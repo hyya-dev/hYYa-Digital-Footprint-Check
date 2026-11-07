@@ -9,11 +9,46 @@ import Observation
 struct Finding: Identifiable, Sendable {
     let definition: SignalDefinition
     let reading: SignalReading
+    /// The person chose to keep this as it is ("Keep: I trust this").
+    var kept = false
     var id: String { definition.id }
     /// The reading's own assessment wins when it has one: a reader can raise a signal (a first
     /// name found) or lower it (a setting left at its ordinary default).
     var severity: Severity { reading.severityOverride ?? definition.severity }
-    var isConcerning: Bool { severity == .high }
+
+    /// Shown to the person but never in the score: what this app sees with a permission they
+    /// gave, something they need or that isn't theirs to change, or something they chose to keep.
+    var advisory: Advisory? {
+        if definition.section.group == .permission { return .permission }
+        if definition.isFYI { return .fyi }
+        if kept { return .kept }
+        return nil
+    }
+    /// Worth a look and counted: advisory findings are flagged gently instead.
+    var isConcerning: Bool { severity == .high && advisory == nil }
+    /// "Keep: I trust this" is offered for what counts against the score and can be changed.
+    var canKeep: Bool { advisory == nil && definition.fix.level != .onlyApple && severity > .low }
+}
+
+/// Why a finding is shown without counting.
+enum Advisory: Sendable {
+    case permission, fyi, kept
+
+    var badge: String {
+        switch self {
+        case .permission: "Advice"
+        case .fyi: "Just so you know"
+        case .kept: "Kept"
+        }
+    }
+
+    var line: String {
+        switch self {
+        case .permission: "Not in your score. This is what an app sees once you allow it, so it's advice for when you decide what to allow."
+        case .fyi: "Not in your score. It's here so you know what apps can see."
+        case .kept: "You chose to keep this, so it's not in your score. It stays listed here in case you change your mind."
+        }
+    }
 }
 
 /// Runs the scan and holds the results. Results live in memory only: nothing is saved.
@@ -33,6 +68,8 @@ final class Scanner {
     private(set) var comparison: ScanComparison?
 
     let history: HistoryStore
+    /// Findings the person chose to keep as they are. Ids only, kept on this device.
+    private(set) var kept: Set<String> = KeptFindings.load()
     /// Moves on with each `reset()`, so a scan still running then is dropped, not saved.
     private var generation = 0
 
@@ -59,6 +96,15 @@ final class Scanner {
         comparison = nil
         lastScan = nil
         progress = 0
+        kept = []
+        KeptFindings.forget()
+    }
+
+    /// "Keep: I trust this", or undo it. The score and history update straight away.
+    func setKept(_ keep: Bool, id: String) async {
+        if keep { kept.insert(id) } else { kept.remove(id) }
+        KeptFindings.save(kept)
+        await scan(quietly: true)
     }
 
     /// Reads every passive and advanced signal, plus any permission category already granted.
@@ -129,7 +175,7 @@ final class Scanner {
 
     func findings(in section: SignalSection) -> [Finding] {
         SignalCatalogue.definitions(in: section).compactMap { def in
-            readings[def.id].map { Finding(definition: def, reading: $0) }
+            readings[def.id].map { Finding(definition: def, reading: $0, kept: kept.contains(def.id)) }
         }
     }
 

@@ -239,7 +239,7 @@ fun TrackerScreen(scanner: com.hyya.footprintinspector.scan.Scanner, nav: Nav) {
         } else {
             SummaryRing(listOf(
                 Slice("worth a look", watch.count { it.isConcerning }, SliceKind.ALERT),
-                Slice("worth knowing", watch.count { it.severity == com.hyya.footprintinspector.model.Severity.MEDIUM }, SliceKind.AMBER),
+                Slice("worth knowing", watch.count { !it.isConcerning && it.severity != com.hyya.footprintinspector.model.Severity.LOW }, SliceKind.AMBER),
                 Slice("all clear", watch.count { it.severity == com.hyya.footprintinspector.model.Severity.LOW }, SliceKind.FINE),
             ), "checks")
             SectionTitle("What has special access", watch.count { it.isConcerning }.takeIf { it > 0 }?.toString())

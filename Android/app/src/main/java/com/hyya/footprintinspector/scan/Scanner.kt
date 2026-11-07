@@ -47,7 +47,30 @@ class Scanner(app: Application) : AndroidViewModel(app) {
     val history = HistoryStore(app)
 
     val findings: List<Finding>
-        get() = Catalogue.list.mapNotNull { d -> readings[d.id]?.let { Finding(d, it) } }
+        get() = Catalogue.list.mapNotNull { d -> readings[d.id]?.let { Finding(d, it, isKept(d.id, it)) } }
+
+    /**
+     * Findings the person chose to keep: id → what was kept. For special access that's a marker of
+     * which apps held it, so a new app gaining that access shows again; for the rest it's empty.
+     * Only ids and markers, in this app's private settings (no backups), removed by Clear history.
+     */
+    var kept by mutableStateOf<Map<String, String>>(emptyMap()); private set
+
+    private fun marker(id: String, r: Reading): String {
+        if (Catalogue.list.firstOrNull { it.id == id }?.section?.group != Group.WATCH) return ""
+        val bytes = MessageDigest.getInstance("SHA-256").digest(r.items.sorted().joinToString("\n").toByteArray())
+        return bytes.take(8).joinToString("") { "%02x".format(it) }
+    }
+
+    private fun isKept(id: String, r: Reading): Boolean = kept[id]?.let { it == marker(id, r) } ?: false
+
+    /** "Keep: I trust this", or undo it. The score updates at once. */
+    fun setKept(id: String, keep: Boolean) {
+        val r = readings[id] ?: return
+        kept = if (keep) kept + (id to marker(id, r)) else kept - id
+        if (this.keep) prefs.edit().putString(KEPT, JSONObject(kept).toString()).apply()
+        publishWidget(checked = false)
+    }
 
     fun findings(section: Section) = findings.filter { it.definition.section == section }
 
@@ -66,6 +89,12 @@ class Scanner(app: Application) : AndroidViewModel(app) {
      * Sensitive apps: how many answered the last check. Only the count is kept, never which apps,
      * so the score is still there after a restart. Clear history removes it.
      */
+    init {
+        if (keep) prefs.getString(KEPT, null)?.let { s ->
+            runCatching { JSONObject(s).let { o -> kept = o.keys().asSequence().associateWith { o.getString(it) } } }
+        }
+    }
+
     var sensitiveFound by mutableStateOf(if (keep && prefs.contains(SENSITIVE)) prefs.getInt(SENSITIVE, 0) else null)
         private set
 
@@ -107,7 +136,8 @@ class Scanner(app: Application) : AndroidViewModel(app) {
     fun clearSaved() {
         sensitiveFound = null
         // The kinds of apps checked and the steps ticked say something too, so they go as well.
-        prefs.edit().remove(SENSITIVE).remove("sensitiveCategories").remove("checkUpDone")
+        kept = emptyMap()
+        prefs.edit().remove(SENSITIVE).remove("sensitiveCategories").remove("checkUpDone").remove(KEPT)
             .remove(ScoreWidget.SCORE).remove(ScoreWidget.CHECKED_AT).apply()
         history.clear()
         generation++
@@ -181,6 +211,7 @@ class Scanner(app: Application) : AndroidViewModel(app) {
 }
 
 private const val SENSITIVE = "sensitiveFound"
+private const val KEPT = "keptFindings"
 
 data class Snapshot(val date: Long, val score: Int, val findingCount: Int, val concerningIds: List<String>, val hashes: Map<String, String>)
 

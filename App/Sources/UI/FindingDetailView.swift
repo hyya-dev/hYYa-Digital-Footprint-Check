@@ -21,15 +21,21 @@ struct FindingDetailView: View {
     private var def: SignalDefinition { finding.definition }
     private var fixable: Bool { def.fix.level != .onlyApple }
 
-    private var headerTone: Tone { finding.severity == .high ? .alert : .context }
+    /// The finding as it is now, so Keep and Undo show at once.
+    private var current: Finding { scanner.allFindings.first { $0.id == finding.id } ?? finding }
+    private var headerTone: Tone { current.isConcerning ? .alert : .context }
 
     var body: some View {
         Page {
             // The clue itself.
             ToneCard(tone: headerTone) {
                 HStack(alignment: .center) {
-                    ToneBadge(text: finding.severity == .high ? "Worth a look" : finding.severity.label,
-                              symbol: finding.severity == .high ? "exclamationmark.circle.fill" : "circle.fill", tone: headerTone)
+                    if let advisory = current.advisory {
+                        ToneBadge(text: advisory.badge, symbol: advisory == .kept ? "checkmark.circle" : "info.circle", tone: .context)
+                    } else {
+                        ToneBadge(text: current.isConcerning ? "Worth a look" : finding.severity.label,
+                                  symbol: current.isConcerning ? "exclamationmark.circle.fill" : "circle.fill", tone: headerTone)
+                    }
                     Spacer(minLength: 8)
                     StatusBadge(status: def.status)
                 }
@@ -56,10 +62,10 @@ struct FindingDetailView: View {
                     Label {
                         Text(note).fixedSize(horizontal: false, vertical: true)
                     } icon: {
-                        Image(systemName: finding.severity == .high ? "exclamationmark.triangle.fill" : "info.circle")
+                        Image(systemName: current.isConcerning ? "exclamationmark.triangle.fill" : "info.circle")
                     }
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(finding.severity == .high ? Tone.alert.tint : Brand.textMuted)
+                    .foregroundStyle(current.isConcerning ? Tone.alert.tint : Brand.textMuted)
                 }
                 FlowRow {
                     ToneBadge(text: def.persistence.label, symbol: "clock", tone: .limit)
@@ -129,9 +135,9 @@ struct FindingDetailView: View {
     /// How serious it is: a level, who can read it, how long it lasts and what it lets someone do.
     private var seriousCard: some View {
         let level = SignalImpact.level(finding.severity)
-        let tone: Tone = finding.severity == .high ? .alert : (finding.severity == .medium ? .context : .limit)
+        let tone: Tone = current.isConcerning ? .alert : (finding.severity == .low ? .limit : .context)
         return ToneCard(tone: tone, title: "How serious", symbol: "gauge.with.dots.needle.67percent") {
-            ToneBadge(text: level.rawValue, tone: tone)
+            ToneBadge(text: current.advisory?.badge ?? level.rawValue, tone: tone)
         } content: {
             if let line = SignalImpact.inPractice[def.id] {
                 Text(line)
@@ -167,10 +173,15 @@ struct FindingDetailView: View {
         ToneCard(tone: fixable ? .fix : .limit,
                  title: fixable ? (PlainWords.action[def.id] ?? "How to fix it") : "Only Apple can fix this",
                  symbol: fixable ? "wrench.and.screwdriver" : "lock") {
-            if fixable && finding.severity == .high {
-                ToneBadge(text: "+\(FootprintScore.highWeight) points", tone: .fix)
+            if FootprintScore.points(for: current) > 0 {
+                ToneBadge(text: "+\(FootprintScore.points(for: current)) points", tone: .fix)
             }
         } content: {
+            if let advisory = current.advisory {
+                Label { Text(advisory.line).fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: "info.circle") }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Brand.ink)
+            }
             Text(def.fix.summary)
                 .font(.body)
                 .foregroundStyle(Brand.textMuted)
@@ -209,6 +220,16 @@ struct FindingDetailView: View {
                 Button("Open Settings") { SettingsLink.openSettingsHome() }
                     .buttonStyle(PrimaryCTAButtonStyle())
                 #endif
+            }
+            // Keep it as it is: shown, but no longer counted. Undo puts it back in the score.
+            if current.canKeep {
+                Button("Keep it: I trust this") { Haptics.success(); Task { await scanner.setKept(true, id: def.id) } }
+                    .buttonStyle(GhostButtonStyle())
+                    .frame(maxWidth: .infinity)
+            } else if current.advisory == .kept {
+                Button("Undo: count it again") { Task { await scanner.setKept(false, id: def.id) } }
+                    .buttonStyle(GhostButtonStyle())
+                    .frame(maxWidth: .infinity)
             }
         }
     }

@@ -98,10 +98,31 @@ data class Reading(
     val note: String? = null,
 )
 
-data class Finding(val definition: Definition, val reading: Reading) {
+/** Shown for the person to know, never scored: what they need or that isn't theirs to change. */
+val FYI_IDS = setOf("languages", "keyboards")
+
+/** Why a finding is shown without counting. Same rules and words as iOS. */
+enum class Advisory(val badge: String, val line: String) {
+    PERMISSION("Advice", "Not in your score. This is what an app sees once you allow it, so it's advice for when you decide what to allow."),
+    FYI("Just so you know", "Not in your score. It's here so you know what apps can see."),
+    KEPT("Kept", "You chose to keep this, so it's not in your score. It stays listed here in case you change your mind."),
+}
+
+/** `kept`: the person chose "Keep: I trust this". For special access it holds only while the same apps hold it. */
+data class Finding(val definition: Definition, val reading: Reading, val kept: Boolean = false) {
     val id: String get() = definition.id
     val severity: Severity get() = reading.severityOverride ?: definition.severity
-    val isConcerning: Boolean get() = severity == Severity.HIGH
+    val advisory: Advisory?
+        get() = when {
+            definition.section.group == Group.PERMISSION -> Advisory.PERMISSION
+            definition.id in FYI_IDS -> Advisory.FYI
+            kept -> Advisory.KEPT
+            else -> null
+        }
+    /** Worth a look and counted: advisory findings are flagged gently instead. */
+    val isConcerning: Boolean get() = severity == Severity.HIGH && advisory == null
+    /** "Keep: I trust this" is offered for what counts against the score and can be changed. */
+    val canKeep: Boolean get() = advisory == null && definition.fix.fixable && severity != Severity.LOW
 }
 
 /** Same rules as iOS: start at 100; fixable high −10, fixable medium −2; unfixable not counted. */
@@ -122,7 +143,7 @@ data class FootprintScore(val value: Int, val fixableCount: Int, val onlyMakerCo
         /** Every 40 points lost halve the score, as on iOS: never zero, first fixes count most. */
         fun value(lost: Int): Int = Math.round(100.0 * Math.pow(0.5, lost / 40.0)).toInt()
 
-        fun points(f: Finding): Int = if (!f.definition.fix.fixable) 0 else when (f.severity) {
+        fun points(f: Finding): Int = if (!f.definition.fix.fixable || f.advisory != null) 0 else when (f.severity) {
             Severity.HIGH -> HIGH_WEIGHT
             Severity.MEDIUM -> MEDIUM_WEIGHT
             Severity.LOW -> 0
@@ -141,6 +162,8 @@ data class FootprintScore(val value: Int, val fixableCount: Int, val onlyMakerCo
 
         val explanation = """
             Everyone starts at 100, and higher is better. Each detail worth a look that you can fix counts $HIGH_WEIGHT points against you, and each smaller one $MEDIUM_WEIGHT. Every 40 points against you halve the score, so the first fixes make the biggest difference, and the score never hits zero. Settings left at their ordinary default don't count.
+
+            What an app sees once you allow it isn't in the score: you decide what to allow, so it's shown as advice. Details you need, such as the languages you use, are shown just so you know. Anything you choose to keep stays listed but stops counting, and you can undo that at any time.
 
             Things only Google or your device's maker can fix aren't in the score, because nothing you do changes them. We list them separately.
 

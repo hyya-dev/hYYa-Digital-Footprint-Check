@@ -38,9 +38,9 @@ data class OverallScore(val parts: Map<Part, Int>) {
         val explanation = """
             Your privacy score is the average of the checks you've done, out of 100. Higher is better.
 
-            • Footprint: how much any app can read about this device. Everyone starts at 100; each thing worth a look that you can fix costs 10 points, each smaller one 2, and every 40 points lost halve it, so it never hits zero.
+            • Footprint: how much any app can read about this device without asking. Everyone starts at 100; each thing worth a look that you can fix costs 10 points, each smaller one 2, and every 40 points lost halve it, so it never hits zero. What apps see once you allow them, and anything you choose to keep, is shown as advice and doesn't count.
             • Sensitive apps: 100 if none of the apps you checked can be spotted, then 25 less for each one that can.
-            • Tracker: 100 if no app holds special access that's worth a look, then 20 less for each one.
+            • Tracker: 100 if no app holds special access that's worth a look, then 20 less for each one. Access you choose to keep doesn't count, until another app gains it.
             • Check-up: counts as 100 once you've been through the main Settings areas. Until then it isn't in the score, so ticking areas off never lowers it.
 
             Sensitive apps and Tracker never go below 20. Things only Google or your device's maker can fix don't count. The score isn't a measure of how unique your device is: that would need data from other devices, and this app never sends or receives any.

@@ -51,7 +51,7 @@ struct FootprintScore: Equatable, Sendable {
     }
 
     static func points(for finding: Finding) -> Int {
-        guard isFixable(finding) else { return 0 }
+        guard isFixable(finding), finding.advisory == nil else { return 0 }
         return switch finding.severity {
         case .high: highWeight
         case .medium: mediumWeight
@@ -84,7 +84,9 @@ struct FootprintScore: Equatable, Sendable {
     }
 
     static let explanation = """
-    Everyone starts at 100, and higher is better. Each detail worth a look that you can fix counts \(highWeight) points against you, and each smaller one \(mediumWeight). Every 40 points against you halve the score, so the first fixes make the biggest difference, and the score never hits zero. Settings left at their ordinary default don't count.
+    Everyone starts at 100, and higher is better. Each detail any app can read without asking that's worth a look and that you can fix counts \(highWeight) points against you, and each smaller one \(mediumWeight). Every 40 points against you halve the score, so the first fixes make the biggest difference, and the score never hits zero. Settings left at their ordinary default don't count.
+
+    What an app sees once you allow it isn't in the score: you decide what to allow, so it's shown as advice. Details you need or that aren't yours to change, such as the languages you use, are shown just so you know. Anything you choose to keep stays listed but stops counting, and you can undo that at any time.
 
     Things only Apple can fix aren't in the score, because they're the same on every device and nothing you do changes them. We list them separately and track Apple's progress in the privacy scoreboard.
 

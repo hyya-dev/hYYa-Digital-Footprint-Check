@@ -55,6 +55,9 @@ struct SectionView: View {
         case .denied?: return "You said no, so apps you said no to can't see this either."
         case .unavailable?: return "Not available on this device."
         default:
+            if findings.contains(where: { $0.advisory == .permission }) {
+                return "\(findings.count) clue\(findings.count == 1 ? "" : "s") an app gets once you allow it. Advice for deciding what to allow, not in your score."
+            }
             let worth = findings.filter(\.isConcerning).count
             return worth == 0 ? "\(findings.count) clue\(findings.count == 1 ? "" : "s"), nothing alarming." : "\(findings.count) clues, \(worth) worth a look."
         }
@@ -121,13 +124,14 @@ struct FindingCard: View {
                 if let note = finding.reading.note {
                     Text(note)
                         .font(.footnote)
-                        .foregroundStyle(finding.severity == .high ? Brand.concern : Brand.textSubtle)
+                        .foregroundStyle(finding.isConcerning ? Brand.concern : Brand.textSubtle)
                         .multilineTextAlignment(.leading)
                 }
             }
             Spacer(minLength: 8)
             HStack(spacing: 8) {
-                if finding.severity == .high { SeverityDot(severity: .high) }
+                if finding.isConcerning { SeverityDot(severity: .high) }
+                else if let advisory = finding.advisory { Text(advisory.badge).font(.caption.weight(.semibold)).foregroundStyle(Brand.textSubtle) }
                 Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Brand.textSubtle)
             }
             .padding(.top, 4)

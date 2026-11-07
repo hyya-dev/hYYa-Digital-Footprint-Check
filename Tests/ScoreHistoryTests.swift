@@ -35,6 +35,32 @@ struct ScoreHistoryTests {
         #expect(score.value == 100)
     }
 
+    @Test func permissionFindingsAreAdviceNotScored() {
+        // What this app sees once allowed: shown as advice, never counted, never in the fix walk-through.
+        let calendar = finding("cal-accounts"), places = finding("photo-places", raise: .high)
+        let score = FootprintScore(findings: [calendar, places])
+        #expect(score.value == 100)
+        #expect(calendar.advisory == .permission && !calendar.isConcerning && !calendar.canKeep)
+        #expect(FootprintScore.points(for: places) == 0)
+    }
+
+    @Test func fyiFindingsAreShownNotScored() {
+        let languages = finding("languages"), keyboards = finding("keyboards"), managed = finding("managed")
+        #expect(FootprintScore(findings: [languages, keyboards, managed]).value == 100)
+        #expect(languages.advisory == .fyi && !languages.canKeep)
+    }
+
+    @Test func keptFindingStaysListedButStopsCounting() {
+        var restart = finding("boot-time")
+        #expect(restart.canKeep && restart.isConcerning)
+        #expect(FootprintScore(findings: [restart]).value == 84)
+        restart.kept = true
+        #expect(restart.advisory == .kept && !restart.isConcerning && !restart.canKeep)
+        #expect(FootprintScore(findings: [restart]).value == 100)
+        // Only Apple can fix it: nothing to keep.
+        #expect(!finding("volume-created").canKeep)
+    }
+
     @Test func scoreFallsSteeplyButNeverHitsZero() {
         #expect(FootprintScore.value(lost: 40) == 50)
         #expect(FootprintScore(findings: Array(repeating: finding("boot-time"), count: 11)).value == 15)

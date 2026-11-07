@@ -21,7 +21,17 @@ struct PrivacyReportView: View {
     /// the app leaves active can't bring the report back.
     @State private var readGeneration = 0
     @Environment(PrivacyCheck.self) private var check
+    /// Apps the person chose to keep: still listed, not counted.
+    @State private var kept: Set<String> = LaunchOptions.has("-sampleData") ? [] : KeptApps.load()
     var onNext: (() -> Void)? = nil
+
+    /// The apps that count: shared with outside companies and not kept.
+    private func counted(_ r: PrivacyReport) -> [PrivacyReport.AppActivity] { r.sharing.filter { !kept.contains($0.bundleID) } }
+
+    private func setKept(_ keep: Bool, _ id: String) {
+        if keep { kept.insert(id); Haptics.success() } else { kept.remove(id) }
+        if !LaunchOptions.has("-sampleData") { KeptApps.save(kept) }
+    }
 
     private static let types: [UTType] = [UTType(filenameExtension: "ndjson") ?? .data, .json, .plainText, .data]
 
@@ -31,7 +41,7 @@ struct PrivacyReportView: View {
                 HeroCard(eyebrow: "Tracker",
                          title: report == nil ? "What did your apps do?" : "Here's what they did",
                          subtitle: "Your device keeps a record of which apps used your private data and who they talked to. Open it here and I'll explain it plainly.",
-                         mood: report == nil ? .thinking : (report!.sharing.isEmpty ? .happy : .concerned),
+                         mood: report == nil ? .thinking : (counted(report!).isEmpty ? .happy : .concerned),
                          mascotSize: 96)
 
                 if let report {
@@ -52,7 +62,7 @@ struct PrivacyReportView: View {
                     Button("Analyze my report") { importing = true }
                         .buttonStyle(PrimaryCTAButtonStyle())
                     Label {
-                        Text("Read only on this device and never sent. For your score, only the number of apps that shared your data is kept, never the report itself.")
+                        Text("Read only on this device and never sent. For your score, only the number of apps that shared your data is kept, never the report itself. Apps you choose to keep are remembered by their ID only.")
                             .fixedSize(horizontal: false, vertical: true)
                     } icon: { Image(systemName: "lock.fill").foregroundStyle(Brand.sand) }
                     .font(.footnote)
@@ -71,9 +81,9 @@ struct PrivacyReportView: View {
             .hiddenNavigationBar()
             .fileImporter(isPresented: $importing, allowedContentTypes: Self.types) { result in load(result) }
             .onChange(of: scenePhase) { _, phase in if phase != .active { report = nil; readGeneration += 1 } }
-            .onChange(of: report?.sharing.count) { _, n in if let n { check.recordTracker(sharing: n) } }
+            .onChange(of: report.map { counted($0).count }) { _, n in if let n { check.recordTracker(sharing: n) } }
             .task { if LaunchOptions.has("-sampleData") && report == nil { report = .sample } }
-            .sensoryFeedback(trigger: opened) { _, _ in (report?.sharing.isEmpty ?? true) ? .success : .warning }
+            .sensoryFeedback(trigger: opened) { _, _ in (report.map { counted($0).isEmpty } ?? true) ? .success : .warning }
         }
     }
 
@@ -92,7 +102,9 @@ struct PrivacyReportView: View {
 
     @ViewBuilder private func results(_ r: PrivacyReport) -> some View {
         let ranked = r.ranked
-        let worth = ranked.filter { $0.verdict == .sharesOutside || $0.verdict == .contentTrackers }
+        let worth = ranked.filter { ($0.verdict == .sharesOutside && !kept.contains($0.bundleID)) || $0.verdict == .contentTrackers }
+        let keptApps = ranked.filter { $0.verdict == .sharesOutside && kept.contains($0.bundleID) }
+        let sharing = counted(r)
         let used = ranked.filter { $0.verdict == .usedData }
         let calm = ranked.filter { $0.verdict == .normal || $0.verdict == .crashReports }
 
@@ -102,10 +114,12 @@ struct PrivacyReportView: View {
             .fine(calm.count, "nothing unusual"),
         ], caption: "apps")
 
-        ToneCard(tone: r.sharing.isEmpty ? .fix : .alert, title: "In short", symbol: "text.magnifyingglass") {
+        ToneCard(tone: sharing.isEmpty ? .fix : .alert, title: "In short", symbol: "text.magnifyingglass") {
             VStack(alignment: .leading, spacing: 10) {
-                summaryLine(r.sharing.count, one: "app shared data with outside advertising or analytics companies",
-                            many: "apps shared data with outside advertising or analytics companies", tone: r.sharing.isEmpty ? .fix : .alert)
+                summaryLine(sharing.count, one: "app shared data with outside advertising or analytics companies",
+                            many: "apps shared data with outside advertising or analytics companies", tone: sharing.isEmpty ? .fix : .alert)
+                if !keptApps.isEmpty { summaryLine(keptApps.count, one: "app you keep: you trust it, so it's not in your score",
+                            many: "apps you keep: you trust them, so they're not in your score", tone: .context) }
                 if !used.isEmpty { summaryLine(used.count, one: "app used your private data without sharing it",
                             many: "apps used your private data without sharing it", tone: .explain) }
                 if !calm.isEmpty { summaryLine(calm.count, one: "app did nothing unusual", many: "apps did nothing unusual", tone: .fix) }
@@ -117,7 +131,11 @@ struct PrivacyReportView: View {
 
         if !worth.isEmpty {
             SectionTitle(title: "Worth a look", trailing: "\(worth.count)")
-            ForEach(worth) { app in AppActivityCard(app: app) }
+            ForEach(worth) { app in AppActivityCard(app: app, kept: false) { setKept($0, app.bundleID) } }
+        }
+        if !keptApps.isEmpty {
+            SectionTitle(title: "Kept: you trust these", trailing: "\(keptApps.count)")
+            ForEach(keptApps) { app in AppActivityCard(app: app, kept: true) { setKept($0, app.bundleID) } }
         }
         if !used.isEmpty {
             SectionTitle(title: "Used your data, nothing shared", trailing: "\(used.count)")
@@ -232,11 +250,16 @@ struct PrivacyReportView: View {
 /// what each site is. Raw addresses sit behind a tap.
 private struct AppActivityCard: View {
     let app: PrivacyReport.AppActivity
+    /// Kept by the person: listed, not counted.
+    var kept = false
+    /// "Keep: I trust this" or Undo, for apps that shared with outside companies.
+    var onKeep: ((Bool) -> Void)? = nil
     @State private var showSites = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var tone: Tone {
-        switch app.verdict {
+        if kept { return .context }
+        return switch app.verdict {
         case .sharesOutside: .alert
         case .contentTrackers, .usedData: .explain
         case .crashReports, .normal: .fix
@@ -263,7 +286,7 @@ private struct AppActivityCard: View {
 
     var body: some View {
         ToneCard(tone: tone, title: app.name, symbol: app.verdict == .sharesOutside ? "exclamationmark.bubble" : "app") {
-            ToneBadge(text: app.verdict.label, tone: tone)
+            ToneBadge(text: kept ? "Kept · not in your score" : app.verdict.label, tone: tone)
             if !app.isThisApp && AppNames.knownName(for: app.bundleID) == nil {
                 // Not a widely used app: the name comes from its ID, so say so instead of guessing.
                 Text("Name worked out from the app's ID\(AppNames.maker(ofUnnamed: app.bundleID).map { ", made by \($0)" } ?? ""). It may look different on your Home Screen.")
@@ -317,6 +340,11 @@ private struct AppActivityCard: View {
                 }
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(Brand.sand)
+            }
+            if let onKeep, app.verdict == .sharesOutside {
+                Button(kept ? "Undo: count it again" : "Keep it: I trust this") { onKeep(!kept) }
+                    .buttonStyle(GhostButtonStyle())
+                    .frame(maxWidth: .infinity)
             }
         }
     }

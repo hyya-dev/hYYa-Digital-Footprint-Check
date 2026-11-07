@@ -201,12 +201,12 @@ struct OverallScore: Equatable, Sendable {
     #if os(macOS)
     static let trackerLine = "counts as 100 once you've looked through every place that shows which apps have special access. Until then it isn't in the score."
     #else
-    static let trackerLine = "100 if no app shared your data with outside advertising or analytics companies, then 20 less for each app that did."
+    static let trackerLine = "100 if no app shared your data with outside advertising or analytics companies, then 20 less for each app that did. Apps you choose to keep stay listed but don't count."
     #endif
     static let explanation = """
     Your privacy score is the average of the checks you've done, out of 100. Higher is better.
 
-    • Footprint: how much any app can read about this device. Everyone starts at 100; each thing worth a look that you can fix costs 10 points, each smaller one 2, and every 40 points lost halve it, so it never hits zero.
+    • Footprint: how much any app can read about this device without asking. Everyone starts at 100; each thing worth a look that you can fix costs 10 points, each smaller one 2, and every 40 points lost halve it, so it never hits zero. What apps see once you allow them, and anything you choose to keep, is shown as advice and doesn't count.
     • Sensitive apps: 100 if none of the apps you checked can be spotted, then 25 less for each one that can.
     • Tracker: \(trackerLine)
     • Check-up: counts as 100 once you've been through the main Settings areas. Until then it isn't in the score, so ticking areas off never lowers it.

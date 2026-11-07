@@ -133,6 +133,7 @@ struct SettingsView: View {
                     check.clearSaved()
                     scanner.reset()
                     ReinstallSource.forget()
+                    KeptApps.forget()
                     SavedPlace.forget()
                     // Directly as well: on a Mac this window can be open with the main one closed.
                     WidgetScore.save(nil)

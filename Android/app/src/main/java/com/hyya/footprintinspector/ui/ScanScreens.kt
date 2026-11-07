@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.ui.draw.clip
@@ -157,8 +158,8 @@ private fun Results(scanner: Scanner, nav: Nav) {
             color = Brand.textMuted, fontSize = 15.sp, lineHeight = 21.sp)
         val seen = scanner.findings
         SummaryRing(listOf(
-            Slice("worth a look", seen.count { it.severity == Severity.HIGH }, SliceKind.ALERT),
-            Slice("worth knowing", seen.count { it.severity == Severity.MEDIUM }, SliceKind.AMBER),
+            Slice("worth a look", seen.count { it.isConcerning }, SliceKind.ALERT),
+            Slice("worth knowing", seen.count { !it.isConcerning && it.severity != Severity.LOW }, SliceKind.AMBER),
             Slice("minor", seen.count { it.severity == Severity.LOW }, SliceKind.FINE),
         ), "clues")
         PrimaryButton("Scan again") { scanner.scan() }
@@ -234,6 +235,7 @@ fun SectionScreen(scanner: Scanner, section: Section, nav: Nav) {
             when {
                 kind != null && !kind.granted(context) -> "Here's what any app you allow gets to see."
                 findings.isEmpty() -> "Nothing to read here on this device."
+                section.group == Group.PERMISSION -> "${findings.size} clue${if (findings.size == 1) "" else "s"} an app gets once you allow it. Advice for deciding what to allow, not in your score."
                 else -> "${findings.size} clue${if (findings.size == 1) "" else "s"}, ${findings.count { it.isConcerning }.let { if (it == 0) "nothing alarming" else "$it worth a look" }}."
             })
         if (kind != null && !kind.granted(context)) {
@@ -257,10 +259,12 @@ private fun FindingRow(f: Finding, nav: Nav, divider: Boolean) {
     Column(Modifier.clickableNoRipple { nav.push(Route.FindingRoute(f.id)) }.padding(horizontal = 14.dp, vertical = 12.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(f.definition.headline, color = Brand.textMuted, fontSize = 12.sp, modifier = Modifier.weight(1f))
-            SeverityDot(f.severity)
+            val advisory = f.advisory
+            if (advisory != null) Text(advisory.badge, color = Brand.textSubtle, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+            else SeverityDot(f.severity)
         }
         Text(f.reading.value, color = Brand.ink, fontSize = 15.sp)
-        f.reading.note?.let { Text(it, color = Brand.concern, fontSize = 11.sp) }
+        f.reading.note?.let { Text(it, color = if (f.isConcerning) Brand.concern else Brand.textSubtle, fontSize = 11.sp) }
     }
     if (divider) androidx.compose.material3.HorizontalDivider(color = Brand.rule, thickness = 0.5.dp)
 }
@@ -277,7 +281,9 @@ fun FindingScreen(scanner: Scanner, id: String, nav: Nav) {
         var showMore by remember { mutableStateOf(false) }
         // The clue itself.
         ToneCard(head) {
-            ToneBadge(if (f.isConcerning) "Worth a look" else f.severity.label, head, Icons.Outlined.ErrorOutline)
+            val advisory = f.advisory
+            if (advisory != null) ToneBadge(advisory.badge, Tone.CONTEXT, Icons.Outlined.Info)
+            else ToneBadge(if (f.isConcerning) "Worth a look" else f.severity.label, head, Icons.Outlined.ErrorOutline)
             Text(d.headline, color = Brand.ink, fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 33.sp)
             Text(d.brief, color = Brand.ink, fontSize = 16.sp, lineHeight = 22.sp)
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -307,8 +313,8 @@ fun FindingScreen(scanner: Scanner, id: String, nav: Nav) {
             }
         }
         // How serious: a level, who can read it, how long it lasts and what it lets someone do.
-        val sTone = when (f.severity) { com.hyya.footprintinspector.model.Severity.HIGH -> Tone.ALERT; com.hyya.footprintinspector.model.Severity.MEDIUM -> Tone.CONTEXT; else -> Tone.LIMIT }
-        ToneCard(sTone, "How serious", Icons.Outlined.Speed, trailing = { ToneBadge(com.hyya.footprintinspector.model.Impact.level(f.severity), sTone) }) {
+        val sTone = when { f.isConcerning -> Tone.ALERT; f.severity == com.hyya.footprintinspector.model.Severity.LOW -> Tone.LIMIT; else -> Tone.CONTEXT }
+        ToneCard(sTone, "How serious", Icons.Outlined.Speed, trailing = { ToneBadge(f.advisory?.badge ?: com.hyya.footprintinspector.model.Impact.level(f.severity), sTone) }) {
             com.hyya.footprintinspector.model.Impact.inPractice[d.id]?.let { Text(it, color = Brand.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 21.sp) }
             ImpactRow(Icons.Outlined.Visibility, "Who can read it", if (d.section.group == Group.PERMISSION) "Only apps you've given this permission." else "Any app on this device, without asking you.")
             ImpactRow(Icons.Outlined.Schedule, "How long it lasts", com.hyya.footprintinspector.model.Impact.lasting(d.persistence))
@@ -317,12 +323,16 @@ fun FindingScreen(scanner: Scanner, id: String, nav: Nav) {
         val fixTone = if (d.fix.fixable) Tone.FIX else Tone.LIMIT
         ToneCard(fixTone, if (d.fix.fixable) (PlainWords.text[d.id]?.action ?: "How to fix it") else "Only Google or the device maker can fix this",
             if (d.fix.fixable) Icons.Outlined.Build else Icons.Outlined.Lock,
-            trailing = if (d.fix.fixable && f.isConcerning) ({ ToneBadge("+${FootprintScore.HIGH_WEIGHT} points", Tone.FIX) }) else null) {
+            trailing = if (FootprintScore.points(f) > 0) ({ ToneBadge("+${FootprintScore.points(f)} points", Tone.FIX) }) else null) {
+            f.advisory?.let { Text(it.line, color = Brand.ink, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, lineHeight = 21.sp) }
             Text(d.fix.summary, color = Brand.textMuted, fontSize = 15.sp, lineHeight = 21.sp)
             if (d.fix.steps.isNotEmpty()) StepList(d.fix.steps, fixTone.tint)
             // A restart isn't a setting, so there's no Settings page to open.
             if (d.id == "boot-time") WeeklyReminderSwitch()
             else if (d.fix.fixable) PrimaryButton("Open Settings") { openSettings(context, d.fix.settingsAction) }
+            // Keep it as it is: shown, but no longer counted. Undo puts it back in the score.
+            if (f.canKeep) GhostButton("Keep it: I trust this") { scanner.setKept(d.id, true) }
+            else if (f.advisory == com.hyya.footprintinspector.model.Advisory.KEPT) GhostButton("Undo: count it again") { scanner.setKept(d.id, false) }
         }
         // The fuller explanation, for anyone who wants it, out of the way of the answer.
         ToneCard(Tone.EXPLAIN) {

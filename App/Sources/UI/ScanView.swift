@@ -174,8 +174,8 @@ private struct Results: View {
                 .fixedSize(horizontal: false, vertical: true)
             let seen = scanner.allFindings
             SummaryRing(slices: [
-                .alert(seen.filter { $0.severity == .high }.count, "worth a look"),
-                .amber(seen.filter { $0.severity == .medium }.count, "worth knowing"),
+                .alert(seen.filter(\.isConcerning).count, "worth a look"),
+                .amber(seen.filter { !$0.isConcerning && $0.severity > .low }.count, "worth knowing"),
                 .fine(seen.filter { $0.severity == .low }.count, "minor"),
             ], caption: "clues")
             Button("Scan again") { Task { await scanner.scan() } }
@@ -255,11 +255,10 @@ struct CategoryTile: View {
 
     var body: some View {
         let findings = scanner.findings(in: section)
-        let top = findings.map(\.severity).max() ?? .low
         RowCard(symbol: section.symbol, title: section.title) {
             HStack(spacing: 8) {
                 Text(detail(findings))
-                if top == .high { SeverityDot(severity: .high) }
+                if findings.contains(where: \.isConcerning) { SeverityDot(severity: .high) }
                 Image(systemName: "chevron.right")
             }
         }

@@ -240,6 +240,11 @@ struct SignalReading: Identifiable, Sendable, Equatable {
 }
 
 extension SignalDefinition {
+    /// Shown for the person to know, never scored: things people need, or that aren't theirs to
+    /// change, such as the languages and keyboards they type in, or a work device's management.
+    var isFYI: Bool { Self.fyiIDs.contains(id) }
+    static let fyiIDs: Set<String> = ["languages", "keyboards", "managed", "mac-languages", "mac-input-sources"]
+
     /// The last-restart finding, whose fix is a weekly restart.
     var isRestart: Bool { id == "boot-time" || id == "mac-boot-time" }
 }
