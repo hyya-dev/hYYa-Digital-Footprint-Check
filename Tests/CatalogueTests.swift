@@ -63,6 +63,26 @@ struct CatalogueTests {
         #expect(System.version.split(separator: ".").count >= 2)
     }
 
+    /// Apple keeps network records for 7 days but access records longer. The 7-day window must come
+    /// from the network records, and older access is named separately (a real export, 2026-11-07,
+    /// read "the last 7 days, from Oct 25" when its network records started Oct 31).
+    @Test func privacyReportWindowFollowsNetworkRecords() throws {
+        let lines = """
+        {"type":"access","accessor":{"identifier":"com.example.maps","identifierType":"bundleID"},"category":"location","kind":"intervalBegin","timeStamp":"2026-10-25T08:00:00.000Z"}
+        {"type":"networkActivity","bundleID":"com.example.maps","domain":"api.example.com","firstTimeStamp":"2026-10-31T09:00:00.000Z","timeStamp":"2026-11-07T20:00:00.000Z","hits":3,"initiatedType":"AppInitiated","domainType":2}
+        """
+        let r = try PrivacyReport.read(Data(lines.utf8))
+        let day = { (s: String) in ISO8601DateFormatter().date(from: s)! }
+        #expect(r.from == day("2026-10-31T09:00:00Z"))
+        #expect(r.accessFrom == day("2026-10-25T08:00:00Z"))
+        #expect(r.to == day("2026-11-07T20:00:00Z"))
+
+        // Network only, or access within a day of it: one window, no second date.
+        let netOnly = try PrivacyReport.read(Data(lines.split(separator: "\n")[1].utf8))
+        #expect(netOnly.accessFrom == nil)
+        #expect(PrivacyReport.sample.accessFrom == nil)
+    }
+
     /// Reads both App Privacy Report layouts and judges plainly: only sharing with outside
     /// advertising or analytics companies is flagged; own servers, Apple, hosting and a company's
     /// own analytics are not; trackers inside opened content are the sender's, not the app's.

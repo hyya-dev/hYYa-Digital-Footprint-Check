@@ -141,16 +141,21 @@ struct PrivacyReport: Sendable {
     }
 
     let apps: [AppActivity]
+    /// The window of the network records: Apple keeps those for 7 days.
     let from: Date?
     let to: Date?
+    /// When data-access records start, if they go back further than the network window (Apple keeps
+    /// those longer), so the page can say both dates instead of one that contradicts "7 days".
+    let accessFrom: Date?
     /// Most worth a look first, then by name. Worked out once: each verdict reads every site.
     let ranked: [AppActivity]
     let sharing: [AppActivity]
 
-    init(apps: [AppActivity], from: Date? = nil, to: Date? = nil) {
+    init(apps: [AppActivity], from: Date? = nil, to: Date? = nil, accessFrom: Date? = nil) {
         self.apps = apps
         self.from = from
         self.to = to
+        self.accessFrom = accessFrom
         let sorted = apps.map { (app: $0, verdict: $0.verdict, name: $0.name) }
             .sorted { ($0.verdict, $0.name) < ($1.verdict, $1.name) }
         ranked = sorted.map(\.app)
@@ -183,7 +188,7 @@ struct PrivacyReport: Sendable {
     static func read(_ data: Data) throws -> PrivacyReport {
         guard data.count <= maxBytes else { throw ReadError.tooBig }
         var byApp: [String: AppActivity] = [:]
-        var first: Date?, last: Date?
+        var netFirst: Date?, accessFirst: Date?, last: Date?
         var recognised = 0
         let iso = ISO8601DateFormatter()
         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -192,9 +197,13 @@ struct PrivacyReport: Sendable {
             guard let s = any as? String else { return nil }
             return iso.date(from: s) ?? isoPlain.date(from: s)
         }
-        func note(_ d: Date?) {
+        func noteNetwork(_ d: Date?) {
             guard let d else { return }
-            first = min(first ?? d, d); last = max(last ?? d, d)
+            netFirst = min(netFirst ?? d, d); last = max(last ?? d, d)
+        }
+        func noteAccess(_ d: Date?) {
+            guard let d else { return }
+            accessFirst = min(accessFirst ?? d, d); last = max(last ?? d, d)
         }
 
         for line in data.split(separator: UInt8(ascii: "\n")) where !line.isEmpty {
@@ -213,7 +222,7 @@ struct PrivacyReport: Sendable {
                                          hits: (old?.hits ?? 0).addingReportingOverflow(hits).overflow ? Int.max : (old?.hits ?? 0) + hits,
                                          byApp: (old?.byApp ?? false) || (obj["initiatedType"] as? String ?? "AppInitiated") == "AppInitiated")
                 byApp[bundle] = app
-                note(date(obj["timeStamp"])); note(date(obj["firstTimeStamp"]))
+                noteNetwork(date(obj["timeStamp"])); noteNetwork(date(obj["firstTimeStamp"]))
             } else if type == "access" || stream?.contains("tcc") == true || stream?.contains("location") == true,
                       let accessor = obj["accessor"] as? [String: Any], let bundle = accessor["identifier"] as? String {
                 recognised += 1
@@ -226,11 +235,15 @@ struct PrivacyReport: Sendable {
                 let when = date(obj["timeStamp"]) ?? date(obj["timestamp"])
                 if let when { app.lastUse = max(app.lastUse ?? when, when) }
                 byApp[bundle] = app
-                note(when)
+                noteAccess(when)
             }
         }
         guard recognised > 0 else { throw ReadError.notAReport }
-        return PrivacyReport(apps: Array(byApp.values), from: first, to: last)
+        // The 7-day window is the network records'. Access records alone (no network activity) set it
+        // themselves; when they reach back more than a day further, the page names that date too.
+        let from = netFirst ?? accessFirst
+        let olderAccess = netFirst.flatMap { net in accessFirst.flatMap { $0 < net.addingTimeInterval(-86_400) ? $0 : nil } }
+        return PrivacyReport(apps: Array(byApp.values), from: from, to: last, accessFrom: olderAccess)
     }
 }
 

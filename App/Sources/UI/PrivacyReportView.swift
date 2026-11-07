@@ -161,7 +161,11 @@ struct PrivacyReportView: View {
     private func limitsCard(_ r: PrivacyReport) -> some View {
         ToneCard(tone: .limit, title: "What this report can't show", symbol: "calendar.badge.exclamationmark") {
             VStack(alignment: .leading, spacing: 8) {
-                bullet("It covers only the last 7 days\(r.from.map { ", from \($0.formatted(date: .abbreviated, time: .omitted))" } ?? ""). Apps that send things when first installed, or only now and then, may not appear.")
+                if let accessFrom = r.accessFrom, let from = r.from {
+                    bullet("Who apps talked to covers only the last 7 days, from \(from.formatted(date: .abbreviated, time: .omitted)). Their use of your data goes back further, to \(accessFrom.formatted(date: .abbreviated, time: .omitted)). Apps that send things when first installed, or only now and then, may not appear.")
+                } else {
+                    bullet("It covers only the last 7 days\(r.from.map { ", from \($0.formatted(date: .abbreviated, time: .omitted))" } ?? ""). Apps that send things when first installed, or only now and then, may not appear.")
+                }
                 bullet("It shows who an app talked to, not what it sent.")
                 bullet("Sites are named by their address. We explain the ones we know; the rest are usually the app's own content.")
             }
