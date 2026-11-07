@@ -83,17 +83,19 @@ const UPLOAD_BASE = `https://androidpublisher.googleapis.com/upload/androidpubli
  * Each set is DELETED first, so a re-run replaces it instead of appending a second copy.
  * A 429 or 5xx is retried with backoff (1, 2, 4, 8 s); anything else stops the run.
  */
+/** Retries a call that failed with 429 or a 5xx (Play is sometimes briefly unavailable), waiting 1, 2, 4, 8 s. */
+const retrying = async (fn) => {
+  for (let wait = 1000; ; wait *= 2) {
+    try { return await fn(); } catch (e) {
+      if (wait > 8000 || !/→ (429|5\d\d):/.test(String(e.message))) throw e;
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+};
+
 export async function pushGraphics(token, E, langs, files, { concurrency = 6, log = console.log } = {}) {
   const jobs = langs.flatMap((lang) => Object.entries(files).map(([type, paths]) => ({ lang, type, paths })));
   const left = Object.fromEntries(langs.map((l) => [l, Object.keys(files).length]));
-  const retrying = async (fn) => {
-    for (let wait = 1000; ; wait *= 2) {
-      try { return await fn(); } catch (e) {
-        if (wait > 8000 || !/→ (429|5\d\d):/.test(String(e.message))) throw e;
-        await new Promise((r) => setTimeout(r, wait));
-      }
-    }
-  };
   let next = 0;
   const worker = async () => {
     while (next < jobs.length) {
@@ -114,7 +116,7 @@ export async function verifyGraphics(token, E, langs, files) {
   const sha = (p) => crypto.createHash("sha256").update(readFileSync(p)).digest("hex");
   const want = Object.fromEntries(Object.entries(files).map(([t, ps]) => [t, ps.map(sha)]));
   for (const lang of langs) for (const [type, hashes] of Object.entries(want)) {
-    const got = ((await api(token, `${E}/listings/${lang}/${type}`)).images ?? []).map((i) => i.sha256);
+    const got = ((await retrying(() => api(token, `${E}/listings/${lang}/${type}`))).images ?? []).map((i) => i.sha256);
     if (got.length !== hashes.length || got.some((h, i) => h !== hashes[i]))
       throw new Error(`${lang} ${type}: Play holds ${got.length} image(s) not matching the ${hashes.length} expected, in order — nothing committed`);
   }
