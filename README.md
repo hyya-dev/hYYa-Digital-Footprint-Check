@@ -9,7 +9,8 @@
 
 <p align="center">
   <b>See what apps know about you. Then fix it.</b><br>
-  Free · Open source · Nothing leaves your device
+  Free · Open source · Nothing leaves your device<br>
+  Website: <a href="https://hyya.com/hyya-digital-footprint-check.html">hyya.com/hyya-digital-footprint-check.html</a>
 </p>
 
 <p align="center">
