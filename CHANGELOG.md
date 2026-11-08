@@ -43,7 +43,7 @@ What's in it:
 | Google Play | 1.0.5 (versionCode 21) | 2026-11-06 | tag `v1.0.5-android21` |
 | App Store (iPhone and iPad) | 1.0.5 (build 35) | 2026-11-06 | tag `v1.0.5-build35` |
 
-The Mac went straight from 1.0.4 to 1.0.6.
+The Mac went straight from 1.0.1 to 1.0.6.
 
 ## Earlier versions
 
