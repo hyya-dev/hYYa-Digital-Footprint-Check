@@ -86,8 +86,9 @@ flags what's worth a look, and walks you through hiding what can be hidden.
 - **App Store privacy label: "Data Not Collected".** The Android app has no internet permission. Full policy:
   [hyya.com/privacypolicy/hyya-digital-footprint-check.html](https://hyya.com/privacypolicy/hyya-digital-footprint-check.html)
 
-Read the code to check. That's why it's open source. Each store release has a matching tag and a
-[GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases).
+Read the code to check. That's why it's open source. Each store release has a matching tag, a
+[GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases) and a
+[CHANGELOG](CHANGELOG.md) entry.
 
 `App/Resources/AppNames.json` is offline lookup data: the names of the most-used apps from Apple's
 public App Store charts, so the Tracker can show "Bolt" instead of a bundle ID. The app never looks
