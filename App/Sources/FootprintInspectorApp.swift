@@ -167,6 +167,7 @@ struct RootView: View {
         .environment(\.goToTab, go)
         .onAppear(perform: restore)
         .modifier(KeepScoreFresh())
+        .modifier(RatingPrompt())
         // Quitting is a fresh start on the Mac: the next launch opens on Score.
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in SavedPlace.forget() }
         // Store screenshots: a Sensitive check with nothing found, as on iOS.
@@ -179,6 +180,7 @@ struct RootView: View {
         .environment(\.goToTab, go)
         .onAppear(perform: restore)
         .modifier(KeepScoreFresh())
+        .modifier(RatingPrompt())
         // Store screenshots: the sample Tracker report and a Sensitive check with nothing found, so
         // every screen can be captured from launch switches alone (the iPhone Duo can't be tapped
         // by tests in every pose).
