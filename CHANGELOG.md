@@ -4,6 +4,20 @@ Each store release, with the store's What's New and the date it went live on eac
 Every release has a matching tag and a [GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases).
 Website: [hyya.com/hyya-digital-footprint-check.html](https://hyya.com/hyya-digital-footprint-check.html)
 
+## 1.0.7
+
+What's New (Google Play):
+> This release contains general bug fixes and stability improvements.
+
+What's in it:
+- Android only: after a scan that raised your score, or once you've come back on another day, the app may
+  ask for a rating with Google Play's standard in-app prompt. It asks at most once per version and never on
+  the first scan. The F-Droid edition leaves this out.
+
+| Store | Version | Live | Source |
+|---|---|---|---|
+| Google Play | 1.0.7 (versionCode 27) | 2026-11-09 | tag `v1.0.7-android27` |
+
 ## 1.0.6
 
 What's New (App Store, Mac App Store and Google Play):
