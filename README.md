@@ -78,7 +78,8 @@ flags what's worth a look, and walks you through hiding what can be hidden.
 
 - **No account, no server, no analytics, no ads, no crash reporting, no networking code.** On iPhone,
   iPad and Mac the app is built only from Apple's own frameworks. On Android it uses Google's
-  open-source AndroidX and Jetpack libraries and Kotlin (see [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES.md)).
+  open-source AndroidX and Jetpack libraries and Kotlin, and the Google Play edition adds Google's
+  In-App Review library for the standard rating prompt (see [THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES.md)).
 - **Everything stays on your device, and we have no access to it.**
   - Scan history keeps scrambled markers, never the values.
   - Sensitive-app results are shown only to you. History can keep how many were found, never which.
@@ -114,7 +115,8 @@ xcodebuild -project hYYaFootprintInspector.xcodeproj -scheme "hYYa Footprint Ins
 
 Android: open `Android/` in Android Studio, or run `./gradlew assembleDebug` there. Add
 `-Pfdroid=true` for the F-Droid edition: it has no card pointing to other hYYa apps, and its rating
-and share links go to this repository and the app's page on hyya.com instead of Google Play.
+and share links go to this repository and the app's page on hyya.com instead of Google Play. It also
+leaves out Google's In-App Review library, so it has no rating prompt and no Google library at all.
 
 | Folder | What's in it |
 |---|---|

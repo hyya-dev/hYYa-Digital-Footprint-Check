@@ -18,6 +18,8 @@ val signingDir: String = Properties().apply {
     rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
 }.getProperty("hyya.signingDir").orEmpty()
 val keystoreFile: File = File(signingDir, "keystore.properties")
+/** `-Pfdroid=true`: the F-Droid edition, built without any Google library. */
+val fdroid = project.findProperty("fdroid")?.toString() == "true"
 val keystoreProps = Properties().apply {
     if (keystoreFile.isFile) keystoreFile.inputStream().use { load(it) }
 }
@@ -64,6 +66,8 @@ android {
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
     testOptions { unitTests { isReturnDefaultValues = true } }
+    // The rating prompt: Google Play's In-App Review on Play, nothing in the F-Droid edition.
+    sourceSets["main"].kotlin.directories.add(if (fdroid) "src/fdroid/java" else "src/play/java")
 }
 
 dependencies {
@@ -76,5 +80,7 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.material.icons)
     implementation(libs.androidx.work.runtime.ktx)
+    // Google's In-App Review (the standard rating prompt). Play edition only: F-Droid takes no Google libraries.
+    if (!fdroid) implementation(libs.play.review)
     testImplementation(libs.junit)
 }

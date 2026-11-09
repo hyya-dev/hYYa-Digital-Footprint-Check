@@ -130,6 +130,21 @@ fun App(startTab: Tab = Tab.HOME, autoScan: Boolean = false, openFinding: String
     if (com.hyya.footprintinspector.scan.Sample.on && scanner.sensitiveFound == null) scanner.recordSensitive(0)
 
     BackHandler(enabled = nav.stack.isNotEmpty()) { nav.pop() }
+    // The rating prompt, after a saved scan, when RatingMoment says the moment is right.
+    val activity = androidx.compose.ui.platform.LocalContext.current as? android.app.Activity
+    androidx.compose.runtime.LaunchedEffect(scanner.comparison) {
+        val comparison = scanner.comparison ?: return@LaunchedEffect
+        if (activity == null || com.hyya.footprintinspector.scan.Sample.on || !com.hyya.footprintinspector.rate.RatingPrompt.AVAILABLE) return@LaunchedEffect
+        val prefs = activity.getSharedPreferences("app", android.content.Context.MODE_PRIVATE)
+        val version = com.hyya.footprintinspector.BuildConfig.VERSION_NAME
+        if (!com.hyya.footprintinspector.rate.RatingMoment.shouldAsk(comparison.current.score - comparison.previous.score,
+                scanner.history.snapshots.map { it.date }, prefs.getString(com.hyya.footprintinspector.rate.RatingMoment.ASKED_KEY, null), version)) return@LaunchedEffect
+        // Let the new score settle on screen first.
+        kotlinx.coroutines.delay(2000)
+        if (scanner.phase != com.hyya.footprintinspector.scan.Phase.DONE) return@LaunchedEffect
+        prefs.edit().putString(com.hyya.footprintinspector.rate.RatingMoment.ASKED_KEY, version).apply()
+        com.hyya.footprintinspector.rate.RatingPrompt.ask(activity)
+    }
     // Keeps the score current: on launch and each time the app comes back to the screen (after
     // changing a setting, say), it re-reads quietly if a scan was done before.
     val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current

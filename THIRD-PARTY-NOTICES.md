@@ -6,6 +6,18 @@ The Android build bundles the open-source libraries below. All of them are licen
 [Apache License, Version 2.0](LICENSES/Apache-2.0.txt). None of them is analytics, advertising,
 crash-reporting or networking code, and the Android app holds no internet permission.
 
+The Google Play edition also bundles Google's In-App Review library, which shows Google Play's
+standard "rate this app" prompt. It is not open source (terms below). It adds no permission, and
+the rating itself is handled by the Google Play app, not by this one. The F-Droid edition
+(`-Pfdroid=true`) leaves it out, along with everything else in this second table.
+
+| Group | Licence | Artifacts |
+|---|---|---|
+| `com.google.android.play` | [Play Core Software Development Kit Terms of Service](https://developer.android.com/guide/playcore/license) | review 2.0.2, core-common 2.0.4 |
+| `com.google.android.gms` | [Android Software Development Kit License](https://developer.android.com/studio/terms.html) | play-services-basement 18.4.0, play-services-tasks 18.2.0 |
+
+The Google Play edition's open-source libraries:
+
 Versions are those resolved for the Android release build (`./gradlew :app:dependencies --configuration releaseRuntimeClasspath`).
 
 | Group | Copyright | Artifacts |
@@ -24,10 +36,12 @@ Versions are those resolved for the Android release build (`./gradlew :app:depen
 | `androidx.compose` | The Android Open Source Project | compose-bom 2026.08.00 |
 | `androidx.concurrent` | The Android Open Source Project | concurrent-futures 1.1.0 |
 | `androidx.core` | The Android Open Source Project | core-ktx 1.19.0, core-viewtree 1.0.0, core 1.19.0 |
-| `androidx.customview` | The Android Open Source Project | customview-poolingcontainer 1.0.0 |
+| `androidx.customview` | The Android Open Source Project | customview-poolingcontainer 1.0.0, customview 1.0.0 (Google Play edition) |
+| `androidx.fragment` | The Android Open Source Project | fragment 1.1.0 (Google Play edition) |
 | `androidx.emoji2` | The Android Open Source Project | emoji2 1.4.0 |
 | `androidx.graphics` | The Android Open Source Project | graphics-path 1.0.1 |
 | `androidx.interpolator` | The Android Open Source Project | interpolator 1.0.0 |
+| `androidx.loader` | The Android Open Source Project | loader 1.0.0 (Google Play edition) |
 | `androidx.lifecycle` | The Android Open Source Project | lifecycle-common-java8 2.10.0, lifecycle-common-jvm 2.10.0, lifecycle-common 2.10.0, lifecycle-livedata-core-ktx 2.10.0, lifecycle-livedata-core 2.10.0, lifecycle-livedata 2.10.0, lifecycle-process 2.10.0, lifecycle-runtime-android 2.10.0, lifecycle-runtime-compose-android 2.10.0, lifecycle-runtime-compose 2.10.0, lifecycle-runtime-ktx-android 2.10.0, lifecycle-runtime-ktx 2.10.0, lifecycle-runtime 2.10.0, lifecycle-service 2.10.0, lifecycle-viewmodel-android 2.10.0, lifecycle-viewmodel-compose-android 2.10.0, lifecycle-viewmodel-compose 2.10.0, lifecycle-viewmodel-ktx 2.10.0, lifecycle-viewmodel-savedstate-android 2.10.0, lifecycle-viewmodel-savedstate 2.10.0, lifecycle-viewmodel 2.10.0 |
 | `androidx.navigationevent` | The Android Open Source Project | navigationevent-android 1.0.0, navigationevent-compose-android 1.0.0, navigationevent-compose 1.0.0, navigationevent 1.0.0 |
 | `androidx.profileinstaller` | The Android Open Source Project | profileinstaller 1.4.0 |
@@ -37,6 +51,7 @@ Versions are those resolved for the Android release build (`./gradlew :app:depen
 | `androidx.startup` | The Android Open Source Project | startup-runtime 1.1.1 |
 | `androidx.tracing` | The Android Open Source Project | tracing 1.2.0 |
 | `androidx.versionedparcelable` | The Android Open Source Project | versionedparcelable 1.1.1 |
+| `androidx.viewpager` | The Android Open Source Project | viewpager 1.0.0 (Google Play edition) |
 | `androidx.window` | The Android Open Source Project | window-core-android 1.5.0, window-core 1.5.0, window 1.5.0 |
 | `androidx.work` | The Android Open Source Project | work-runtime-ktx 2.9.1, work-runtime 2.9.1 |
 | `com.google.guava` | The Guava Authors | listenablefuture 1.0 |
