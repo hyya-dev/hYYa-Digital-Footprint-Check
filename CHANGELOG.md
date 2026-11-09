@@ -40,7 +40,7 @@ What's in it:
 |---|---|---|---|
 | Google Play | 1.0.6 (versionCode 26) | 2026-11-08 | tag `v1.0.6-android26` |
 | Mac App Store | 1.0.6 (build 40) | 2026-11-08 | tag `v1.0.6-build40` |
-| App Store (iPhone and iPad) | 1.0.6 (build 40) | In review | tag `v1.0.6-build40` |
+| App Store (iPhone and iPad) | 1.0.6 (build 40) | 2026-11-09 | tag `v1.0.6-build40` |
 
 ## 1.0.5
 
