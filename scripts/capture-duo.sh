@@ -8,7 +8,7 @@
 set -euo pipefail
 cd "${0:A:h}/.."
 OUT=$1; WHICH=${2:-outer}
-UDID=$(xcrun simctl list devices | grep "fi-iPhone-Duo" | grep -oE "[0-9A-F-]{36}")
+UDID=$(xcrun simctl list devices | grep -F "fi-iPhone-Duo-272 (" | grep -oE "[0-9A-F-]{36}")
 APP=${APP:-"build/dd/Build/Products/Debug-iphonesimulator/hYYa Digital Footprint Check.app"}
 BID=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier" "$APP/Info.plist")
 # The display to photograph, by its pixel width: outer 1398 (2034 sideways), inner 2007 (2853).
