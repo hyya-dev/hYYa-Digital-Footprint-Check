@@ -59,8 +59,21 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Store builds won't run on a rooted device, with hooking tools or a debugger, or as a re-signed copy.
+            buildConfigField("boolean", "DEVICE_CHECK", "true")
         }
-        debug { versionNameSuffix = "-debug" }
+        debug {
+            versionNameSuffix = "-debug"
+            buildConfigField("boolean", "DEVICE_CHECK", "false")
+        }
+        // Release-identical (R8, same signing) but without the device check, so release builds can be checked
+        // on emulators and on our own phone over USB. Never uploaded to a store.
+        create("verify") {
+            initWith(getByName("release"))
+            matchingFallbacks += "release"
+            versionNameSuffix = "-verify"
+            buildConfigField("boolean", "DEVICE_CHECK", "false")
+        }
     }
     buildFeatures { compose = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }

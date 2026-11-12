@@ -51,15 +51,17 @@ struct FootprintInspectorApp: App {
 
     private var mainWindow: some Scene {
         WindowGroup {
-            RootView()
-                .environment(scanner)
-                .environment(history)
-                .environment(check)
-                .tint(Brand.accent)
-                .preferredColorScheme(.dark)
-                #if os(macOS)
-                .frame(minWidth: 820, minHeight: 600)
-                #endif
+            IntegrityGate {
+                RootView()
+                    .environment(scanner)
+                    .environment(history)
+                    .environment(check)
+            }
+            .tint(Brand.accent)
+            .preferredColorScheme(.dark)
+            #if os(macOS)
+            .frame(minWidth: 820, minHeight: 600)
+            #endif
         }
     }
 }
@@ -260,4 +262,30 @@ enum LaunchOptions {
         return args[i + 1]
     }
     static var autoScan: Bool { has("-autoScan") }
+}
+
+/// Shows the app only when `DeviceIntegrity` finds nothing; checked again each time the app comes
+/// back, so it opens as soon as the cause is gone. `-previewIntegrity <problem>` shows the block
+/// screen in Debug builds, for screenshots.
+struct IntegrityGate<Content: View>: View {
+    @ViewBuilder let content: Content
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var finding: IntegrityFinding? = IntegrityGate.check()
+
+    private static func check() -> IntegrityFinding? {
+        if let preview = LaunchOptions.value(after: "-previewIntegrity").flatMap(IntegrityProblem.init(rawValue:)) {
+            let sample: [IntegrityProblem: String] = [.modifiedSystem: "Sileo", .hookingTool: "FridaGadget.dylib"]
+            return IntegrityFinding(problem: preview, detail: sample[preview])
+        }
+        return DeviceIntegrity.current()
+    }
+
+    var body: some View {
+        Group {
+            if let finding { IntegrityBlockView(finding: finding) } else { content }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { finding = Self.check() }
+        }
+    }
 }

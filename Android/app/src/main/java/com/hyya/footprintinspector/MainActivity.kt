@@ -9,14 +9,40 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.hyya.footprintinspector.secure.DeviceIntegrity
+import com.hyya.footprintinspector.secure.IntegrityFinding
+import com.hyya.footprintinspector.secure.IntegrityProblem
 import com.hyya.footprintinspector.scan.Sample
 import com.hyya.footprintinspector.ui.App
 import com.hyya.footprintinspector.ui.FootprintTheme
 import com.hyya.footprintinspector.ui.Tab
 
 class MainActivity : ComponentActivity() {
+    /** Set when DeviceIntegrity finds a problem; checked again each time the app comes back, so it opens as
+     *  soon as the cause is gone. Debug builds can show it with `--es previewIntegrity DEBUGGER`. */
+    private var integrity by mutableStateOf<IntegrityFinding?>(null)
+
+    private fun checkIntegrity() {
+        val dev = BuildConfig.DEBUG
+        val preview = if (dev) intent.getStringExtra("previewIntegrity") else null
+        integrity = preview?.let { name ->
+            IntegrityProblem.entries.firstOrNull { it.name == name }?.let { p ->
+                IntegrityFinding(p, mapOf(IntegrityProblem.MODIFIED_SYSTEM to "Magisk", IntegrityProblem.HOOKING_TOOL to "frida-agent-64.so")[p])
+            }
+        } ?: DeviceIntegrity.current(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        checkIntegrity()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        checkIntegrity()
         // Revealed app names must not linger in the Recents thumbnail. Screenshots still work.
         setRecentsScreenshotEnabled(false)
         // The short name is only for the home screen icon; Recents gets the full name.
@@ -37,6 +63,12 @@ class MainActivity : ComponentActivity() {
         if (dev && intent.getBooleanExtra("testReminder", false)) com.hyya.footprintinspector.remind.ScanReminder.post(this)
         val openFinding = if (dev) intent.getStringExtra("openFinding") else null
         val openFix = dev && intent.getBooleanExtra("openFix", false)
-        setContent { FootprintTheme { App(startTab, autoScan, openFinding, openFix) } }
+        setContent {
+            FootprintTheme {
+                val finding = integrity
+                if (finding != null) com.hyya.footprintinspector.ui.IntegrityBlock(finding)
+                else App(startTab, autoScan, openFinding, openFix)
+            }
+        }
     }
 }
