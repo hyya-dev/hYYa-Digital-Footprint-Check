@@ -118,6 +118,12 @@ Android: open `Android/` in Android Studio, or run `./gradlew assembleDebug` the
 and share links go to this repository and the app's page on hyya.com instead of Google Play. It also
 leaves out Google's In-App Review library, so it has no rating prompt and no Google library at all.
 
+Store builds check that they run as themselves. They won't open on a rooted or jailbroken device, with a
+hooking tool loaded, with a debugger attached, or as a re-signed copy. Debug builds, Simulators and the
+Android `verify` build type (release-identical, without the check) never check. A release APK you sign with
+your own key is treated as a re-signed copy, so build `verify` or the F-Droid edition instead. The F-Droid
+edition skips the signature check and only warns about root.
+
 | Folder | What's in it |
 |---|---|
 | `App/Sources/Readers`, `App/Sources/Permissions` | How each signal is read |
