@@ -24,7 +24,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -80,6 +85,41 @@ private fun steps(f: IntegrityFinding): List<String> = when (f.problem) {
  *  screen: the text shrinks step by step until it does, and only scrolls at the very largest text sizes. */
 @Composable
 fun IntegrityBlock(finding: IntegrityFinding) {
+    Frame { scale -> Words(finding, scale) }
+}
+
+/**
+ * The F-Droid edition's root warning (owner, 2026-11-13): said once, then the app carries on. The steps to
+ * remove root are there, folded away, for anyone who wants them.
+ */
+@Composable
+fun RootWarning(finding: IntegrityFinding, onContinue: () -> Unit) {
+    var showSteps by rememberSaveable { mutableStateOf(false) }
+    // With the steps open the detective steps back, so everything still fits without scrolling.
+    Frame(compact = showSteps) { scale ->
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy((14 * scale).dp)) {
+            Eyebrow("hYYa Digital Footprint Check")
+            Text("This device is rooted${finding.detail?.let { " ($it)" } ?: ""}", color = Brand.ink,
+                fontSize = (24 * scale).sp, lineHeight = (30 * scale).sp, fontWeight = FontWeight.Bold)
+            Text("Other apps with root access can change what this app shows, so some results may not be reliable. " +
+                "You can still use the app.", color = Brand.textMuted, fontSize = (16 * scale).sp, lineHeight = (22 * scale).sp)
+            if (showSteps) Steps(finding, scale)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Button(onClick = onContinue,
+                    colors = ButtonDefaults.buttonColors(containerColor = Brand.cta, contentColor = Brand.onCta),
+                ) { Text("Continue", fontSize = (16 * scale).sp, fontWeight = FontWeight.SemiBold) }
+                if (!showSteps) TextButton(onClick = { showSteps = true }) {
+                    Text("How to fix it", color = Brand.sand, fontSize = (16 * scale).sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+    }
+}
+
+/** The mascot and the words, side by side when sideways, fitted to the screen. */
+@Composable
+private fun Frame(compact: Boolean = false, content: @Composable (Float) -> Unit) {
+    val m = if (compact) 0.55f else 1f // sideways only: upright has the room
     BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black).safeDrawingPadding()) {
         val wide = maxWidth > maxHeight
         val height = maxHeight.value
@@ -87,14 +127,14 @@ fun IntegrityBlock(finding: IntegrityFinding) {
             if (wide) {
                 Row(Modifier.widthIn(max = 960.dp), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    Mascot(size = minOf(200, (height * 0.6f).toInt()))
-                    FitToHeight(Modifier.weight(1f)) { scale -> Words(finding, scale) }
+                    Mascot(size = (minOf(200f, height * 0.6f) * m).toInt())
+                    FitToHeight(Modifier.weight(1f), content)
                 }
             } else {
                 Column(Modifier.widthIn(max = 560.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Mascot(size = minOf(120, (height * 0.16f).toInt()))
-                    FitToHeight(Modifier.fillMaxWidth()) { scale -> Words(finding, scale) }
+                    FitToHeight(Modifier.fillMaxWidth(), content)
                 }
             }
         }
@@ -109,27 +149,32 @@ private fun Words(finding: IntegrityFinding, scale: Float) {
         Text("For security reasons, the app can't run on this device", color = Brand.ink,
             fontSize = (24 * scale).sp, lineHeight = (30 * scale).sp, fontWeight = FontWeight.Bold)
         Text(found(finding), color = Brand.textMuted, fontSize = (16 * scale).sp, lineHeight = (22 * scale).sp)
-        Column(
-            Modifier.fillMaxWidth().background(Brand.surface, RoundedCornerShape(14.dp))
-                .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp)).padding((14 * scale).dp),
-            verticalArrangement = Arrangement.spacedBy((8 * scale).dp),
-        ) {
-            Eyebrow("How to fix it")
-            steps(finding).forEachIndexed { i, step ->
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("${i + 1}.", color = Brand.sand, fontSize = (16 * scale).sp, lineHeight = (22 * scale).sp,
-                        fontWeight = FontWeight.SemiBold, modifier = Modifier.alignByBaseline())
-                    Text(step, color = Brand.ink, fontSize = (16 * scale).sp, lineHeight = (22 * scale).sp,
-                        modifier = Modifier.alignByBaseline())
-                }
-            }
-        }
+        Steps(finding, scale)
         if (finding.problem == IntegrityProblem.DEBUGGER) {
             Button(
                 onClick = { runCatching { context.startActivity(Intent(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS)) }
                     .onFailure { context.startActivity(Intent(Settings.ACTION_SETTINGS)) } },
                 colors = ButtonDefaults.buttonColors(containerColor = Brand.cta, contentColor = Brand.onCta),
             ) { Text("Open Developer options", fontSize = (16 * scale).sp, fontWeight = FontWeight.SemiBold) }
+        }
+    }
+}
+
+@Composable
+private fun Steps(finding: IntegrityFinding, scale: Float) {
+    Column(
+        Modifier.fillMaxWidth().background(Brand.surface, RoundedCornerShape(14.dp))
+            .border(1.dp, Color.White.copy(alpha = 0.08f), RoundedCornerShape(14.dp)).padding((14 * scale).dp),
+        verticalArrangement = Arrangement.spacedBy((8 * scale).dp),
+    ) {
+        Eyebrow("How to fix it")
+        steps(finding).forEachIndexed { i, step ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("${i + 1}.", color = Brand.sand, fontSize = (16 * scale).sp, lineHeight = (22 * scale).sp,
+                    fontWeight = FontWeight.SemiBold, modifier = Modifier.alignByBaseline())
+                Text(step, color = Brand.ink, fontSize = (16 * scale).sp, lineHeight = (22 * scale).sp,
+                    modifier = Modifier.alignByBaseline())
+            }
         }
     }
 }

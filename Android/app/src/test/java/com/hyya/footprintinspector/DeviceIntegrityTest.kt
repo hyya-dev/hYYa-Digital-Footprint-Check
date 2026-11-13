@@ -7,6 +7,7 @@ package com.hyya.footprintinspector
 import com.hyya.footprintinspector.secure.DeviceIntegrity
 import com.hyya.footprintinspector.secure.IntegrityFinding
 import com.hyya.footprintinspector.secure.IntegrityProblem
+import com.hyya.footprintinspector.secure.IntegrityResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -48,6 +49,24 @@ class DeviceIntegrityTest {
     @Test fun aDebuggerIsFound() {
         assertEquals(IntegrityProblem.DEBUGGER, found(probe(debugger = true)))
         assertEquals(IntegrityProblem.DEBUGGER, found(probe(tracer = 4242)))
+    }
+
+    @Test fun fdroidOnlyWarnsAboutRoot() {
+        val rooted = probe(files = setOf("/sbin/.magisk"), checkSignature = false)
+        assertEquals(IntegrityResult(warning = IntegrityFinding(IntegrityProblem.MODIFIED_SYSTEM, "Magisk")),
+            DeviceIntegrity.result(rooted, warnOnRoot = true))
+        // Play blocks the same phone.
+        assertEquals(IntegrityProblem.MODIFIED_SYSTEM, DeviceIntegrity.result(rooted, warnOnRoot = false).block?.problem)
+    }
+
+    @Test fun fdroidStillBlocksHooksAndDebuggersOnARootedPhone() {
+        val hooked = probe(files = setOf("/sbin/.magisk"), classes = setOf("de.robv.android.xposed.XposedBridge"), checkSignature = false)
+        val r = DeviceIntegrity.result(hooked, warnOnRoot = true)
+        assertEquals(IntegrityProblem.HOOKING_TOOL, r.block?.problem)
+        assertEquals(IntegrityProblem.MODIFIED_SYSTEM, r.warning?.problem)
+        assertEquals(IntegrityProblem.DEBUGGER,
+            DeviceIntegrity.result(probe(files = setOf("/system/xbin/su"), tracer = 77, checkSignature = false), warnOnRoot = true).block?.problem)
+        assertEquals(IntegrityResult(), DeviceIntegrity.result(probe(checkSignature = false), warnOnRoot = true))
     }
 
     @Test fun aResignedCopyIsFound() {

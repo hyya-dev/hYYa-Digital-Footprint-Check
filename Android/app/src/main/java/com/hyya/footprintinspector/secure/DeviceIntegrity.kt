@@ -19,6 +19,9 @@ enum class IntegrityProblem { MODIFIED_SYSTEM, HOOKING_TOOL, DEBUGGER, MODIFIED_
 /** A problem and, where the check knows it, the exact thing it found, so the block screen can name it. */
 data class IntegrityFinding(val problem: IntegrityProblem, val detail: String? = null)
 
+/** What the app does about it: [block] stops the app; [warning] is shown once and the app carries on. */
+data class IntegrityResult(val block: IntegrityFinding? = null, val warning: IntegrityFinding? = null)
+
 /**
  * Checks for root, hooking tools, an attached debugger and a re-signed copy. Store builds only: debug
  * and "verify" builds never check, and neither do Google's pre-launch test phones. USB debugging on
@@ -62,11 +65,26 @@ object DeviceIntegrity {
         "b02c93bd33825a0c9609a51130cc662ef427b7051e019bbaac5d4e74fa99dce7",
     )
 
-    /** The first problem found, in order of how much it says; null means all is well. */
-    fun problem(p: Probe): IntegrityFinding? {
+    /** Root, if found. */
+    fun rooted(p: Probe): IntegrityFinding? =
         ROOT_FILES.firstOrNull(p.fileExists)?.let { file ->
-            return IntegrityFinding(IntegrityProblem.MODIFIED_SYSTEM, if ("magisk" in file) "Magisk" else file)
+            IntegrityFinding(IntegrityProblem.MODIFIED_SYSTEM, if ("magisk" in file) "Magisk" else file)
         }
+
+    /** The first problem found, in order of how much it says; null means all is well. */
+    fun problem(p: Probe): IntegrityFinding? = rooted(p) ?: tampering(p)
+
+    /**
+     * The F-Droid edition only warns about root (owner, 2026-11-13): F-Droid's users root their phones far more
+     * often, and a rooted phone on its own doesn't change this app. A hooking tool or a debugger inside the app
+     * still blocks there, because that is the app itself being changed; on a rooted phone they are still looked for.
+     */
+    fun result(p: Probe, warnOnRoot: Boolean): IntegrityResult =
+        if (!warnOnRoot) IntegrityResult(block = problem(p))
+        else IntegrityResult(block = tampering(p), warning = rooted(p))
+
+    /** A hooking tool, a debugger, or a re-signed copy. */
+    private fun tampering(p: Probe): IntegrityFinding? {
         HOOK_CLASSES.firstOrNull(p.classExists)?.let { cls ->
             return IntegrityFinding(IntegrityProblem.HOOKING_TOOL, if ("xposed" in cls) "Xposed or LSPosed" else "Substrate")
         }
@@ -82,10 +100,10 @@ object DeviceIntegrity {
     fun isTestLab(c: Context): Boolean =
         Settings.System.getString(c.contentResolver, "firebase.test.lab") == "true"
 
-    /** The problem on this device, or null. Always null where the build doesn't check. */
-    fun current(c: Context): IntegrityFinding? {
-        if (!BuildConfig.DEVICE_CHECK || isTestLab(c)) return null
-        return runCatching { problem(live(c)) }.getOrNull()
+    /** What to do on this device. Always nothing where the build doesn't check, or if a check can't read. */
+    fun current(c: Context): IntegrityResult {
+        if (!BuildConfig.DEVICE_CHECK || isTestLab(c)) return IntegrityResult()
+        return runCatching { result(live(c), warnOnRoot = BuildConfig.FDROID) }.getOrDefault(IntegrityResult())
     }
 
     private fun live(c: Context) = Probe(

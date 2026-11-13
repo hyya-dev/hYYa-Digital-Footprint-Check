@@ -15,6 +15,7 @@ import androidx.compose.runtime.setValue
 import com.hyya.footprintinspector.secure.DeviceIntegrity
 import com.hyya.footprintinspector.secure.IntegrityFinding
 import com.hyya.footprintinspector.secure.IntegrityProblem
+import com.hyya.footprintinspector.secure.IntegrityResult
 import com.hyya.footprintinspector.scan.Sample
 import com.hyya.footprintinspector.ui.App
 import com.hyya.footprintinspector.ui.FootprintTheme
@@ -23,16 +24,32 @@ import com.hyya.footprintinspector.ui.Tab
 class MainActivity : ComponentActivity() {
     /** Set when DeviceIntegrity finds a problem; checked again each time the app comes back, so it opens as
      *  soon as the cause is gone. Debug builds can show it with `--es previewIntegrity DEBUGGER`. */
-    private var integrity by mutableStateOf<IntegrityFinding?>(null)
+    private var integrity by mutableStateOf(IntegrityResult())
+
+    /** The F-Droid root warning is said once per installed version, then the app just runs. */
+    private var rootWarningSeen by mutableStateOf(false)
 
     private fun checkIntegrity() {
         val dev = BuildConfig.DEBUG
         val preview = if (dev) intent.getStringExtra("previewIntegrity") else null
-        integrity = preview?.let { name ->
+        val previewFinding = preview?.let { name ->
             IntegrityProblem.entries.firstOrNull { it.name == name }?.let { p ->
                 IntegrityFinding(p, mapOf(IntegrityProblem.MODIFIED_SYSTEM to "Magisk", IntegrityProblem.HOOKING_TOOL to "frida-agent-64.so")[p])
             }
-        } ?: DeviceIntegrity.current(this)
+        }
+        // `--ez previewRootWarning true` shows the F-Droid root warning in any debug build.
+        val warnOnRoot = BuildConfig.FDROID || (dev && intent.getBooleanExtra("previewRootWarning", false))
+        integrity = when {
+            previewFinding == null -> DeviceIntegrity.current(this)
+            warnOnRoot && previewFinding.problem == IntegrityProblem.MODIFIED_SYSTEM -> IntegrityResult(warning = previewFinding)
+            else -> IntegrityResult(block = previewFinding)
+        }
+        rootWarningSeen = previewFinding == null && getSharedPreferences("app", MODE_PRIVATE).getInt("rootWarningSeen", 0) == BuildConfig.VERSION_CODE
+    }
+
+    private fun dismissRootWarning() {
+        getSharedPreferences("app", MODE_PRIVATE).edit().putInt("rootWarningSeen", BuildConfig.VERSION_CODE).apply()
+        rootWarningSeen = true
     }
 
     override fun onResume() {
@@ -65,9 +82,13 @@ class MainActivity : ComponentActivity() {
         val openFix = dev && intent.getBooleanExtra("openFix", false)
         setContent {
             FootprintTheme {
-                val finding = integrity
-                if (finding != null) com.hyya.footprintinspector.ui.IntegrityBlock(finding)
-                else App(startTab, autoScan, openFinding, openFix)
+                val block = integrity.block
+                val warning = integrity.warning
+                when {
+                    block != null -> com.hyya.footprintinspector.ui.IntegrityBlock(block)
+                    warning != null && !rootWarningSeen -> com.hyya.footprintinspector.ui.RootWarning(warning, ::dismissRootWarning)
+                    else -> App(startTab, autoScan, openFinding, openFix)
+                }
             }
         }
     }
