@@ -85,8 +85,14 @@ function check(l) {
   if (!l.fullDescription?.includes(BRAND)) issues.push(`fullDescription must keep the name "${BRAND}" untranslated`);
   if (!l.releaseNotes || len(l.releaseNotes) > 500) issues.push(`releaseNotes is ${len(l.releaseNotes)} characters (max 500)`);
   else if (l.releaseNotes.trim().split("\n").length !== en.releaseNotes.split("\n").length) issues.push("releaseNotes must keep the same lines as the English");
+  // The app is in English, so a page it names must keep its English name, or people look for a page that isn't there.
+  for (const page of PAGES) if (en.releaseNotes.includes(page) && !l.releaseNotes?.includes(page)) issues.push(`releaseNotes must keep the page name "${page}" in English`);
   return issues;
 }
+
+/** The app's own page names, as its English navigation bar shows them ("Settings" is left out: in the listing it
+ *  means the system's Settings app, which has a local name). */
+const PAGES = ["Score", "Footprint", "Sensitive apps", "Tracker", "Check-up"];
 
 function prompt(language, feedback) {
   return `You localise Google Play store listings. Localise this approved English listing for a free, open-source privacy app into ${language}, for people searching Google Play in that language.
@@ -97,6 +103,7 @@ Rules:
 - shortDescription: at most 80 characters. Same message as the English: see what apps know about your device, then fix it; free, open source, private.
 - fullDescription: at most 4000 characters, plain text. Keep the structure: paragraphs, the UPPERCASE section headings (translated, still uppercase where the script has case) and the • bullets. Keep "${BRAND}" and "hYYa" unchanged. "Settings" is the system's own localised name for the Settings app. Keep "Android" and "Google" where the English has them, but never name iPhone, iPad, iOS or Mac.
 - Stay device-neutral: the listing is for phones and tablets alike, so say "device" (the local neutral word) wherever the English says "device". Never write "phone", "mobile", "smartphone", "cell" or "tablet".
+- The app itself is in English, so when the release note names one of its pages (${PAGES.map((p) => `"${p}"`).join(", ")}), keep that name in English exactly as written; local quotation marks around it are fine.
 - releaseNotes: the release note. Keep its two lines: the "•" feature line, and on the second line a faithful translation of the fixed sentence "This release contains general bug fixes and stability improvements."
 - Never mention other apps or companies (other than Google and Android as in the English), viruses, malware or spyware, and make no ranking claims.
 ${feedback ? `\nYour previous attempt had these problems; fix all of them:\n- ${feedback.join("\n- ")}\n` : ""}
