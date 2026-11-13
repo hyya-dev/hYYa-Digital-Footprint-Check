@@ -4,6 +4,27 @@ Each store release, with the store's What's New and the date it went live on eac
 Every release has a matching tag and a [GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases).
 Website: [hyya.com/hyya-digital-footprint-check.html](https://hyya.com/hyya-digital-footprint-check.html)
 
+## 1.0.8
+
+What's New (Google Play):
+> • Add the widget to your home screen in one tap, from the Score page.
+> This release contains general bug fixes and stability improvements.
+
+What's in it (Android):
+- An "add the widget" card on the Score page. One tap opens your launcher's own Add sheet. It only appears
+  where that works and no score widget is placed yet, and "Not now" hides it for good.
+- The widget picker shows a sample score instead of an empty widget, and says why to add it.
+- The app checks it is running as itself. A store build won't open on a rooted device, with a hooking tool
+  (Frida, Xposed/LSPosed, Substrate) loaded into it, with a debugger attached, or as a re-signed copy. The
+  screen names what it found and gives the steps to fix it. USB debugging on its own never blocks.
+- The F-Droid edition only warns about root, once per version, then carries on. Hooking tools and debuggers
+  still block there. It skips the signature check, since F-Droid signs with its own key.
+- The Play edition's in-app review library now uses a current androidx.fragment (1.8.9).
+
+| Store | Version | Live | Source |
+|---|---|---|---|
+| Google Play | 1.0.8 (versionCode 28) | 2026-11-13 | tag `v1.0.8-android28` |
+
 ## 1.0.7
 
 What's New (Google Play):
