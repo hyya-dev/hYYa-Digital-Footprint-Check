@@ -16,7 +16,7 @@ struct ScoreWidget: Widget {
             ScoreWidgetView(score: entry.score)
         }
         .configurationDisplayName("hYYa Digital Footprint Check")
-        .description("Your privacy score and your last check")
+        .description("Keep your privacy score in sight and know when to check again.")
         .supportedFamilies([.systemSmall, .systemMedium])
         .contentMarginsDisabled()
     }

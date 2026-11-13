@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -494,7 +495,24 @@ fun HomeScreen(scanner: Scanner, nav: Nav) {
                     color = Brand.textMuted, fontSize = 14.sp, lineHeight = 19.sp)
                 WeeklyReminderSwitch()
             }
+            WidgetOfferCard()
         }
+    }
+}
+
+/** "Add the widget": one tap opens the launcher's own Add sheet. Only where that works, once, and never in
+ *  sample-data runs, so the store screenshots stay as they are. */
+@Composable
+private fun WidgetOfferCard() {
+    val context = LocalContext.current
+    var show by remember { mutableStateOf(!com.hyya.footprintinspector.scan.Sample.on &&
+        com.hyya.footprintinspector.widget.WidgetOffer.shouldOffer(context)) }
+    if (!show) return
+    InfoCard("Your score on your home screen", Tone.CONTEXT, Icons.Outlined.Widgets) {
+        Text("Add the widget to see your privacy score and your last check at a glance.",
+            color = Brand.textMuted, fontSize = 14.sp, lineHeight = 19.sp)
+        PrimaryButton("Add the widget") { if (com.hyya.footprintinspector.widget.WidgetOffer.pin(context)) show = false }
+        GhostButton("Not now") { com.hyya.footprintinspector.widget.WidgetOffer.dismiss(context); show = false }
     }
 }
 

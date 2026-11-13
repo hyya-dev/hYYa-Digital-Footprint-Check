@@ -3,7 +3,7 @@
     <!-- Only the home screen icon uses the short name (the full name is cut off there); everything else uses app_full_name. -->
     <string name="app_name">hYYa Footprint</string>
     <string name="app_full_name">hYYa Digital Footprint Check</string>
-    <string name="widget_description">Your privacy score and your last check</string>
+    <string name="widget_description">Keep your privacy score in sight\nand know when to check again.</string>
     <string name="widget_label">PRIVACY SCORE</string>
     <string name="widget_out_of">out of 100</string>
     <string name="widget_last_check">Last check</string>
