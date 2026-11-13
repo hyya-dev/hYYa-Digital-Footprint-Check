@@ -95,5 +95,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     // Google's In-App Review (the standard rating prompt). Play edition only: F-Droid takes no Google libraries.
     if (!fdroid) implementation(libs.play.review)
+    // The review library pulls in fragment 1.1.0, which Play reports as outdated: use a current one.
+    if (!fdroid) implementation(libs.androidx.fragment)
     testImplementation(libs.junit)
 }
