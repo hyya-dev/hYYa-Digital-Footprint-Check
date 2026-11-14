@@ -256,10 +256,13 @@ final class FlowCheckUITests: XCTestCase {
         app.launch()
         tab("Settings")
         // Each card is one button (1.0.5), so its label holds the pill's words.
-        assertVisible(card("Rate the App"), "rating card")
+        // Your own scan settings come first; the rating card follows them (2026-11-14 review, S3).
         let reminder = text("Re-scan reminder")
         scrollUntil(reminder)
         shot("settings-reminder")
+        let rate = card("Rate the App")
+        scrollUntil(rate)
+        assertVisible(rate, "rating card")
         let more = card("Visit hyya.com")
         scrollUntil(more)
         shot("settings-more")
