@@ -15,6 +15,45 @@ final class ReviewRendersUITests: XCTestCase {
     override func setUp() { continueAfterFailure = true }
 
     func testUpright() { renders(.portrait, "up") }
+    /// Just the score-rise and hYYa-suggestion shots, upright and sideways.
+    func testRiseAndSuggestion() {
+        for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
+            tag = t
+            launch(["-previewRise"], o)
+            tab("Footprint")
+            let start = app.buttons["Start with check 1"].firstMatch
+            if start.waitForExistence(timeout: 4) { start.tap() }
+            _ = app.buttons["Scan again"].waitForExistence(timeout: 25)
+            // Small steps: on a short sideways screen one swipe can jump right over the card.
+            let share = app.buttons["Share your progress"].firstMatch
+            let mid = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
+            var steps = 0
+            while steps < 40 && !(share.exists && share.frame.minY > 40 && share.frame.maxY < app.frame.maxY - 60) {
+                mid.press(forDuration: 0.05, thenDragTo: mid.withOffset(CGVector(dx: 0, dy: -110)))
+                steps += 1
+            }
+            shot("r03-score-rise")
+
+            let photos = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Photos'")).firstMatch
+            scrollTo(photos, max: 12)
+            photos.tap(); sleep(2)
+            let showMe = app.buttons["Show me"].firstMatch
+            if showMe.waitForExistence(timeout: 3) {
+                showMe.tap(); sleep(2)
+                let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+                for label in ["Allow Full Access", "Allow Access to All Photos", "Allow"] {
+                    let b = springboard.buttons[label]
+                    if b.waitForExistence(timeout: 2) { b.tap(); break }
+                }
+                sleep(4)
+            }
+            let places = app.buttons.containing(NSPredicate(format: "label CONTAINS 'map where'")).firstMatch
+            scrollTo(places, max: 6)
+            places.tap(); sleep(2)
+            scrollTo(app.buttons["No thanks"].firstMatch, max: 12)
+            shot("r05-finding-suggestion")
+        }
+    }
     func testSideways() { renders(.landscapeLeft, "side") }
 
     private func launch(_ extra: [String] = [], _ orientation: UIDeviceOrientation) {
@@ -38,7 +77,16 @@ final class ReviewRendersUITests: XCTestCase {
 
     private func scrollTo(_ el: XCUIElement, max: Int = 10) {
         var n = 0
-        while (!el.exists || !el.isHittable) && n < max { app.swipeUp(velocity: .slow); n += 1 }
+        // Frames, not isHittable: for an element off screen, isHittable can throw instead of returning false.
+        func onScreen() -> Bool { el.exists && app.frame.insetBy(dx: 0, dy: 40).contains(el.frame) }
+        while !onScreen() && n < max { app.swipeUp(velocity: .slow); n += 1 }
+        // A swipe can carry it just past the top: drag back a little.
+        var back = 0
+        while el.exists && el.frame.minY < 60 && back < 4 {
+            let mid = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4))
+            mid.press(forDuration: 0.05, thenDragTo: mid.withOffset(CGVector(dx: 0, dy: 140)))
+            back += 1
+        }
     }
 
     /// Checks 2 and 3, then the Footprint scan: the state most people reach first.
@@ -83,6 +131,16 @@ final class ReviewRendersUITests: XCTestCase {
         scrollTo(photos, max: 12)
         if photos.exists {
             photos.tap(); sleep(2)
+            let showMe = app.buttons["Show me"].firstMatch
+            if showMe.waitForExistence(timeout: 3) {
+                showMe.tap(); sleep(2)
+                let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+                for label in ["Allow Full Access", "Allow Access to All Photos", "Allow"] {
+                    let b = springboard.buttons[label]
+                    if b.waitForExistence(timeout: 2) { b.tap(); break }
+                }
+                sleep(4)
+            }
             let places = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Places in your photos'")).firstMatch
             if places.waitForExistence(timeout: 4) { places.tap(); sleep(2) }
             let card = app.staticTexts["From the makers of this app"].firstMatch
@@ -106,9 +164,7 @@ final class ReviewRendersUITests: XCTestCase {
         let start = app.buttons["Start with check 1"].firstMatch
         if start.waitForExistence(timeout: 4) { start.tap() }
         _ = app.buttons["Scan again"].waitForExistence(timeout: 25)
-        let share = app.buttons["Share your progress"].firstMatch
-        scrollTo(share, max: 8)
-        app.swipeUp(velocity: .slow)
+        scrollTo(app.staticTexts["Since your last scan"].firstMatch, max: 8)
         shot("r03-score-rise")
 
         // Owed: the "add the widget" card, and the widget's face in each rendering mode.
@@ -127,10 +183,12 @@ final class ReviewRendersUITests: XCTestCase {
         for soft in ["0", "0.3", "0.5"] {
             launch(["-paperSoft", soft], orientation)
             threeChecks()
-            app.swipeUp(velocity: .slow); app.swipeUp(velocity: .slow)
-            shot("r07-papers-\(soft)-results")
+            shot("r07-papers-\(soft.replacingOccurrences(of: ".", with: "p"))-results")
+            tab("Score")
+            app.swipeUp(velocity: .slow)
+            shot("r07-papers-\(soft.replacingOccurrences(of: ".", with: "p"))-score")
             tab("Tracker")
-            shot("r07-papers-\(soft)-tracker")
+            shot("r07-papers-\(soft.replacingOccurrences(of: ".", with: "p"))-tracker")
         }
     }
 }
