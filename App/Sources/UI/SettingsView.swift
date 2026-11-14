@@ -113,13 +113,15 @@ struct SettingsView: View {
 
                 SectionTitle(title: "More from hYYa")
                 HyyaCard()
-                Panel {
-                    Toggle(isOn: $showSuggestions) {
-                        RowCard(symbol: "sparkles", title: "Suggest hYYa apps in fixes",
-                                subtitle: "Only where one of our apps genuinely fixes the finding.") { EmptyView() }
+                if HyyaSuggestions.anyLive {
+                    Panel {
+                        Toggle(isOn: $showSuggestions) {
+                            RowCard(symbol: "sparkles", title: "Suggest hYYa apps in fixes",
+                                    subtitle: "Only where one of our apps genuinely fixes the finding.") { EmptyView() }
+                        }
+                        .tint(Brand.green.color)
+                        .padding(.trailing, 14)
                     }
-                    .tint(Brand.green.color)
-                    .padding(.trailing, 14)
                 }
 
                 #if DEBUG && os(iOS)

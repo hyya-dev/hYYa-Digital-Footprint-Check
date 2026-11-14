@@ -44,8 +44,8 @@ enum class Paper(private val base: Long) {
     }
 
     companion object {
-        /** Plan D4: 0 = full colour. Set from a debug-only launch extra for the owner's renders. */
-        @Volatile var softening = 0f
+        /** Plan D4: 0.3, the owner's choice from the renders (2026-11-14). Debug builds can override it for renders. */
+        @Volatile var softening = 0.3f
 
         /** Green when well protected, blue in the middle, purple when heavy; gray before any check (no pink, little yellow). */
         fun forScore(score: Int?) = when {

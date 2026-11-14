@@ -41,5 +41,15 @@ enum HyyaSuggestions {
         "photo-library": folder,
     ]
 
-    static func suggestion(for signalID: String) -> HyyaSuggestion? { bySignal[signalID] }
+    /// Apps whose own team has confirmed the name, wording, link and any logo shown here (owner's rule,
+    /// 2026-11-14: anything about another hYYa app is confirmed by that app first). Until an app is listed,
+    /// its suggestion never shows. Encrypted Folder: asked 2026-11-14, answer pending.
+    static let confirmedApps: Set<String> = []
+
+    static func suggestion(for signalID: String) -> HyyaSuggestion? {
+        bySignal[signalID].flatMap { confirmedApps.contains($0.appName) ? $0 : nil }
+    }
+
+    /// The Settings switch shows only when some suggestion can appear.
+    static var anyLive: Bool { bySignal.values.contains { confirmedApps.contains($0.appName) } }
 }

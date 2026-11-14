@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
         val openFinding = if (dev) intent.getStringExtra("openFinding") else null
         val openFix = dev && intent.getBooleanExtra("openFix", false)
         // Renders for the owner's review: note-paper strength, and an earlier, lower scan to show a rise.
-        if (dev) com.hyya.footprintinspector.ui.Paper.softening = intent.getFloatExtra("paperSoft", 0f)
+        if (dev && intent.hasExtra("paperSoft")) com.hyya.footprintinspector.ui.Paper.softening = intent.getFloatExtra("paperSoft", 0.3f)
         com.hyya.footprintinspector.scan.Scanner.previewRise = dev && intent.getBooleanExtra("previewRise", false)
         setContent {
             FootprintTheme {

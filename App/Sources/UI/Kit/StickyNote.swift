@@ -23,12 +23,12 @@ enum Paper: CaseIterable, Sendable {
         return Color(hex: Self.softened(hex, by: Self.softening))
     }
 
-    /// How far each paper moves toward a quiet light grey (0 = full colour). Plan D4, owner to choose.
+    /// How far each paper moves toward a pale warm white (0 = full colour). Plan D4: 0.3, the owner's choice.
     static var softening: Double {
         #if DEBUG
         if let v = LaunchOptions.value(after: "-paperSoft").flatMap(Double.init) { return v }
         #endif
-        return 0
+        return 0.3   // owner's choice from the renders, 2026-11-14
     }
 
     /// Mixes a colour toward a pale warm white, #F4F2EE, in sRGB. Up to 0.5, every ink in Ink.swift keeps its own target
