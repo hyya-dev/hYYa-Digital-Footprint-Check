@@ -123,7 +123,16 @@ struct FindingDetailView: View {
             if showSuggestions, let suggestion = HyyaSuggestions.suggestion(for: def.id),
                !seenSuggestions.split(separator: "|").contains(Substring(suggestion.appName)) {
                 ToneCard(tone: .context, title: "From the makers of this app", symbol: "sparkles") {
-                    Text(suggestion.reason).font(.body).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                    HStack(alignment: .top, spacing: 14) {
+                        if let icon = suggestion.icon {
+                            Image(icon).resizable().scaledToFill()
+                                .frame(width: 56, height: 56)
+                                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+                                .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(Color.black.opacity(0.12), lineWidth: 1))
+                                .accessibilityHidden(true)
+                        }
+                        Text(suggestion.reason).font(.body).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                    }
                     HStack(spacing: 12) {
                         Button("See \(suggestion.appName)") { markSeen(suggestion); openURL(suggestion.url) }
                             .buttonStyle(GhostButtonStyle())

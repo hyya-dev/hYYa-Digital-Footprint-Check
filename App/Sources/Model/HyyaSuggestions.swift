@@ -10,6 +10,8 @@ struct HyyaSuggestion: Sendable {
     /// One honest sentence on how it helps with this finding.
     let reason: String
     let url: URL
+    /// The app's own icon, only when its team approved showing it (asset name).
+    var icon: String? = nil
 }
 
 /// Which hYYa app goes with which finding. **Deliberately empty**: each pairing is decided case by case
@@ -26,14 +28,17 @@ enum HyyaSuggestions {
     /// Hidden for good once tapped or turned down: the suggestion is shown until then, never again after.
     static let seenKey = "hyyaSuggestionsSeen"
 
-    /// Owner, 2026-11-14 (plan S1): proposed pairs, pending the owner's yes on the renders.
-    /// Encrypted Folder genuinely fixes the Photos findings: what's kept there isn't in the photo library
-    /// that apps with Photos access read. (Encrypted Notes was weighed for the clipboard finding and left
-    /// out: copying out of a note still goes through the clipboard.)
+    /// Encrypted Folder on the Photos findings: text, name, link and icon confirmed by its own team
+    /// (2026-11-14). Their rules: it's an "encrypted folder", never a vault, safe or locker, and it doesn't
+    /// "hide" photos; importing keeps the original in Photos until the person removes it, so the sentence
+    /// says to remove them; no sync, no price, no "nothing leaves your device". Needs macOS 26 on Apple
+    /// silicon, so it's never shown on an Intel Mac. (Encrypted Notes was weighed for the clipboard finding
+    /// and left out: copying out of a note still goes through the clipboard.)
     private static let folder = HyyaSuggestion(
         appName: "hYYa Encrypted Folder",
-        reason: "Keep private photos and videos in an encrypted folder instead of your photo library. Apps you give Photos access can't see what's in it.",
-        url: URL(string: "https://apps.apple.com/app/id6786135330")!)
+        reason: "Move private photos and videos into an encrypted folder, then remove them from your photo library. Apps you give Photos access can't see them there.",
+        url: URL(string: "https://apps.apple.com/app/id6786135330")!,
+        icon: "EncryptedFolderIcon")
 
     static let bySignal: [String: HyyaSuggestion] = [
         "photo-places": folder,
@@ -43,8 +48,14 @@ enum HyyaSuggestions {
 
     /// Apps whose own team has confirmed the name, wording, link and any logo shown here (owner's rule,
     /// 2026-11-14: anything about another hYYa app is confirmed by that app first). Until an app is listed,
-    /// its suggestion never shows. Encrypted Folder: asked 2026-11-14, answer pending.
-    static let confirmedApps: Set<String> = []
+    /// its suggestion never shows. Encrypted Folder: confirmed 2026-11-14.
+    static let confirmedApps: Set<String> = {
+        #if os(macOS) && arch(x86_64)
+        return []          // Encrypted Folder runs only on Apple silicon Macs
+        #else
+        return ["hYYa Encrypted Folder"]
+        #endif
+    }()
 
     static func suggestion(for signalID: String) -> HyyaSuggestion? {
         bySignal[signalID].flatMap { confirmedApps.contains($0.appName) ? $0 : nil }
