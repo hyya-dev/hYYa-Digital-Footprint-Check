@@ -33,6 +33,7 @@ struct SettingsView: View {
     @State private var confirmingClear = false
     @AppStorage(ScanReminder.storageKey) private var reminder = ScanReminder.off.rawValue
     @State private var notificationsOff = false
+    @AppStorage(HyyaSuggestions.settingKey) private var showSuggestions = true
 
     static let shareMessage = "hYYa Digital Footprint Check shows what any app can learn about your device, and how to fix it. Free, open source, nothing leaves your device."
 
@@ -41,8 +42,6 @@ struct SettingsView: View {
             Page {
                 HeroCard(eyebrow: "Settings", title: "hYYa Digital Footprint Check",
                          subtitle: "Everything here stays on this device.", mood: .idle, mascotSize: 96)
-
-                ReviewCard()
 
                 SectionTitle(title: "Your scans")
                 Panel {
@@ -88,6 +87,8 @@ struct SettingsView: View {
                 Text("Only scores and counts are kept, never which apps you have. Clear history removes them too.")
                     .font(.footnote).foregroundStyle(Brand.textSubtle).padding(.horizontal, 4).padding(.top, -14)
 
+                ReviewCard()
+
                 // Same order as Encrypted Notes. Share and Rate carry subtitles because they're asks;
                 // the other three are errands the user already knows the reason for.
                 SectionTitle(title: "Support hYYa")
@@ -112,6 +113,14 @@ struct SettingsView: View {
 
                 SectionTitle(title: "More from hYYa")
                 HyyaCard()
+                Panel {
+                    Toggle(isOn: $showSuggestions) {
+                        RowCard(symbol: "sparkles", title: "Suggest hYYa apps in fixes",
+                                subtitle: "Only where one of our apps genuinely fixes the finding.") { EmptyView() }
+                    }
+                    .tint(Brand.green.color)
+                    .padding(.trailing, 14)
+                }
 
                 #if DEBUG && os(iOS)
                 SectionTitle(title: "Developer")

@@ -178,8 +178,17 @@ private struct Results: View {
                 .amber(seen.filter { !$0.isConcerning && $0.severity > .low }.count, "worth knowing"),
                 .fine(seen.filter { $0.severity == .low }.count, "minor"),
             ], caption: "clues")
-            Button("Scan again") { Task { await scanner.scan() } }
-                .buttonStyle(PrimaryCTAButtonStyle())
+            // With fixes waiting, fixing is the main step; scanning again comes after.
+            if fixes.isEmpty {
+                Button("Scan again") { Task { await scanner.scan() } }
+                    .buttonStyle(PrimaryCTAButtonStyle())
+            } else {
+                Button("Fix them with me") { FixWizard.forget(); fixing = true }
+                    .buttonStyle(PrimaryCTAButtonStyle())
+                Button("Scan again") { Task { await scanner.scan() } }
+                    .buttonStyle(GhostButtonStyle())
+                    .frame(maxWidth: .infinity)
+            }
             Button("How the score works") { showingFormula = true }
                 .buttonStyle(.plain)
                 .font(.footnote)
@@ -187,14 +196,17 @@ private struct Results: View {
                 .frame(maxWidth: .infinity)
         }
 
-        ScoreGuideCard(score: score, fixes: fixes, all: scanner.allFindings) { FixWizard.forget(); fixing = true }
+        ScoreGuideCard(score: score, fixes: fixes, all: scanner.allFindings, showsFixButton: false) { FixWizard.forget(); fixing = true }
             .task { if LaunchOptions.has("-openFix") && !fixes.isEmpty { FixWizard.forget(); fixing = true } }
 
 
         SectionDivider()
 
         if let comparison = scanner.comparison {
-            ToneCard(tone: .context) { ComparisonCard(comparison: comparison) }
+            ToneCard(tone: .context) {
+                ComparisonCard(comparison: comparison)
+                if comparison.scoreDelta > 0 { ProgressShare(from: comparison.previous.score, to: comparison.current.score) }
+            }
         }
 
         if !concerning.isEmpty {
@@ -295,5 +307,38 @@ struct FormulaSheet: View {
             }
         }
         .presentationDetents([.large])
+    }
+}
+
+
+/// After a scan that raised the score: an offer to share the progress. Never in the same moment as
+/// the rating prompt, which asks after the same kind of scan.
+private struct ProgressShare: View {
+    let from: Int
+    let to: Int
+    @Environment(Scanner.self) private var scanner
+    @Environment(HistoryStore.self) private var history
+    @Environment(PrivacyCheck.self) private var check
+    @CheckStored(\.checkUpDone) private var checkUpStored
+    @CheckStored(\.trackerChecked) private var trackerStored
+    @AppStorage(RatingMoment.askedScanKey) private var askedScan = ""
+    @AppStorage(RatingMoment.askedKey) private var askedVersion = ""
+
+    /// True while the rating prompt is about to ask (it waits two seconds) or has asked on this scan.
+    private var ratingMoment: Bool {
+        if askedScan == history.latest?.id.uuidString { return true }
+        return !LaunchOptions.has("-sampleData") && RatingMoment.shouldAsk(
+            scoreDelta: scanner.comparison?.scoreDelta, scanDates: history.snapshots.map(\.date),
+            askedVersion: askedVersion, currentVersion: RatingMoment.currentVersion)
+    }
+
+    var body: some View {
+        if !ratingMoment {
+            let overall = OverallScore.current(scanner: scanner, history: history, check: check,
+                                               checkUpStored: checkUpStored, trackerStored: trackerStored)
+            OverallShareButton(overall: overall, title: "Share your progress",
+                               message: "My Footprint score went from \(from) to \(to) with hYYa Digital Footprint Check. Free, open source, nothing leaves the device.")
+                .frame(maxWidth: .infinity)
+        }
     }
 }

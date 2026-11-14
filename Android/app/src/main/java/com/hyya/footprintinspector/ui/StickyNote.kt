@@ -33,11 +33,20 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 
 /** The Mac Stickies colours; every ink on them is measured to WCAG 2.2 AA. */
-enum class Paper(val colour: Color) {
-    YELLOW(Color(0xFFFBEB61)), PINK(Color(0xFFF3B6B3)), GREEN(Color(0xFFA2FC90)),
-    BLUE(Color(0xFFA1EEFD)), PURPLE(Color(0xFFA1B5F8)), GRAY(Color(0xFFDADADB));
+enum class Paper(private val base: Long) {
+    YELLOW(0xFFFBEB61), PINK(0xFFF3B6B3), GREEN(0xFFA2FC90),
+    BLUE(0xFFA1EEFD), PURPLE(0xFFA1B5F8), GRAY(0xFFDADADB);
+
+    /** The paper, moved [softening] of the way toward a pale warm white (#F4F2EE), as on iOS. Up to 0.5 every ink in
+     *  Ink.kt keeps its own target (body 9:1, secondary 7:1, hints and meaning colours 6:1, amber marks 3.3:1). */
+    val colour: Color get() = if (softening <= 0f) Color(base) else Color(base).let { c ->
+        Color(c.red + (0xF4 / 255f - c.red) * softening, c.green + (0xF2 / 255f - c.green) * softening, c.blue + (0xEE / 255f - c.blue) * softening)
+    }
 
     companion object {
+        /** Plan D4: 0 = full colour. Set from a debug-only launch extra for the owner's renders. */
+        @Volatile var softening = 0f
+
         /** Green when well protected, blue in the middle, purple when heavy; gray before any check (no pink, little yellow). */
         fun forScore(score: Int?) = when {
             score == null -> GRAY

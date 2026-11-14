@@ -134,6 +134,7 @@ fun SensitiveScreen(scanner: com.hyya.footprintinspector.scan.Scanner) {
                     val on = c.id in chosen
                     RowCard(Icons.Outlined.Visibility, c.title, c.apps.joinToString(", ") { it.name },
                         tint = if (on) Brand.ink else Brand.textSubtle, showDivider = i < Sensitive.categories.lastIndex,
+                        state = if (on) "Selected" else "Not selected",
                         onClick = {
                             chosen = if (on) chosen - c.id else chosen + c.id
                             scanner.saveSensitiveChoice(chosen)
@@ -289,6 +290,7 @@ fun CheckUpScreen(nav: Nav) {
             CheckUp.steps.forEachIndexed { i, s ->
                 RowCard(if (s.id in done) Icons.Outlined.CheckCircle else Icons.Outlined.Security, s.title, s.hint ?: s.path.substringBefore(" (on Samsung").let { if (it.length > 60 && "Permission manager" in it) "Permission manager › " + s.path.substringAfterLast("› ") else it.substringBefore(", then") },
                     tint = if (s.id in done) Brand.green else Brand.sand, showDivider = i < CheckUp.steps.lastIndex,
+                    state = if (s.id in done) "Done" else null,
                     onClick = { nav.push(Route.CheckUpRoute(i)) }) {
                     Icon(if (s.id in done) Icons.Outlined.CheckCircle else Icons.AutoMirrored.Outlined.KeyboardArrowRight, null,
                         tint = if (s.id in done) Tone.FIX.tint else Brand.textSubtle)
@@ -360,6 +362,14 @@ fun SettingsScreen(scanner: Scanner, nav: Nav) {
     Page {
         if (nav.stack.isNotEmpty()) BackBar("Settings", nav)
         HeroCard("Settings", "hYYa Digital Footprint Check", "Everything here stays on this device.")
+        SectionTitle("Your scans")
+        Panel {
+            RowCard(Icons.Outlined.History, "Scan history") { Text("$count", color = Brand.textSubtle) }
+            ReminderRow()
+            RowCard(Icons.Outlined.Delete, "Clear history", tint = Brand.concern, showDivider = false,
+                onClick = { scanner.clearSaved(); count = 0 })
+        }
+        Text("Only scores and counts are kept, never which apps you have. Clear history removes them too.", color = Brand.textSubtle, fontSize = 12.sp)
         // Rating card, as on iOS.
         // The whole card opens the link; the pill is its label, centred across the card.
         ToneCard(Tone.CONTEXT, "Enjoying hYYa Digital Footprint Check?", onClick = { openUrl(context, Links.RATE) }, paper = Paper.PURPLE) {
@@ -371,14 +381,6 @@ fun SettingsScreen(scanner: Scanner, nav: Nav) {
             }
             CardPill(if (com.hyya.footprintinspector.BuildConfig.FDROID) "Feedback on GitHub" else "Rate the App")
         }
-        SectionTitle("Your scans")
-        Panel {
-            RowCard(Icons.Outlined.History, "Scan history") { Text("$count", color = Brand.textSubtle) }
-            ReminderRow()
-            RowCard(Icons.Outlined.Delete, "Clear history", tint = Brand.concern, showDivider = false,
-                onClick = { scanner.clearSaved(); count = 0 })
-        }
-        Text("Only scores and counts are kept, never which apps you have. Clear history removes them too.", color = Brand.textSubtle, fontSize = 12.sp)
         SectionTitle("Support hYYa")
         Panel {
             RowCard(Icons.Outlined.Share, "Share", "Help your friends take back their digital privacy.", onClick = {
@@ -418,7 +420,7 @@ private fun ColumnScope.CardPill(text: String) {
 }
 
 @Composable
-private fun OutIcon() = Icon(Icons.AutoMirrored.Outlined.OpenInNew, null, tint = Brand.textSubtle, modifier = Modifier.size(16.dp))
+private fun OutIcon() = Icon(Icons.AutoMirrored.Outlined.OpenInNew, "Opens outside the app", tint = Brand.textSubtle, modifier = Modifier.size(16.dp))
 
 /** Restarted within the last week. */
 fun restartedRecently() = com.hyya.footprintinspector.scan.RecentRestart.isRecent(android.os.SystemClock.elapsedRealtime())

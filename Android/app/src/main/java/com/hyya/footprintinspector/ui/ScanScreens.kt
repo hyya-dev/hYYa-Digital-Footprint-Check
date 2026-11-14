@@ -4,6 +4,8 @@
 
 package com.hyya.footprintinspector.ui
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -163,16 +165,22 @@ private fun Results(scanner: Scanner, nav: Nav) {
             Slice("worth knowing", seen.count { !it.isConcerning && it.severity != Severity.LOW }, SliceKind.AMBER),
             Slice("minor", seen.count { it.severity == Severity.LOW }, SliceKind.FINE),
         ), "clues")
-        PrimaryButton("Scan again") { scanner.scan() }
+        // With fixes waiting, fixing is the main step; scanning again comes after.
+        if (fixesOf(scanner).isEmpty()) PrimaryButton("Scan again") { scanner.scan() }
+        else {
+            PrimaryButton("Fix them with me") { nav.push(Route.FixRoute) }
+            GhostButton("Scan again") { scanner.scan() }
+        }
         Text("How the score works", color = Brand.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth().clickableNoRipple { nav.push(Route.ScoreRoute) })
-        ScoreGuide(scanner, nav)
+        ScoreGuide(scanner, nav, showFixButton = false)
         scanner.comparison?.let { cmp ->
             InfoCard("Since your last scan", Tone.CONTEXT, Icons.Outlined.History) {
                 Text("${cmp.previous.score} → ${cmp.current.score}", color = Brand.ink, fontSize = 18.sp)
                 val changed = cmp.changedIds.mapNotNull { Catalogue.byId[it]?.title }
                 Text(if (changed.isEmpty()) "No other changes found." else "${changed.size} changed, such as ${changed.take(3).joinToString(", ")}.",
                     color = Brand.textMuted, fontSize = 13.sp)
+                if (cmp.current.score > cmp.previous.score) ProgressShare(scanner, cmp)
             }
         }
 
@@ -298,7 +306,8 @@ fun FindingScreen(scanner: Scanner, id: String, nav: Nav) {
             }
             if (f.reading.items.isNotEmpty()) {
                 androidx.compose.material3.HorizontalDivider(color = head.tint.copy(alpha = 0.2f), thickness = 0.5.dp)
-                Row(Modifier.fillMaxWidth().pressable { showDetails = !showDetails }, verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().pressable { showDetails = !showDetails }
+                    .semantics(mergeDescendants = true) { stateDescription = if (showDetails) "Expanded" else "Collapsed" }, verticalAlignment = Alignment.CenterVertically) {
                     Text("All the details (${f.reading.items.size})", color = head.tint, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                     Icon(if (showDetails) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = head.tint)
                 }
@@ -337,7 +346,8 @@ fun FindingScreen(scanner: Scanner, id: String, nav: Nav) {
         }
         // The fuller explanation, for anyone who wants it, out of the way of the answer.
         ToneCard(Tone.EXPLAIN) {
-            Row(Modifier.fillMaxWidth().pressable { showMore = !showMore }, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().pressable { showMore = !showMore }
+                .semantics(mergeDescendants = true) { stateDescription = if (showMore) "Expanded" else "Collapsed" }, verticalAlignment = Alignment.CenterVertically) {
                 Text("More about this", color = Tone.EXPLAIN.tint, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 Icon(if (showMore) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = Tone.EXPLAIN.tint)
             }
@@ -379,7 +389,7 @@ private fun fixesOf(scanner: Scanner) =
 
 /** What the score means and how to raise it, as on iOS. */
 @Composable
-private fun ScoreGuide(scanner: Scanner, nav: Nav) {
+private fun ScoreGuide(scanner: Scanner, nav: Nav, showFixButton: Boolean = true) {
     val score = scanner.score
     val fixes = fixesOf(scanner)
     val reach = FootprintScore.of(scanner.findings.filter { f -> fixes.none { it.id == f.id } }).value
@@ -409,7 +419,7 @@ private fun ScoreGuide(scanner: Scanner, nav: Nav) {
                 Row { Text("+${FootprintScore.points(f)}", color = Tone.FIX.tint, fontSize = 14.sp, fontWeight = FontWeight.Bold, modifier = Modifier.width(38.dp))
                     Text(f.definition.fixTitle, color = Brand.textMuted, fontSize = 14.sp, lineHeight = 19.sp) }
             }
-            PrimaryButton("Fix them with me") { nav.push(Route.FixRoute) }
+            if (showFixButton) PrimaryButton("Fix them with me") { nav.push(Route.FixRoute) }
         }
     }
 }
@@ -426,11 +436,15 @@ fun FixScreen(scanner: Scanner, nav: Nav) {
     val fixes = ids.mapNotNull { id -> scanner.findings.firstOrNull { it.id == id } }
     var index by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
     var done by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
+    var doneIds by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(listOf<String>()) }
     Page {
         BackBar(if (index < fixes.size) "Fix ${index + 1} of ${fixes.size}" else "All done", nav)
         if (index < fixes.size) {
             val f = fixes[index]
             androidx.compose.material3.LinearProgressIndicator(progress = { index.toFloat() / fixes.size }, color = Tone.FIX.tint, trackColor = Brand.tile, modifier = Modifier.fillMaxWidth())
+            val gone = doneIds + f.id
+            val reach = FootprintScore.of(scanner.findings.filter { it.id !in gone }).value
+            MascotNote("This one is worth ${FootprintScore.points(f)} points. Do it and your Footprint score could reach $reach.", Tone.CONTEXT)
             Text("Apps can't change these settings for you, so I'll open each page. Come back here after each change.", color = Brand.textSubtle, fontSize = 12.sp, lineHeight = 16.sp)
             ToneCard(Tone.FIX, f.definition.fixTitle, Icons.Outlined.Build, trailing = { ToneBadge("+${FootprintScore.points(f)} points", Tone.FIX) }) {
                 Text(f.definition.fix.summary, color = Brand.ink, fontSize = 15.sp, lineHeight = 21.sp)
@@ -438,7 +452,7 @@ fun FixScreen(scanner: Scanner, nav: Nav) {
                 if (f.id == "boot-time") WeeklyReminderSwitch()
                 else GhostButton("Open Settings") { openSettings(context, f.definition.fix.settingsAction) }
             }
-            PrimaryButton("Done, next", fill = Tone.FIX.tint) { done++; index++ }
+            PrimaryButton("Done, next") { done++; doneIds = doneIds + f.id; index++ }
             GhostButton("Skip this one") { index++ }
         } else {
             MascotNote(if (done == 0) "No changes this time. You can come back whenever you like."
@@ -478,14 +492,29 @@ fun HomeScreen(scanner: Scanner, nav: Nav) {
                 Spacer(Modifier.weight(1f))
                 Mascot(110)
             }
-            Eyebrow("Your privacy score")
+            Eyebrow(if (left == 0) "Your privacy score" else "Your privacy score so far")
             Text(overall.level?.title ?: "", color = Brand.ink, fontSize = 26.sp, fontWeight = FontWeight.Bold)
             AccentRule()
             Text(if (left == 0) "All ${overall.total} checks done. Higher is better."
                 else "Based on ${overall.doneCount} of ${overall.total} checks. Do the other $left to complete your score.",
                 color = Brand.textMuted, fontSize = 15.sp, lineHeight = 21.sp)
             Text("How the score works", color = Brand.sand, fontSize = 13.sp, modifier = Modifier.clickableNoRipple { nav.push(Route.ScoreRoute) })
-            GhostButton("Share my result") { shareResult(context, overall) }
+            // Until every check is done, the next check is the one obvious step; sharing waits.
+            val next = com.hyya.footprintinspector.model.OverallScore.Part.entries.firstOrNull { overall.parts[it] == null }
+            if (next != null) {
+                val tab = when (next) {
+                    com.hyya.footprintinspector.model.OverallScore.Part.FOOTPRINT -> Tab.SCAN
+                    com.hyya.footprintinspector.model.OverallScore.Part.SENSITIVE -> Tab.SENSITIVE
+                    com.hyya.footprintinspector.model.OverallScore.Part.TRACKER -> Tab.TRACKER
+                    com.hyya.footprintinspector.model.OverallScore.Part.CHECKUP -> Tab.CHECKUP
+                }
+                PrimaryButton("Do check ${next.ordinal + 1}: ${tab.label}") {
+                    go(tab); if (tab == Tab.SCAN) scanner.scan()
+                }
+                GhostButton("Share my result") { shareResult(context, overall) }
+            } else {
+                PrimaryButton("Share my result") { shareResult(context, overall) }
+            }
         }
         SectionTitle("Your checks", "${overall.doneCount} of ${overall.total}")
         ChecksPanel(overall, scanner, checkUpDoneCount(context))
@@ -553,4 +582,25 @@ fun WeeklyReminderSwitch() {
         }, colors = androidx.compose.material3.SwitchDefaults.colors(checkedTrackColor = Tone.FIX.tint))
     }
     if (declined) Text("Notifications are off for this app. Allow them in Settings, then try again.", color = Brand.concern, fontSize = 12.sp)
+}
+
+/** After a scan that raised the score: an offer to share the progress. Never in the same moment as the
+ *  rating prompt, which asks after the same kind of scan (App.kt marks the scan it asked on). */
+@Composable
+private fun ProgressShare(scanner: Scanner, cmp: com.hyya.footprintinspector.scan.Comparison) {
+    val context = LocalContext.current
+    val prefs = context.getSharedPreferences("app", android.content.Context.MODE_PRIVATE)
+    val ratingMoment = com.hyya.footprintinspector.rate.RatingPrompt.AVAILABLE && !com.hyya.footprintinspector.scan.Sample.on && (
+        prefs.getLong(com.hyya.footprintinspector.rate.RatingMoment.ASKED_SCAN_KEY, 0L) == cmp.current.date ||
+            com.hyya.footprintinspector.rate.RatingMoment.shouldAsk(cmp.current.score - cmp.previous.score,
+                scanner.history.snapshots.map { it.date }, prefs.getString(com.hyya.footprintinspector.rate.RatingMoment.ASKED_KEY, null),
+                com.hyya.footprintinspector.BuildConfig.VERSION_NAME))
+    if (ratingMoment) return
+    GhostButton("Share your progress") {
+        val text = "My Footprint score went from ${cmp.previous.score} to ${cmp.current.score} with hYYa Digital Footprint Check. " +
+            "Free, open source, nothing leaves the device.\n${Links.SHARE_LINK}"
+        context.startActivity(android.content.Intent.createChooser(
+            android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, text), null)
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
 }

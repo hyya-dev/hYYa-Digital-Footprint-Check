@@ -14,6 +14,8 @@ import java.time.ZoneId
  */
 object RatingMoment {
     const val ASKED_KEY = "rating.askedVersion"
+    /** The scan the prompt asked on (its date), so the share offer stays out of that moment. */
+    const val ASKED_SCAN_KEY = "rating.askedScan"
     const val MINIMUM_SCANS = 3
 
     fun shouldAsk(scoreDelta: Int?, scanDates: List<Long>, askedVersion: String?, currentVersion: String,

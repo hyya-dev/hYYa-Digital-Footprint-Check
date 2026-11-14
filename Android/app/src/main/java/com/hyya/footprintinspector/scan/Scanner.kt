@@ -39,6 +39,11 @@ enum class Phase { IDLE, SCANNING, DONE }
 
 /** Runs the scan and holds the results in memory. Only scrambled markers are saved. */
 class Scanner(app: Application) : AndroidViewModel(app) {
+    companion object {
+        /** Debug renders only (MainActivity sets it from a debug-only extra): an earlier scan 12 points lower. */
+        @Volatile var previewRise = false
+    }
+
     var phase by mutableStateOf(Phase.IDLE); private set
     var progress by mutableStateOf(0f); private set
     var readings by mutableStateOf<Map<String, Reading>>(emptyMap()); private set
@@ -191,7 +196,8 @@ class Scanner(app: Application) : AndroidViewModel(app) {
             val snapshot = history.snapshot(findings, score)
             val unchanged = before != null && before.score == snapshot.score && before.concerningIds == snapshot.concerningIds
             if (!(quietly && unchanged)) {
-                comparison = before?.let { Comparison(it, snapshot) }
+                comparison = (before ?: if (previewRise) Snapshot(snapshot.date - 3 * 86_400_000L, maxOf(0, snapshot.score - 12),
+                    snapshot.findingCount, snapshot.concerningIds, emptyMap()) else null)?.let { Comparison(it, snapshot) }
                 history.append(snapshot)
             }
             phase = Phase.DONE

@@ -142,7 +142,8 @@ fun App(startTab: Tab = Tab.HOME, autoScan: Boolean = false, openFinding: String
         // Let the new score settle on screen first.
         kotlinx.coroutines.delay(2000)
         if (scanner.phase != com.hyya.footprintinspector.scan.Phase.DONE) return@LaunchedEffect
-        prefs.edit().putString(com.hyya.footprintinspector.rate.RatingMoment.ASKED_KEY, version).apply()
+        prefs.edit().putString(com.hyya.footprintinspector.rate.RatingMoment.ASKED_KEY, version)
+            .putLong(com.hyya.footprintinspector.rate.RatingMoment.ASKED_SCAN_KEY, comparison.current.date).apply()
         com.hyya.footprintinspector.rate.RatingPrompt.ask(activity)
     }
     // Keeps the score current: on launch and each time the app comes back to the screen (after

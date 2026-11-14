@@ -12,14 +12,35 @@ enum Paper: CaseIterable, Sendable {
     /// The Mac Stickies colours. Every ink used on them is measured to reach
     /// WCAG 2.2 AA, 4.5:1 for text and 3:1 for marks, on all six (see Color(dark:paper:)).
     var colour: Color {
-        switch self {
-        case .yellow: Color(hex: 0xFBEB61)
-        case .pink: Color(hex: 0xF3B6B3)
-        case .green: Color(hex: 0xA2FC90)
-        case .blue: Color(hex: 0xA1EEFD)
-        case .purple: Color(hex: 0xA1B5F8)
-        case .gray: Color(hex: 0xDADADB)
+        let hex: UInt32 = switch self {
+        case .yellow: 0xFBEB61
+        case .pink: 0xF3B6B3
+        case .green: 0xA2FC90
+        case .blue: 0xA1EEFD
+        case .purple: 0xA1B5F8
+        case .gray: 0xDADADB
         }
+        return Color(hex: Self.softened(hex, by: Self.softening))
+    }
+
+    /// How far each paper moves toward a quiet light grey (0 = full colour). Plan D4, owner to choose.
+    static var softening: Double {
+        #if DEBUG
+        if let v = LaunchOptions.value(after: "-paperSoft").flatMap(Double.init) { return v }
+        #endif
+        return 0
+    }
+
+    /// Mixes a colour toward a pale warm white, #F4F2EE, in sRGB. Up to 0.5, every ink in Ink.swift keeps its own target
+    /// (body 9:1, secondary 7:1, hints and meaning colours 6:1, amber marks 3.3:1; measured 2026-11-14).
+    static func softened(_ hex: UInt32, by t: Double) -> UInt32 {
+        guard t > 0 else { return hex }
+        let target = [0xF4, 0xF2, 0xEE]
+        let parts = [16, 8, 0].enumerated().map { i, shift -> Int in
+            let c = Double((hex >> shift) & 0xFF)
+            return Int((c + (Double(target[i]) - c) * t).rounded()) << shift
+        }.reduce(0, |)
+        return UInt32(parts)
     }
 
     /// The paper for a role: purple for "worth a look", green for fixes, blue for what a clue tells

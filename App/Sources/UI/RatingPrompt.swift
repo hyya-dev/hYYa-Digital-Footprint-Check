@@ -10,6 +10,8 @@ import SwiftUI
 /// first scan, and at most once per app version (the system also caps it at three times a year).
 enum RatingMoment {
     static let askedKey = "rating.askedVersion"
+    /// The scan the prompt asked on, so the share offer stays out of that moment.
+    static let askedScanKey = "rating.askedScan"
     static let minimumScans = 3
 
     static func shouldAsk(scoreDelta: Int?, scanDates: [Date], askedVersion: String?,
@@ -46,6 +48,7 @@ struct RatingPrompt: ViewModifier {
                     try? await Task.sleep(for: .seconds(2))
                     guard scenePhase == .active, scanner.phase == .done else { return }
                     askedVersion = RatingMoment.currentVersion
+                    UserDefaults.standard.set(history.latest?.id.uuidString, forKey: RatingMoment.askedScanKey)
                     requestReview()
                 }
             }

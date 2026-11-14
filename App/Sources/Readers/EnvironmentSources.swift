@@ -15,13 +15,15 @@ struct AudioSource: SignalSource {
     func read() async -> [SignalReading] {
         let session = AVAudioSession.sharedInstance()
         let route = session.currentRoute
-        let outputs = route.outputs.map { "\($0.portName) (\(Self.kind($0.portType)))" }
-        let names = route.outputs.map(\.portName) + route.inputs.map(\.portName)
+        // Store screenshots: made-up headphones, never the real device's.
+        let sample = LaunchOptions.has("-sampleData")
+        let outputs = sample ? ["Sam's AirPods Pro (Bluetooth headphones)"] : route.outputs.map { "\($0.portName) (\(Self.kind($0.portType)))" }
+        let names = sample ? ["Sam's AirPods Pro"] : route.outputs.map(\.portName) + route.inputs.map(\.portName)
         let firstName = names.lazy.compactMap(OwnerName.find).first
 
         var audio = SignalReading(id: "audio-route",
-                                  value: route.outputs.first?.portName ?? "None",
-                                  items: outputs + route.inputs.map { "Microphone: \($0.portName)" })
+                                  value: sample ? "Sam's AirPods Pro" : route.outputs.first?.portName ?? "None",
+                                  items: outputs + (sample ? [] : route.inputs.map { "Microphone: \($0.portName)" }))
         if let firstName {
             audio.severityOverride = .high
             audio.note = "This name suggests the owner is called \(firstName). Any app can read it."

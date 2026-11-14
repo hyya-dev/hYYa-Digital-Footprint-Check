@@ -48,7 +48,7 @@ enum Brand {
     static let ink = InkStyle(role: .text, color: Color(dark: 0xF5F5F7, paper: 0x26222B))
     static let textPrimary = ink
     static let textMuted = InkStyle(role: .muted, color: Color(dark: 0xA1A1A8, paper: 0x4A4550))
-    static let textSubtle = InkStyle(role: .subtle, color: Color(dark: 0x6C6C73, paper: 0x4A464D))
+    static let textSubtle = InkStyle(role: .subtle, color: Color(dark: 0x84848B, paper: 0x4A464D))
 
     // MARK: Panels
     static let surface = Color(dark: 0x111113, paper: 0x000000, paperAlpha: 0.06)

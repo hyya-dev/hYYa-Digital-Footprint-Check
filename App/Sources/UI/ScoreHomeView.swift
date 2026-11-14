@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 import SwiftUI
+import WidgetKit
 
 /// The home page: one privacy score for all four checks, each check's own part, and the way to
 /// share it. The score is kept between launches and moves as soon as any check changes
@@ -40,6 +41,7 @@ struct ScoreHomeView: View {
                             .font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                         WeeklyReminderToggle()
                     }
+                    WidgetOfferCard(value: overall.value ?? 0)
                 }
             }
             .hiddenNavigationBar()
@@ -98,7 +100,7 @@ struct ScoreHomeView: View {
             }
             .padding(.top, 12)
             VStack(alignment: .leading, spacing: 6) {
-                Brand.eyebrow("Your privacy score")
+                Brand.eyebrow(left == 0 ? "Your privacy score" : "Your privacy score so far")
                 Text(overall.level?.title ?? "")
                     .scaledFont(30, weight: .bold, relativeTo: .largeTitle)
                     .foregroundStyle(Brand.ink)
@@ -115,9 +117,25 @@ struct ScoreHomeView: View {
                     .foregroundStyle(Brand.textSubtle)
                     .padding(.top, 2)
             }
-            OverallShareButton(overall: overall)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Until every check is done, the next check is the one obvious step; sharing waits.
+            if let next = Self.nextCheck(overall) {
+                Button("Do check \(next.step ?? 0): \(next.title)") {
+                    goToTab(next)
+                    if next == .footprint { Task { await scanner.scan() } }
+                }
+                .buttonStyle(PrimaryCTAButtonStyle())
+                OverallShareButton(overall: overall)
+                    .frame(maxWidth: .infinity)
+            } else {
+                OverallShareButton(overall: overall, prominent: true)
+            }
         }
+    }
+
+    /// The first check not done yet, in the app's order.
+    static func nextCheck(_ overall: OverallScore) -> AppTab? {
+        let tabs: [OverallScore.Part: AppTab] = [.footprint: .footprint, .sensitive: .sensitive, .tracker: .tracker, .checkup: .checkup]
+        return OverallScore.Part.onThisPlatform.first { overall.parts[$0] == nil }.flatMap { tabs[$0] }
     }
 
     static func tint(_ level: OverallScore.Level?) -> InkStyle {
@@ -127,4 +145,70 @@ struct ScoreHomeView: View {
         default: Tone.alert.tint
         }
     }
+}
+
+
+/// "Add the widget": a picture of the real widget with the score, and the steps. Apps on these systems
+/// can't add a widget for you, so there's nothing to wait on. Shown until "Got it" or until a widget is
+/// added; never in sample-data runs, so the store screenshots stay as they are.
+private struct WidgetOfferCard: View {
+    let value: Int
+    @Environment(HistoryStore.self) private var history
+    @AppStorage("widgetOfferDismissed") private var dismissed = false
+    @State private var hasWidget = true
+
+    var body: some View {
+        Group {
+            if Self.preview || (!dismissed && !hasWidget && !LaunchOptions.has("-sampleData")) {
+                ToneCard(tone: .context, title: Self.title, symbol: "square.grid.2x2") {
+                    HStack(alignment: .top, spacing: 16) {
+                        ScoreWidgetView(score: WidgetScore(score: value, checkedAt: history.latest?.date ?? .now), size: .systemSmall)
+                            .environment(\.colorScheme, .dark)
+                            // Drawn at the real small-widget size, then scaled, so it looks exactly as it will.
+                            .frame(width: 158, height: 158)
+                            .background(Color.black)
+                            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Brand.border, lineWidth: 1))
+                            .scaleEffect(0.81, anchor: .topLeading)
+                            .frame(width: 128, height: 128, alignment: .topLeading)
+                            .accessibilityHidden(true)
+                        Text("See your privacy score and your last check at a glance.")
+                            .font(.subheadline).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                    }
+                    StepList(steps: Self.steps, tint: Brand.sand)
+                    Button("Got it") { withAnimation { dismissed = true } }
+                        .buttonStyle(GhostButtonStyle())
+                        .frame(maxWidth: .infinity)
+                }
+            }
+        }
+        .task {
+            let configs = (try? await WidgetCenter.shared.currentConfigurations()) ?? []
+            hasWidget = !configs.isEmpty
+        }
+    }
+
+    /// Renders for the owner's review only.
+    static var preview: Bool {
+        #if DEBUG
+        LaunchOptions.has("-previewWidgetOffer")
+        #else
+        false
+        #endif
+    }
+
+    #if os(macOS)
+    static let title = "Your score on your desktop"
+    static let steps = [
+        "Control-click an empty spot on the desktop and choose Edit Widgets.",
+        "Search for hYYa, then drag the widget onto your desktop.",
+    ]
+    #else
+    static let title = "Your score on your home screen"
+    static let steps = [
+        "Touch and hold an empty spot on your home screen until the apps jiggle.",
+        "Tap Edit at the top, then Add Widget.",
+        "Search for hYYa, choose a size and tap Add Widget.",
+    ]
+    #endif
 }

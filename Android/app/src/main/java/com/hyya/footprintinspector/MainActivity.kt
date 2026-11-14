@@ -80,6 +80,9 @@ class MainActivity : ComponentActivity() {
         if (dev && intent.getBooleanExtra("testReminder", false)) com.hyya.footprintinspector.remind.ScanReminder.post(this)
         val openFinding = if (dev) intent.getStringExtra("openFinding") else null
         val openFix = dev && intent.getBooleanExtra("openFix", false)
+        // Renders for the owner's review: note-paper strength, and an earlier, lower scan to show a rise.
+        if (dev) com.hyya.footprintinspector.ui.Paper.softening = intent.getFloatExtra("paperSoft", 0f)
+        com.hyya.footprintinspector.scan.Scanner.previewRise = dev && intent.getBooleanExtra("previewRise", false)
         setContent {
             FootprintTheme {
                 val block = integrity.block

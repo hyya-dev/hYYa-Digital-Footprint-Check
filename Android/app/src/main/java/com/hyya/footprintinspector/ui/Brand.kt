@@ -4,6 +4,8 @@
 
 package com.hyya.footprintinspector.ui
 
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -67,7 +69,7 @@ object Brand {
     val green: Color @Composable @ReadOnlyComposable get() = pick(0xFF7CD9A8, InkRole.FIX)
     val ink: Color @Composable @ReadOnlyComposable get() = pick(0xFFF5F5F7, InkRole.TEXT)
     val textMuted: Color @Composable @ReadOnlyComposable get() = pick(0xFFA1A1A8, InkRole.MUTED)
-    val textSubtle: Color @Composable @ReadOnlyComposable get() = pick(0xFF6C6C73, InkRole.SUBTLE)
+    val textSubtle: Color @Composable @ReadOnlyComposable get() = pick(0xFF84848B, InkRole.SUBTLE)
     val surface: Color @Composable @ReadOnlyComposable get() = if (LocalOnPaper.current) Color.Black.copy(alpha = 0.06f) else Color(0xFF111113)
     val tile: Color @Composable @ReadOnlyComposable get() = if (LocalOnPaper.current) Color.Black.copy(alpha = 0.08f) else Color(0xFF1D1915)
     val rule: Color @Composable @ReadOnlyComposable get() = sandDeep.copy(alpha = 0.35f)
@@ -189,11 +191,14 @@ fun RowCard(
     tint: Color = Brand.sand,
     showDivider: Boolean = true,
     onClick: (() -> Unit)? = null,
+    /** Read out by TalkBack after the title, for a state the row only shows as an icon ("Selected", "Done"). */
+    state: String? = null,
     trailing: @Composable (() -> Unit)? = null,
 ) {
     Column {
         Row(
             (if (onClick != null) Modifier.pressable(onClick) else Modifier)
+                .then(if (state != null) Modifier.semantics(mergeDescendants = true) { stateDescription = state } else Modifier)
                 .fillMaxWidth().padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

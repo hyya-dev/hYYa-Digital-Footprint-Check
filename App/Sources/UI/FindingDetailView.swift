@@ -13,6 +13,7 @@ struct FindingDetailView: View {
     @Environment(Scanner.self) private var scanner
     @Environment(\.openURL) private var openURL
     @AppStorage(HyyaSuggestions.settingKey) private var showSuggestions = true
+    @AppStorage(HyyaSuggestions.seenKey) private var seenSuggestions = ""
     let finding: Finding
     @State private var cleared = false
     @State private var showDetails = false
@@ -119,11 +120,16 @@ struct FindingDetailView: View {
                 .tint(Tone.explain.tint)
             }
 
-            if showSuggestions, let suggestion = HyyaSuggestions.suggestion(for: def.id) {
+            if showSuggestions, let suggestion = HyyaSuggestions.suggestion(for: def.id),
+               !seenSuggestions.split(separator: "|").contains(Substring(suggestion.appName)) {
                 ToneCard(tone: .context, title: "From the makers of this app", symbol: "sparkles") {
-                    Text(suggestion.reason).font(.body).foregroundStyle(Brand.textMuted)
-                    Button("Open \(suggestion.appName)") { openURL(suggestion.url) }
-                        .buttonStyle(GhostButtonStyle())
+                    Text(suggestion.reason).font(.body).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 12) {
+                        Button("See \(suggestion.appName)") { markSeen(suggestion); openURL(suggestion.url) }
+                            .buttonStyle(GhostButtonStyle())
+                        Button("No thanks") { withAnimation { markSeen(suggestion) } }
+                            .buttonStyle(.plain).font(.subheadline).foregroundStyle(Brand.ink)
+                    }
                 }
             }
         }
@@ -200,7 +206,7 @@ struct FindingDetailView: View {
                     Haptics.success()
                     Task { await scanner.scan(quietly: true) }
                 }
-                .buttonStyle(PrimaryCTAButtonStyle(fill: Brand.green.color, depthColor: Color(hex: 0x0E8A56)))
+                .buttonStyle(PrimaryCTAButtonStyle(fill: cleared ? Brand.green.color : Brand.cta))
                 .disabled(cleared)
             }
             if def.isRestart {
@@ -232,5 +238,9 @@ struct FindingDetailView: View {
                     .frame(maxWidth: .infinity)
             }
         }
+    }
+
+    private func markSeen(_ suggestion: HyyaSuggestion) {
+        seenSuggestions = (seenSuggestions.split(separator: "|").map(String.init) + [suggestion.appName]).joined(separator: "|")
     }
 }

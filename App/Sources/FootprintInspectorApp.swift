@@ -52,15 +52,24 @@ struct FootprintInspectorApp: App {
     private var mainWindow: some Scene {
         WindowGroup {
             IntegrityGate {
-                RootView()
-                    .environment(scanner)
-                    .environment(history)
-                    .environment(check)
+                Group {
+                    #if DEBUG
+                    // Renders for the owner's review only: the widget's face in each rendering mode.
+                    if LaunchOptions.has("-widgetLab") { WidgetLab() } else { RootView() }
+                    #else
+                    RootView()
+                    #endif
+                }
+                .environment(scanner)
+                .environment(history)
+                .environment(check)
             }
             .tint(Brand.accent)
             .preferredColorScheme(.dark)
             #if os(macOS)
             .frame(minWidth: 820, minHeight: 600)
+            // A widget click brings the open window forward instead of opening a second one.
+            .handlesExternalEvents(preferring: ["*"], allowing: ["*"])
             #endif
         }
     }
@@ -289,3 +298,40 @@ struct IntegrityGate<Content: View>: View {
         }
     }
 }
+
+
+#if DEBUG
+/// The widget's face, small and medium, in full colour and as the system draws it tinted (accented) or
+/// vibrant. The system adds its tint on the home screen; this shows only the layout the widget gives it.
+private struct WidgetLab: View {
+    private let score = WidgetScore(score: 82, checkedAt: Date(timeIntervalSince1970: 1_794_995_000))
+    private let modes: [(String, WidgetRenderingMode)] = [("Full colour", .fullColor), ("Tinted", .accented), ("Vibrant", .vibrant)]
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                ForEach(modes, id: \.0) { name, mode in
+                    Text(name).font(.headline).foregroundStyle(.white)
+                    HStack(alignment: .top, spacing: 14) {
+                        face(mode, .systemSmall, width: 158)
+                        face(mode, .systemMedium, width: 338).frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .padding(16)
+        }
+        .background(Color(white: 0.18))
+    }
+
+    private func face(_ mode: WidgetRenderingMode, _ family: WidgetFamily, width: CGFloat) -> some View {
+        ScoreWidgetView(score: score, size: family)
+            .environment(\.widgetRenderingMode, mode)
+            .environment(\.colorScheme, .dark)
+            .frame(width: width, height: 158)
+            .background(mode == .fullColor ? Color.black : Color(white: 0.28))
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .scaleEffect(0.62, anchor: .topLeading)
+            .frame(width: width * 0.62, height: 158 * 0.62, alignment: .topLeading)
+    }
+}
+#endif

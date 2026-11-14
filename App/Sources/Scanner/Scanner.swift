@@ -111,10 +111,22 @@ final class Scanner {
     /// `quietly` re-reads in place, without the scanning screen: used when the app comes back to
     /// the screen and after the fix walk-through, so a fix shows in the score straight away. A
     /// quiet scan is saved to history only when something changed.
+    /// Renders only (debug builds, `-previewRise`): an earlier scan 12 points lower, to show what a rise looks like.
+    private static func previewRise(_ latest: ScanSnapshot?, current: ScanSnapshot) -> ScanSnapshot? {
+        #if DEBUG
+        if LaunchOptions.has("-previewRise") && latest == nil {
+            return ScanSnapshot(id: UUID(), date: Date().addingTimeInterval(-3 * 86_400), osVersion: current.osVersion,
+                                score: max(0, current.score - 12), findingCount: current.findingCount,
+                                concerningIDs: current.concerningIDs + ["clip-count"], valueHashes: [:])
+        }
+        #endif
+        return latest
+    }
+
     func scan(quietly: Bool = false) async {
         guard phase != .scanning else { return }
         let run = generation
-        let before = history.latest
+        let latest = history.latest
         if !quietly { phase = .scanning }
         progress = 0
         var fresh: [String: SignalReading] = [:]
@@ -132,6 +144,7 @@ final class Scanner {
         lastScan = Date()
         let snapshot = history.makeSnapshot(findings: allFindings, score: score,
                                             osVersion: ProcessInfo.processInfo.operatingSystemVersionString)
+        let before = Self.previewRise(latest, current: snapshot)
         let unchanged = before.map { $0.score == snapshot.score && $0.concerningIDs == snapshot.concerningIDs } ?? false
         if !(quietly && unchanged) {
             comparison = before.map { ScanComparison(previous: $0, current: snapshot) }

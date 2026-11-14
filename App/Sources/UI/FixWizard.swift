@@ -14,6 +14,8 @@ struct ScoreGuideCard: View {
     let score: FootprintScore
     let fixes: [Finding]
     var all: [Finding] = []
+    /// Off when the page already shows "Fix them with me" as its main button.
+    var showsFixButton = true
     let onFix: () -> Void
 
     /// The score if every one of these were fixed.
@@ -49,8 +51,10 @@ struct ScoreGuideCard: View {
                     }
                     if fixes.count > 5 { Text("and \(fixes.count - 5) more").font(.footnote).foregroundStyle(Brand.textSubtle) }
                 }
-                Button("Fix them with me", action: onFix)
-                    .buttonStyle(PrimaryCTAButtonStyle())
+                if showsFixButton {
+                    Button("Fix them with me", action: onFix)
+                        .buttonStyle(PrimaryCTAButtonStyle())
+                }
             }
         }
     }
@@ -153,6 +157,8 @@ struct FixWizard: View {
     private func step(_ f: Finding) -> some View {
         Page {
             ProgressView(value: Double(index), total: Double(fixes.count)).tint(Tone.fix.tint)
+            MascotSays(line: "This one is worth \(FootprintScore.points(for: f)) points. Do it and your Footprint score could reach \(projected(after: f)).",
+                       mood: .happy, size: 72, tone: .context)
             Text("Apps can't change these settings for you, so I'll take you to each one. Come back here after each change.")
                 .font(.footnote).foregroundStyle(Brand.textSubtle).fixedSize(horizontal: false, vertical: true)
             ToneCard(tone: .fix, title: f.definition.fixTitle, symbol: "wrench.and.screwdriver") {
@@ -178,7 +184,7 @@ struct FixWizard: View {
             let layout = verticalSizeClass == .compact ? AnyLayout(HStackLayout(spacing: 12)) : AnyLayout(VStackLayout(spacing: 8))
             layout {
                 Button("Done, next") { done.insert(f.id); Haptics.success(); index += 1 }
-                    .buttonStyle(PrimaryCTAButtonStyle(fill: Brand.green.color, depthColor: Color(hex: 0x0E8A56)))
+                    .buttonStyle(PrimaryCTAButtonStyle())
                 Button("Skip this one") { index += 1 }
                     .buttonStyle(GhostButtonStyle())
                     .frame(maxWidth: .infinity)
@@ -191,6 +197,12 @@ struct FixWizard: View {
             .background { ZStack { Color.black; Brand.surface }.ignoresSafeArea(edges: .bottom) }
             .overlay(alignment: .top) { Rectangle().fill(Brand.rule).frame(height: 0.5) }
         }
+    }
+
+    /// The Footprint score once this fix and the ones already done take effect.
+    private func projected(after f: Finding) -> Int {
+        let gone = done.union([f.id])
+        return FootprintScore(findings: scanner.allFindings.filter { !gone.contains($0.id) }).value
     }
 
     private var finished: some View {

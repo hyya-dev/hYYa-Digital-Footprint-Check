@@ -68,14 +68,25 @@ struct ShareCardView: View {
 /// to the share sheet.
 struct OverallShareButton: View {
     let overall: OverallScore
+    /// The main button once every check is done; an outline button before that.
+    var prominent = false
+    var title: LocalizedStringKey = "Share my result"
+    var message: String? = nil
     @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         if let image = render() {
-            ShareLink(item: image, preview: SharePreview("My privacy score", image: image)) {
-                Label("Share my result", systemImage: "square.and.arrow.up")
+            if prominent {
+                link(image).buttonStyle(PrimaryCTAButtonStyle())
+            } else {
+                link(image).buttonStyle(GhostButtonStyle())
             }
-            .buttonStyle(GhostButtonStyle())
+        }
+    }
+
+    private func link(_ image: Image) -> some View {
+        ShareLink(item: image, message: message.map { Text($0) }, preview: SharePreview("My privacy score", image: image)) {
+            Label(title, systemImage: "square.and.arrow.up")
         }
     }
 
