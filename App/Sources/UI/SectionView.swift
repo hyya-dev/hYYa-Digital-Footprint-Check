@@ -56,10 +56,10 @@ struct SectionView: View {
         case .unavailable?: return "Not available on this device."
         default:
             if findings.contains(where: { $0.advisory == .permission }) {
-                return "\(findings.count) clue\(findings.count == 1 ? "" : "s") an app gets once you allow it. Advice for deciding what to allow, not in your score."
+                return "\(findings.count) thing\(findings.count == 1 ? "" : "s") an app gets once you allow it. Advice for deciding what to allow, not in your score."
             }
             let worth = findings.filter(\.isConcerning).count
-            return worth == 0 ? "\(findings.count) clue\(findings.count == 1 ? "" : "s"), nothing alarming." : "\(findings.count) clues, \(worth) worth a look."
+            return worth == 0 ? "\(findings.count) thing\(findings.count == 1 ? "" : "s") apps can see, nothing alarming." : "\(findings.count) things apps can see, \(worth) worth a look."
         }
     }
 

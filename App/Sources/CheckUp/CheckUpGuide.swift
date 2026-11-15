@@ -60,6 +60,17 @@ struct CheckUpStep: Identifiable, Sendable {
 }
 
 enum CheckUpGuide {
+    /// Simple by default (1.1.0): the five that matter most come first; the other areas are one tap away.
+    static var essentialIDs: [String] {
+        #if os(macOS)
+        ["mac-filevault", "mac-lock", "mac-apple-account", "mac-updates", "mac-passwords"]
+        #else
+        ["lock-device", "apple-account", "updates", "passwords", "safety-check"]
+        #endif
+    }
+    static var essentials: [CheckUpStep] { essentialIDs.compactMap { id in steps.first { $0.id == id } } }
+    static var others: [CheckUpStep] { steps.filter { !essentialIDs.contains($0.id) } }
+
     static var steps: [CheckUpStep] {
         #if os(macOS)
         macSteps

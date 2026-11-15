@@ -15,6 +15,42 @@ final class ReviewRendersUITests: XCTestCase {
     override func setUp() { continueAfterFailure = true }
 
     func testUpright() { renders(.portrait, "up") }
+
+    /// 1.1.0 "simple by default": the screens the tester found crowded, upright and sideways.
+    func testSimple() {
+        for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
+            tag = t
+            launch([], o)
+            threeChecks()
+            shot("s02-results")
+            app.swipeUp(velocity: .slow)
+            shot("s02-results-2")
+            let all = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'See everything apps can read'")).firstMatch
+            scrollTo(all, max: 6)
+            all.tap(); sleep(1)
+            app.swipeUp(velocity: .slow)
+            shot("s02-results-all")
+            tab("Score")
+            shot("s01-score")
+
+            launch(["-autoScan", "-openFinding", "audio-route"], o)
+            sleep(16)
+            shot("s03-finding")
+            let more = app.buttons["More about this"].firstMatch
+            scrollTo(more, max: 6)
+            more.tap(); sleep(1)
+            app.swipeUp(velocity: .slow)
+            shot("s03-finding-more")
+
+            launch(["-startTab", "checkup"], o)
+            shot("s04-checkup")
+            let areas = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'More areas'")).firstMatch
+            scrollTo(areas, max: 6)
+            areas.tap(); sleep(1)
+            app.swipeUp(velocity: .slow)
+            shot("s04-checkup-more")
+        }
+    }
     /// Just the score-rise and hYYa-suggestion shots, upright and sideways.
     func testRiseAndSuggestion() {
         for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
