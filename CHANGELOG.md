@@ -13,7 +13,14 @@ What's New (Google Play):
 > • A wider home screen widget, and easier to use with TalkBack and larger text.
 > This release contains general bug fixes and stability improvements.
 
-What's in it (Android):
+What's New (App Store; the Mac App Store says "desktop" for "Home Screen"):
+> • A calmer new look, easier on the eyes.
+> • Simpler results: what you can fix comes first, with what each fix is worth.
+> • Check-up starts with five essential steps, and any check can be run again from your score.
+> • Add the score widget to your Home Screen.
+> This release contains general bug fixes and stability improvements.
+
+What's in it (every platform; the Android details are marked):
 - A new look: a warm charcoal page, flat slate cards, a muted gold accent, and the detective in a soft spotlight.
   A card that is worth a look carries a coral edge; a fix carries a green one.
 - Simple by default: Footprint opens on the things you can fix, each with its points, and the full list is one tap
@@ -21,17 +28,21 @@ What's in it (Android):
   serious" in view, and the rest folds under "More about this".
 - Check-up opens on five essentials, with the other areas one tap away. It counts toward your score once the five
   are done; if you had already finished every area that counted before, you keep that credit.
-- Every finished check has "Check again" on the Score page, and (versionCode 30) the Score page says when it was
-  last checked and offers "Check everything again".
+- Every finished check has "Check again" on the Score page, and the Score page says when it was last checked and
+  offers "Check everything again" (on Android from versionCode 30).
 - Sensitive apps checks every kind by default, with Select all / Clear all.
 - Clear history asks first and says when it's done.
-- "Add the widget" places the wide widget; the small one is roomier.
-- Clearer TalkBack labels and states, and a lighter faint grey that reads at 4.5:1.
+- On a wide screen, such as a tablet or a foldable held open like a book, the Score sits on the left page and the
+  check you open on the right; open a finding or a step and the check moves left with its detail on the right
+  (App Store).
+- Android only: "Add the widget" places the wide widget; the small one is roomier; clearer TalkBack labels and
+  states, and a lighter faint grey that reads at 4.5:1.
 
 | Store | Version | Live | Source |
 |---|---|---|---|
 | Google Play | 1.1.0 (versionCode 29) | 2026-11-16 | tag `v1.1.0-android29` |
 | Google Play | 1.1.0 (versionCode 30): the Score page says when it was last checked and offers "Check everything again" | 2026-11-16 | tag `v1.1.0-android30` |
+| App Store (iPhone and iPad) | 1.1.0 (build 43) | 2026-11-16 | tag `v1.1.0-build43` |
 
 ## 1.0.8
 
