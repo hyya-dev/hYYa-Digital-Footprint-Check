@@ -4,6 +4,8 @@
 
 package com.hyya.footprintinspector.ui
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -523,7 +525,20 @@ fun HomeScreen(scanner: Scanner, nav: Nav) {
             Text(if (left == 0) "All ${overall.total} checks done. Higher is better."
                 else "${overall.doneCount} of ${overall.total} checks done. Higher is better.",
                 color = Brand.textMuted, fontSize = 15.sp, lineHeight = 21.sp)
-            Text("How the score works", color = Brand.sand, fontSize = 13.sp, modifier = Modifier.clickableNoRipple { nav.push(Route.ScoreRoute) })
+            // How old the score is, and one way to run every check again (owner, 2026-11-16).
+            scanner.history.latest?.date?.let { last ->
+                val now = System.currentTimeMillis()
+                Text("Last checked " + (if (now - last < 60_000) "just now" else android.text.format.DateUtils.getRelativeTimeSpanString(last, now,
+                    android.text.format.DateUtils.MINUTE_IN_MILLIS).toString().replaceFirstChar { it.lowercase() }),
+                    color = Brand.textSubtle, fontSize = 13.sp)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (overall.doneCount > 0) Text("↻  Check everything again", color = Brand.sand, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickableNoRipple { scanner.startNewRound(); go(Tab.SCAN) }
+                        .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = "Check everything again" }
+                        .padding(vertical = 6.dp))
+                Text("How the score works", color = Brand.textSubtle, fontSize = 13.sp, modifier = Modifier.clickableNoRipple { nav.push(Route.ScoreRoute) })
+            }
             // Until every check is done, the next check is the one obvious step; sharing waits.
             val next = com.hyya.footprintinspector.model.OverallScore.Part.entries.firstOrNull { overall.parts[it] == null }
             if (next != null) {

@@ -75,6 +75,16 @@ final class PrivacyCheck {
     func recordSensitive(found: Int) { saved.sensitiveFound = found; saved.checkedAt = Date(); save() }
     func recordTracker(sharing: Int) { saved.trackerSharing = sharing; saved.checkedAt = Date(); save() }
 
+    /// "Check everything again" (owner, 2026-11-16): the scans' results start over so each check can run afresh,
+    /// while the score history and the Check-up steps the person has done (settings they changed) stay.
+    func startNewRound() {
+        saved.sensitiveFound = nil
+        saved.trackerSharing = nil
+        saved.trackerChecked = ""
+        saved.checkedAt = nil
+        save()
+    }
+
     func clearSaved() {
         saved = Saved()
         readable = true

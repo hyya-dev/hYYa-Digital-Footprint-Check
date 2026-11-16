@@ -111,11 +111,33 @@ struct ScoreHomeView: View {
                     .foregroundStyle(Brand.textMuted)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
-                Button("How the score works") { showingFormula = true }
-                    .buttonStyle(.plain)
-                    .font(.brand(.footnote))
-                    .foregroundStyle(Brand.textSubtle)
-                    .padding(.top, 2)
+                // How old the score is, and one way to run every check again (owner, 2026-11-16: an old score
+                // with no way to retry from here was a dead end).
+                if let last = [check.checkedAt, history.latest?.date].compactMap({ $0 }).max() {
+                    Text("Last checked \(Date().timeIntervalSince(last) < 60 ? "just now" : last.formatted(.relative(presentation: .named)))")
+                        .font(.brand(.footnote))
+                        .foregroundStyle(Brand.textSubtle)
+                }
+                HStack(spacing: 18) {
+                    if overall.doneCount > 0 {
+                        Button {
+                            Haptics.selection()
+                            check.startNewRound()
+                            goToTab(.footprint)
+                            Task { await scanner.scan() }
+                        } label: {
+                            Label("Check everything again", systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.plain)
+                        .font(.brand(.subheadline, .semibold))
+                        .foregroundStyle(Brand.sand)
+                    }
+                    Button("How the score works") { showingFormula = true }
+                        .buttonStyle(.plain)
+                        .font(.brand(.footnote))
+                        .foregroundStyle(Brand.textSubtle)
+                }
+                .padding(.top, 2)
             }
             // Until every check is done, the next check is the one obvious step; sharing waits.
             if let next = Self.nextCheck(overall) {

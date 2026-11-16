@@ -138,6 +138,14 @@ class Scanner(app: Application) : AndroidViewModel(app) {
         ScoreWidget.update(ctx)
     }
 
+    /** "Check everything again" (owner, 2026-11-16): the Sensitive result starts over and the scan (which also
+     *  covers the Tracker) runs again; the score history and the ticked Check-up steps stay. */
+    fun startNewRound() {
+        sensitiveFound = null
+        prefs.edit().remove(SENSITIVE).apply()
+        scan()
+    }
+
     fun clearSaved() {
         sensitiveFound = null
         // The kinds of apps checked and the steps ticked say something too, so they go as well.
