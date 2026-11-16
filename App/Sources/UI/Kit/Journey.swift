@@ -315,6 +315,18 @@ struct ChecksPanel: View {
 /// Duo keep one column.
 enum BookLayout {
     static func isWide(_ size: CGSize) -> Bool { size.width > size.height && size.width >= 700 && size.height >= 560 }
+
+    #if os(iOS)
+    /// The left page's width, so the line between the pages falls on the middle of the window: on the open Duo
+    /// that is the hinge, whichever side the navbar is on.
+    @MainActor static func leftWidth(_ geo: GeometryProxy) -> CGFloat {
+        let frame = geo.frame(in: .global)
+        let window = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }?.keyWindow?.bounds.width
+        guard let window else { return geo.size.width / 2 }
+        return min(max(window / 2 - frame.minX, geo.size.width * 0.35), geo.size.width * 0.65)
+    }
+    #endif
 }
 
 struct ListDetailStack<Content: View, Placeholder: View>: View {

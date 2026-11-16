@@ -18,7 +18,7 @@ struct ScanView: View {
         GeometryReader { geo in
             if BookLayout.isWide(geo.size) && (!openedFinding.isEmpty || !openedSection.isEmpty) {
                 HStack(spacing: 0) {
-                    stack(pushesDetails: false).frame(width: geo.size.width / 2)
+                    stack(pushesDetails: false).frame(width: BookLayout.leftWidth(geo))
                     Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
                     NavigationStack { detailPage }
                 }

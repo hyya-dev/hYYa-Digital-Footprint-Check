@@ -28,7 +28,7 @@ struct CheckUpView: View {
         GeometryReader { geo in
             if BookLayout.isWide(geo.size) && !openStep.isEmpty {
                 HStack(spacing: 0) {
-                    NavigationStack { list(pushesStep: false) }.frame(width: geo.size.width / 2)
+                    NavigationStack { list(pushesStep: false) }.frame(width: BookLayout.leftWidth(geo))
                     Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
                     NavigationStack {
                         stepPage(openStep)

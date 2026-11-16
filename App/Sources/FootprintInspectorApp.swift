@@ -250,7 +250,7 @@ private struct BookPages: View {
         GeometryReader { geo in
             if BookLayout.isWide(geo.size) && !detailOpen {
                 HStack(spacing: 0) {
-                    page(.home).frame(width: geo.size.width / 2)
+                    page(.home).frame(width: BookLayout.leftWidth(geo))
                     Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
                     page(tab == .home ? rightOfScore : tab)
                 }
