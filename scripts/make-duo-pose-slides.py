@@ -85,16 +85,18 @@ def upright(canvas, shot, box_h, cx, cy, crease=False):
 
 
 def book(canvas, shot, page_w, cx, cy):
-    """The open Duo held like a book: its two pages split at the fold, each angled about 24 degrees back
-    from the hinge, so the outer edges are shorter and drawn in."""
+    """The open Duo held like a book facing you: its two pages split at the fold, the hinge furthest away,
+    so the hinge edge is the shorter one and the outer edges come towards you."""
     body = framed(shot, 60, 20)
     half = body.width // 2
     left, right = body.crop((0, 0, half, body.height)), body.crop((half, 0, body.width, body.height))
     scale = page_w / half
     h = body.height * scale
+    # Held like a book facing you: the hinge is the far edge (shorter), the outer edges come towards you
+    # (full height), and each page is foreshortened across its width (owner, 2026-11-16: not the other way).
     pull, drop = page_w * 0.09, h * 0.06
-    lq = [(cx - page_w + pull, cy - h / 2 + drop), (cx, cy - h / 2), (cx, cy + h / 2), (cx - page_w + pull, cy + h / 2 - drop)]
-    rq = [(cx, cy - h / 2), (cx + page_w - pull, cy - h / 2 + drop), (cx + page_w - pull, cy + h / 2 - drop), (cx, cy + h / 2)]
+    lq = [(cx - page_w + pull, cy - h / 2), (cx, cy - h / 2 + drop), (cx, cy + h / 2 - drop), (cx - page_w + pull, cy + h / 2)]
+    rq = [(cx, cy - h / 2 + drop), (cx + page_w - pull, cy - h / 2), (cx + page_w - pull, cy + h / 2), (cx, cy + h / 2 - drop)]
     shadow(canvas, [lq[0], rq[1], rq[2], lq[3]], 60)
     for page, quad, shade in ((left, lq, 0.86), (right, rq, 1.0)):
         if shade < 1:   # the left page faces a little away from the light
@@ -102,7 +104,7 @@ def book(canvas, shot, page_w, cx, cy):
             page = Image.alpha_composite(page, Image.composite(dark, Image.new("RGBA", page.size, (0, 0, 0, 0)), page.getchannel("A")))
         img, off = warp(page, quad)
         canvas.alpha_composite(img, off)
-    ImageDraw.Draw(canvas).line((cx, cy - h / 2 + 6, cx, cy + h / 2 - 6), fill=(8, 8, 9, 255), width=8)   # the hinge
+    ImageDraw.Draw(canvas).line((cx, cy - h / 2 + drop + 6, cx, cy + h / 2 - drop - 6), fill=(8, 8, 9, 255), width=8)   # the hinge
 
 
 def make(pose, screen, spec, dirs, mascot):
