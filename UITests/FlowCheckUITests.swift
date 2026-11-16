@@ -136,6 +136,10 @@ final class FlowCheckUITests: XCTestCase {
         XCUIDevice.shared.orientation = orientation
         XCTAssertTrue(app.buttons["Scan again"].waitForExistence(timeout: 25), "scan didn't finish")
 
+        // How the score works sits in the full list (1.1.0, simple by default): open it first.
+        let all = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'See everything apps can read'")).firstMatch
+        scrollUntil(all)
+        if all.exists { all.tap(); sleep(1) }
         // How the score works: Done.
         let how = app.buttons["How the score works"]
         scrollUntil(how)
@@ -232,7 +236,7 @@ final class FlowCheckUITests: XCTestCase {
     func testCheckUpFlow() {
         app.launch()
         tab("Check-up")
-        assertVisible(text("checked"), "Check-up heading")
+        assertVisible(text("essentials done"), "Check-up heading")
         let first = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Safety Check'")).firstMatch
         assertVisible(first, "first Check-up row without scrolling")
         shot("checkup-list")

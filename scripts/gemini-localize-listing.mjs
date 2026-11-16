@@ -84,6 +84,7 @@ function check(l) {
     else {
       if (en.whatsNew.includes("iPhone Duo") && !l.whatsNew.includes("iPhone Duo")) issues.push('whatsNew must keep "iPhone Duo" exactly as written');
       if (l.whatsNew.split("\n").length !== en.whatsNew.split("\n").length) issues.push("whatsNew must keep the same lines as the English");
+      for (const page of ["Check-up"]) if (en.whatsNew.includes(page) && !l.whatsNew.includes(page)) issues.push(`whatsNew must keep the page name "${page}" in English`);
     }
   }
   for (const [k, v] of Object.entries(l)) if (BANNED.test(v)) issues.push(`${k} uses a banned word (${v.match(BANNED)[0]})`);
@@ -102,7 +103,8 @@ Rules:
 - promotionalText: at most 170 characters. Keep it device-neutral like the English (phone, tablet or computer): never name iPhone, iPad, Mac or Android.
 - description: at most 4000 characters, plain text. Keep the structure: paragraphs, the UPPERCASE section headings (translated, still uppercase where the script has case) and the • bullets. Keep "${BRAND}", "hYYa" and "Mozilla Public License 2.0" unchanged; "Settings" is the system's own localised name for the Settings app. Stay device-neutral like the English ("your device", "the system"): never name iPhone, iPad, iOS, Mac or Android.
 - Never mention other apps or companies, viruses, malware or spyware, and make no ranking claims.
-- whatsNew: the release note. Keep its lines: the • bullet line${en.whatsNew?.includes("iPhone Duo") ? ' (keep "iPhone Duo" exactly as written, it\'s the device\'s name)' : ""} and, on the second line, a faithful translation of the fixed sentence "This release contains general bug fixes and stability improvements."
+- The app itself is in English, so when the release note names one of its pages ("Check-up"), keep that name in English exactly as written; local quotation marks around it are fine.
+- whatsNew: the release note. Keep every line in order: each • feature line${en.whatsNew?.includes("iPhone Duo") ? ' (keep "iPhone Duo" exactly as written, it\'s the device\'s name)' : ""} and, on the last line, a faithful translation of the fixed sentence "This release contains general bug fixes and stability improvements."
 ${feedback ? `\nYour previous attempt had these problems; fix all of them:\n- ${feedback.join("\n- ")}\n` : ""}
 English listing (JSON):
 ${JSON.stringify(WHATS_NEW ? { whatsNew: en.whatsNew } : SEARCH_ONLY ? { subtitle: en.subtitle, keywords: en.keywords } : TEXT_ONLY ? { promotionalText: en.promotionalText, description: en.description, whatsNew: en.whatsNew }

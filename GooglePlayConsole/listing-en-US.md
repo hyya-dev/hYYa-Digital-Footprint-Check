@@ -47,7 +47,10 @@ Meet the detective: he's on every page and has a tip if you tap him.
 hYYa Digital Footprint Check is part of the hYYa family of privacy-first apps.
 
 ## Release notes (500)
-• Add the widget to your home screen in one tap, from the Score page.
+• A calmer new look, easier on the eyes.
+• Simpler results: what you can fix comes first, with what each fix is worth.
+• Check-up starts with five essential steps, and any check can be run again from your score.
+• A wider home screen widget, and easier to use with TalkBack and larger text.
 This release contains general bug fixes and stability improvements.
 
 ## Category

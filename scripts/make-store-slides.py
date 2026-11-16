@@ -6,7 +6,7 @@
 
     python3 scripts/make-store-slides.py <raw-dir> <out-dir> <width> <height> [slides.json]
 
-Layout (Quiet Noir): black ground with a soft sand glow; the mascot and the full name
+Layout (Midnight Library, owner 2026-11-16): warm charcoal ground with a soft gold glow; the mascot and the full name
 "hYYa Digital Footprint Check" at the top; a benefit headline with one sand phrase; three highlight
 chips; and the real app screen in a device frame that runs off the bottom edge. The mascot
 appears once, in the header lockup (repeating it is overkill). Copy comes from
@@ -18,11 +18,13 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
 FONT = "/System/Library/Fonts/SFNS.ttf"
-SAND = (210, 174, 136)
-SAND_DEEP = (143, 117, 96)
-INK = (245, 245, 247)
-MUTED = (161, 161, 168)
-MASCOT = ROOT / "store/creative/mascot-night.png"  # the night render, faded into the dark slide
+SAND = (212, 175, 55)        # Midnight Library gold #D4AF37
+SAND_DEEP = (140, 116, 38)
+INK = (241, 242, 244)
+MUTED = (180, 182, 187)
+PAGE = (23, 24, 26)           # #17181A
+CARD = (37, 39, 43)           # #25272B
+MASCOT = ROOT / "App/Resources/Assets.xcassets/MascotCutout.imageset/mascot-cutout.png"  # the cut-out, under a gold spotlight
 
 
 # Apple's SF Pro is licensed only for mock-ups of software for Apple platforms, so the Google Play
@@ -42,11 +44,11 @@ def font(size, weight="Bold"):
 
 
 def glow_background(w, h):
-    bg = Image.new("RGB", (w, h), (0, 0, 0))
-    layer = Image.new("RGB", (w, h), (0, 0, 0))
+    bg = Image.new("RGB", (w, h), PAGE)
+    layer = Image.new("RGB", (w, h), PAGE)
     d = ImageDraw.Draw(layer)
-    d.ellipse((-w * 0.3, -h * 0.18, w * 1.3, h * 0.38), fill=(36, 28, 20))
-    d.ellipse((w * 0.2, h * 0.82, w * 1.4, h * 1.25), fill=(22, 16, 13))
+    d.ellipse((-w * 0.3, -h * 0.18, w * 1.3, h * 0.38), fill=(44, 40, 30))
+    d.ellipse((w * 0.2, h * 0.82, w * 1.4, h * 1.25), fill=(30, 31, 34))
     return Image.blend(bg, layer.filter(ImageFilter.GaussianBlur(w * 0.16)), 1.0)
 
 
@@ -112,7 +114,7 @@ def chips(d, items, x, y, max_w, size):
         w = d.textlength(text, font=f) + pad_x * 2 + size * 0.75
         if cx > x and cx + w > x + max_w:
             cx, cy = x, cy + h + gap
-        d.rounded_rectangle((cx, cy, cx + w, cy + h), h // 2, fill=(26, 22, 18), outline=SAND_DEEP, width=2)
+        d.rounded_rectangle((cx, cy, cx + w, cy + h), h // 2, fill=CARD, outline=(70, 66, 50), width=2)
         dot = size * 0.32
         d.ellipse((cx + pad_x, cy + h / 2 - dot / 2, cx + pad_x + dot, cy + h / 2 + dot / 2), fill=SAND)
         d.text((cx + pad_x + size * 0.75, cy + pad_y - size * 0.08), text, font=f, fill=INK)
@@ -129,6 +131,10 @@ def make_slide(spec, raw_dir, w, h, mascot):
     # Brand lockup: small mascot + full name
     m_small = mascot.resize((int(150 * unit), int(150 * unit * mascot.height / mascot.width)), Image.LANCZOS)
     top = int(110 * unit)
+    spot = Image.new("RGBA", (int(m_small.width * 1.6), int(m_small.width * 1.6)), (0, 0, 0, 0))
+    ImageDraw.Draw(spot).ellipse((0, 0, spot.width, spot.height), fill=SAND + (60,))
+    spot = spot.filter(ImageFilter.GaussianBlur(spot.width * 0.18))
+    canvas.alpha_composite(spot, (margin + m_small.width // 2 - spot.width // 2, top + m_small.height // 2 - spot.height // 2))
     canvas.alpha_composite(m_small, (margin, top))
     name_f = font(int(54 * unit), "Semibold")
     nx = margin + m_small.width + int(24 * unit)

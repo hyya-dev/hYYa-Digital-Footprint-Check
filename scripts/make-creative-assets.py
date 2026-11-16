@@ -34,8 +34,8 @@ CONCERNS = [
 CORAL = (236, 127, 106)
 
 def glow(w, h, centre_y=0.5):
-    bg = Image.new("RGB", (w, h), (0, 0, 0))
-    layer = Image.new("RGB", (w, h), (0, 0, 0))
+    bg = Image.new("RGB", (w, h), slides.PAGE)
+    layer = Image.new("RGB", (w, h), slides.PAGE)
     d = ImageDraw.Draw(layer)
     d.ellipse((w * 0.18, h * (centre_y - 0.55), w * 0.82, h * (centre_y + 0.55)), fill=(44, 33, 23))
     return Image.blend(bg, layer.filter(ImageFilter.GaussianBlur(w * 0.09)), 1.0).convert("RGBA")

@@ -104,7 +104,7 @@ Rules:
 - fullDescription: at most 4000 characters, plain text. Keep the structure: paragraphs, the UPPERCASE section headings (translated, still uppercase where the script has case) and the • bullets. Keep "${BRAND}" and "hYYa" unchanged. "Settings" is the system's own localised name for the Settings app. Keep "Android" and "Google" where the English has them, but never name iPhone, iPad, iOS or Mac.
 - Stay device-neutral: the listing is for phones and tablets alike, so say "device" (the local neutral word) wherever the English says "device". Never write "phone", "mobile", "smartphone", "cell" or "tablet".
 - The app itself is in English, so when the release note names one of its pages (${PAGES.map((p) => `"${p}"`).join(", ")}), keep that name in English exactly as written; local quotation marks around it are fine.
-- releaseNotes: the release note. Keep its two lines: the "•" feature line, and on the second line a faithful translation of the fixed sentence "This release contains general bug fixes and stability improvements."
+- releaseNotes: the release note. Keep every line in order: each "•" feature line, and on the last line a faithful translation of the fixed sentence "This release contains general bug fixes and stability improvements."
 - Never mention other apps or companies (other than Google and Android as in the English), viruses, malware or spyware, and make no ranking claims.
 ${feedback ? `\nYour previous attempt had these problems; fix all of them:\n- ${feedback.join("\n- ")}\n` : ""}
 English listing (JSON):
