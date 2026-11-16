@@ -4,6 +4,33 @@ Each store release, with the store's What's New and the date it went live on eac
 Every release has a matching tag and a [GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases).
 Website: [hyya.com/hyya-digital-footprint-check.html](https://hyya.com/hyya-digital-footprint-check.html)
 
+## 1.1.0
+
+What's New (Google Play):
+> • A calmer new look, easier on the eyes.
+> • Simpler results: what you can fix comes first, with what each fix is worth.
+> • Check-up starts with five essential steps, and any check can be run again from your score.
+> • A wider home screen widget, and easier to use with TalkBack and larger text.
+> This release contains general bug fixes and stability improvements.
+
+What's in it (Android):
+- A new look: a warm charcoal page, flat slate cards, a muted gold accent, and the detective in a soft spotlight.
+  A card that is worth a look carries a coral edge; a fix carries a green one.
+- Simple by default: Footprint opens on the things you can fix, each with its points, and the full list is one tap
+  away. A finding shows the headline, what's on your device and the fix; a finding worth a look keeps "How
+  serious" in view, and the rest folds under "More about this".
+- Check-up opens on five essentials, with the other areas one tap away. It counts toward your score once the five
+  are done; if you had already finished every area that counted before, you keep that credit.
+- Every finished check has "Check again" on the Score page.
+- Sensitive apps checks every kind by default, with Select all / Clear all.
+- Clear history asks first and says when it's done.
+- "Add the widget" places the wide widget; the small one is roomier.
+- Clearer TalkBack labels and states, and a lighter faint grey that reads at 4.5:1.
+
+| Store | Version | Live | Source |
+|---|---|---|---|
+| Google Play | 1.1.0 (versionCode 29) | 2026-11-16 | tag `v1.1.0-android29` |
+
 ## 1.0.8
 
 What's New (Google Play):
