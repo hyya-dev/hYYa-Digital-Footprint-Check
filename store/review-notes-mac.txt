@@ -2,9 +2,9 @@ hYYa Digital Footprint Check for Mac is a free privacy-education app. It reads t
 
 No login is required. To review:
 1. Click "Start with check 1". Results appear in a few seconds.
-2. Click any clue to see what it reveals, why the system allows it, and how to fix it. Where a fix exists, "Open in System Settings" opens the matching System Settings page.
+2. Footprint lists what can be fixed ("See everything apps can read" shows the rest). Click any item to see what it reveals and how to fix it. Where a fix exists, "Open in System Settings" opens the matching System Settings page.
 3. Each permission category ("Seen once you allow it") asks for that permission only when the user clicks "Show me", and shows counts and summaries only.
-4. "Sensitive apps": the user picks categories, then clicks Check. Results are hidden until clicked, cleared when the app goes to the background, and never sent. Only the count found stays on the device, never which apps.
+4. "Sensitive apps": all categories are on by default (any can be turned off); the user clicks Check. Results are hidden until clicked, cleared when the app goes to the background, and never sent. Only the count found stays on the device, never which apps.
 5. "Check-up" walks through the Privacy & Security pages of System Settings.
 6. Settings opens in its own window (hYYa Digital Footprint Check menu › Settings, or ⌘,).
 
