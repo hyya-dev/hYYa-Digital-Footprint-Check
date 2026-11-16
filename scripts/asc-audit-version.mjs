@@ -69,6 +69,26 @@ for (const want of PLATFORM === "MAC_OS" ? ["APP_DESKTOP"] : ["APP_IPHONE_67", "
   ok(shots.length >= 1 && done === shots.length, `${want}: ${shots.length} slides, ${done} processed`);
 }
 
+// Product page header and search results artwork (iOS): every language must carry both, and each must be the
+// repo's current file (same size in bytes). Missed once on 1.1.0, when the slides were new but the header and
+// search card on the store were still the old look (owner pulled the build from review, 2026-11-16).
+if (PLATFORM === "IOS") {
+  const { statSync } = await import("node:fs");
+  const want = {
+    PRODUCT_PAGE_HEADER_ASSET: statSync(new URL("../store/creative/header-3840x1646.png", import.meta.url)).size,
+    APP_STORE_SEARCH_RESULTS_ASSET: statSync(new URL("../store/creative/search-results-3840x2560.png", import.meta.url)).size,
+  };
+  let art = 0;
+  for (const l of locs) {
+    const pl = await api(`/v1/appStoreVersionLocalizations/${l.id}/placements?include=image&limit=200`);
+    const imgs = Object.fromEntries((pl.included ?? []).map((i) => [i.id, i.attributes]));
+    const bad = Object.entries(want).filter(([type, size]) => !pl.data.some((p) => p.attributes.placementType === type
+      && imgs[p.relationships.image.data.id]?.fileSize === size));
+    if (bad.length) ok(false, `${l.attributes.locale}: ${bad.map(([t]) => t).join(", ")} missing or not the repo's file`); else art++;
+  }
+  ok(art === locs.length, `header and search results art is the repo's in ${art} of ${locs.length} languages`);
+}
+
 // Reviewer notes and contact.
 const notes = readFileSync(new URL(PLATFORM === "MAC_OS" ? "../store/review-notes-mac.txt" : "../store/review-notes.txt", import.meta.url), "utf8").trim();
 const rd = (await api(`/v1/appStoreVersions/${version.id}/appStoreReviewDetail`)).data.attributes;
