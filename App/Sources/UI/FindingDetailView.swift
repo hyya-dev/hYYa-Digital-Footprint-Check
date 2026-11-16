@@ -68,57 +68,9 @@ struct FindingDetailView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(current.isConcerning ? Tone.alert.tint : Brand.textMuted)
                 }
-                FlowRow {
-                    ToneBadge(text: def.persistence.label, symbol: "clock", tone: .limit)
-                    ToneBadge(text: def.section.group == .permission ? "Needs permission" : "No permission needed",
-                              symbol: def.section.group == .permission ? "hand.raised" : "eye", tone: .limit)
-                }
-                if !finding.reading.items.isEmpty {
-                    Rectangle().fill(headerTone.tint.opacity(0.2)).frame(height: 0.5)
-                    DisclosureGroup(isExpanded: $showDetails) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            ForEach(Array(finding.reading.items.enumerated()), id: \.offset) { _, item in
-                                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                    Circle().fill(headerTone.tint.opacity(0.7)).frame(width: 5, height: 5)
-                                    Text(item)
-                                        .font(.subheadline)
-                                        .foregroundStyle(Brand.textMuted)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                        .textSelection(.enabled)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
-                        .padding(.top, 8)
-                    } label: {
-                        Text("All the details (\(finding.reading.items.count))")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(headerTone.tint)
-                    }
-                    .tint(headerTone.tint)
-                    .sensoryFeedback(.selection, trigger: showDetails)
-                }
             }
 
             fixCard
-
-            seriousCard
-
-            // The fuller explanation, for anyone who wants it, out of the way of the answer.
-            ToneCard(tone: .explain) {
-                DisclosureGroup(isExpanded: $showMore) {
-                    VStack(alignment: .leading, spacing: 14) {
-                        moreRow("What it tells an app", def.reveals)
-                        moreRow("Why the system allows it", def.why)
-                    }
-                    .padding(.top, 10)
-                } label: {
-                    Label("More about this", systemImage: "text.book.closed")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Tone.explain.tint)
-                }
-                .tint(Tone.explain.tint)
-            }
 
             if showSuggestions, let suggestion = HyyaSuggestions.suggestion(for: def.id),
                !seenSuggestions.split(separator: "|").contains(Substring(suggestion.appName)) {
@@ -138,6 +90,64 @@ struct FindingDetailView: View {
                             .buttonStyle(GhostButtonStyle())
                         Button("No thanks") { withAnimation { markSeen(suggestion) } }
                             .buttonStyle(.plain).font(.subheadline).foregroundStyle(Brand.ink)
+                    }
+                }
+            }
+
+            // A finding worth a look keeps its "How serious" card in view; only calm ones fold it.
+            if current.isConcerning { seriousCard }
+
+            // Simple by default (1.1.0): how serious it is, why the system allows it and every detail
+            // are one tap away, out of the way of the answer.
+            Button { withAnimation(.smooth) { showMore.toggle() } } label: {
+                HStack {
+                    Label("More about this", systemImage: "text.book.closed").font(.body.weight(.semibold))
+                    Spacer()
+                    Image(systemName: showMore ? "chevron.up" : "chevron.down")
+                }
+                .foregroundStyle(Brand.sand)
+                .padding(.vertical, 14)
+                .padding(.horizontal, 18)
+                    .overlay(Capsule().strokeBorder(Brand.edge.opacity(0.45), lineWidth: 0.75))
+                .contentShape(Capsule())  // the whole pill takes the tap, not just its text and chevron
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(showMore ? "Expanded" : "Collapsed")
+
+            if showMore {
+                if !current.isConcerning { seriousCard }
+                ToneCard(tone: .explain) {
+                    moreRow("What it tells an app", def.reveals)
+                    moreRow("Why the system allows it", def.why)
+                    FlowRow {
+                        ToneBadge(text: def.persistence.label, symbol: "clock", tone: .limit)
+                        ToneBadge(text: def.section.group == .permission ? "Needs permission" : "No permission needed",
+                                  symbol: def.section.group == .permission ? "hand.raised" : "eye", tone: .limit)
+                    }
+                    if !finding.reading.items.isEmpty {
+                        Rectangle().fill(Tone.explain.tint.opacity(0.2)).frame(height: 0.5)
+                        DisclosureGroup(isExpanded: $showDetails) {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(Array(finding.reading.items.enumerated()), id: \.offset) { _, item in
+                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                        Circle().fill(Tone.explain.tint.opacity(0.7)).frame(width: 5, height: 5)
+                                        Text(item)
+                                            .font(.subheadline)
+                                            .foregroundStyle(Brand.textMuted)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                            .textSelection(.enabled)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                            }
+                            .padding(.top, 8)
+                        } label: {
+                            Text("All the details (\(finding.reading.items.count))")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Tone.explain.tint)
+                        }
+                        .tint(Tone.explain.tint)
+                        .sensoryFeedback(.selection, trigger: showDetails)
                     }
                 }
             }

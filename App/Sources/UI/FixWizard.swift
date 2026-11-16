@@ -27,7 +27,7 @@ struct ScoreGuideCard: View {
     private var meaning: String {
         switch score.level {
         case .light: "Higher is better, and you're in good shape: apps learn little that could single out this device."
-        case .moderate: "Higher is better. You're in the middle: a few clues together could single out this device."
+        case .moderate: "Higher is better. You're in the middle: a few details together could single out this device."
         case .heavy: "Higher is better. A low score means apps can easily tell this device apart from others and recognise you."
         }
     }

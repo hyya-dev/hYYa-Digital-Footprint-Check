@@ -21,8 +21,8 @@ enum SignalImpact {
     static func reach(_ s: Severity) -> String {
         switch s {
         case .high: "Enough on its own to tell this device apart from almost every other, so apps and the companies behind them can recognise you."
-        case .medium: "Narrows down who you are. Combined with two or three other clues, it can single out this device."
-        case .low: "Shared by many devices, so it says little on its own. It only matters alongside other clues."
+        case .medium: "Narrows down who you are. Combined with two or three other details, it can single out this device."
+        case .low: "Shared by many devices, so it says little on its own. It only matters alongside other details."
         }
     }
 

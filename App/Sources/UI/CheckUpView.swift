@@ -6,9 +6,9 @@ import SwiftUI
 
 struct CheckUpView: View {
     #if os(macOS)
-    static let introLine = "macOS never tells one app which other apps can reach your location, contacts or screen. Only System Settings knows, so let's look together."
+    static let introLine = "Start with five simple steps. Then, if you like, see which apps can reach your location, contacts or screen."
     #else
-    static let introLine = "Start with simple protection steps, then see which apps can reach your Health, location or photos. Only Settings knows, so let's look together, one area at a time."
+    static let introLine = "Start with five simple steps. Then, if you like, see which apps can reach your health, location or photos."
     #endif
 
     /// Ticked steps, remembered on this phone only so the user can pick up where they left off.
@@ -16,39 +16,46 @@ struct CheckUpView: View {
     /// The open area, saved on this device so it's still open after the person goes to Settings,
     /// even if iOS quit the app meanwhile.
     @AppStorage("nav.checkup") private var openStep = ""
+    /// The other areas start closed on every visit (simple by default); kept only while the app is open.
+    @SceneStorage("checkup.showMore") private var showMore = false
 
     private var done: Set<String> { Set(stored.split(separator: ",").map(String.init)) }
 
     var body: some View {
-        let total = CheckUpGuide.steps.count
+        let total = CheckUpGuide.essentialIDs.count
+        let essentialsDone = CheckUpGuide.essentialIDs.filter { done.contains($0) }.count
         ListDetailStack {
             Page {
                 HeroCard(eyebrow: "Check-up",
-                         title: done.count == total ? "All checked!" : "\(done.count) of \(total) checked",
+                         title: essentialsDone == total ? "Essentials done!" : "\(essentialsDone) of \(total) essentials done",
                          subtitle: Self.introLine,
-                         mood: done.count == total ? .happy : .idle,
+                         mood: essentialsDone == total ? .happy : .idle,
                          mascotSize: 104) {
-                    ProgressView(value: Double(done.count), total: Double(total))
+                    ProgressView(value: Double(essentialsDone), total: Double(total))
                         .tint(Tone.fix.tint)
                         .padding(.top, 6)
-                        .animation(.spring, value: done.count)
+                        .animation(.spring, value: essentialsDone)
                 }
 
-                Panel {
-                    ForEach(Array(CheckUpGuide.steps.enumerated()), id: \.element.id) { index, step in
-                        Button { openStep = step.id } label: {
-                            RowCard(symbol: done.contains(step.id) ? "checkmark" : step.symbol,
-                                    title: step.title,
-                                    subtitle: step.hint ?? step.path,
-                                    tileFG: done.contains(step.id) ? InkStyle.white : Brand.accent,
-                                    tileBG: done.contains(step.id) ? Brand.mint.color : Brand.lilacSoft) {
-                                Image(systemName: done.contains(step.id) ? "checkmark.circle.fill" : "chevron.right")
-                                    .foregroundStyle(done.contains(step.id) ? Tone.fix.tint : Brand.textSubtle)
-                            }
-                        }
-                        .buttonStyle(PressableCardStyle())
+                SectionTitle(title: "The essentials", trailing: "\(essentialsDone) of \(total)")
+                stepPanel(CheckUpGuide.essentials)
+
+                Button { withAnimation(.smooth) { showMore.toggle() } } label: {
+                    HStack {
+                        Text(showMore ? "Hide the other areas" : "More areas (\(CheckUpGuide.others.count))")
+                            .font(.body.weight(.semibold))
+                        Spacer()
+                        Image(systemName: showMore ? "chevron.up" : "chevron.down")
                     }
+                    .foregroundStyle(Brand.sand)
+                    .padding(.vertical, 14)
+                    .padding(.horizontal, 18)
+                    .overlay(Capsule().strokeBorder(Brand.edge.opacity(0.45), lineWidth: 0.75))
+                    .contentShape(Capsule())  // the whole pill takes the tap, not just its text and chevron
                 }
+                .buttonStyle(.plain)
+                .accessibilityValue(showMore ? "Expanded" : "Collapsed")
+                if showMore { stepPanel(CheckUpGuide.others) }
 
                 if !done.isEmpty {
                     Button("Start over") { stored = "" }
@@ -70,6 +77,24 @@ struct CheckUpView: View {
             .task { if CheckUpStepView.restartedRecently { binding(for: "restart").wrappedValue = true } }
         } placeholder: {
             DetailPlaceholder(line: "Pick an area to see where to go and what to do.")
+        }
+    }
+
+    private func stepPanel(_ steps: [CheckUpStep]) -> some View {
+        Panel {
+            ForEach(steps) { step in
+                Button { openStep = step.id } label: {
+                    RowCard(symbol: done.contains(step.id) ? "checkmark" : step.symbol,
+                            title: step.title,
+                            subtitle: step.hint ?? step.path,
+                            tileFG: done.contains(step.id) ? InkStyle.white : Brand.accent,
+                            tileBG: done.contains(step.id) ? Brand.mint.color : Brand.lilacSoft) {
+                        Image(systemName: done.contains(step.id) ? "checkmark.circle.fill" : "chevron.right")
+                            .foregroundStyle(done.contains(step.id) ? Tone.fix.tint : Brand.textSubtle)
+                    }
+                }
+                .buttonStyle(PressableCardStyle())
+            }
         }
     }
 

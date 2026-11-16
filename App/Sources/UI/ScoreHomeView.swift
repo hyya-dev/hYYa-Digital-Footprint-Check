@@ -106,7 +106,7 @@ struct ScoreHomeView: View {
                     .foregroundStyle(Brand.ink)
                 AccentRule().padding(.vertical, 4)
                 Text(left == 0 ? "All \(overall.total) checks done. Higher is better." :
-                        "Based on \(overall.doneCount) of \(overall.total) checks. Do the other \(left) to complete your score.")
+                        "\(overall.doneCount) of \(overall.total) checks done. Higher is better.")
                     .font(.body)
                     .foregroundStyle(Brand.textMuted)
                     .lineSpacing(2)

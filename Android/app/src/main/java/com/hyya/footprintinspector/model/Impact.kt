@@ -10,8 +10,8 @@ object Impact {
 
     fun reach(s: Severity) = when (s) {
         Severity.HIGH -> "Enough on its own to tell this device apart from almost every other, so apps and the companies behind them can recognise you."
-        Severity.MEDIUM -> "Narrows down who you are. Combined with two or three other clues, it can single out this device."
-        Severity.LOW -> "Shared by many devices, so it says little on its own. It only matters alongside other clues."
+        Severity.MEDIUM -> "Narrows down who you are. Combined with two or three other details, it can single out this device."
+        Severity.LOW -> "Shared by many devices, so it says little on its own. It only matters alongside other details."
     }
 
     fun lasting(p: Persistence) = when (p) {

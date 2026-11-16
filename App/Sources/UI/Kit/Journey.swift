@@ -163,7 +163,7 @@ extension OverallScore {
     /// places looked through.
     @MainActor static func current(scanner: Scanner, history: HistoryStore, check: PrivacyCheck, checkUpStored: String, trackerStored: String = "") -> OverallScore {
         let ticked = Set(checkUpStored.split(separator: ",").map(String.init))
-        let ids = Set(CheckUpGuide.steps.filter(\.counts).map(\.id))
+        let ids = CheckUpGuide.scoredIDs(ticked: ticked)
         let reviewed = Set(trackerStored.split(separator: ",").map(String.init)).intersection(TrackerPlaces.ids).count
         return OverallScore(footprint: scanner.phase == .done ? scanner.score.value : history.latest?.score,
                             sensitiveFound: check.sensitiveFound,
@@ -239,8 +239,9 @@ struct ChecksPanel: View {
             return n == 0 ? "No app shared your data" : (n == 1 ? "1 app shared your data" : "\(n) apps shared your data")
             #endif
         case .checkup:
-            let ticked = Set(checkUpStored.split(separator: ",").map(String.init)).intersection(CheckUpGuide.steps.map(\.id)).count
-            return ticked == CheckUpGuide.steps.count ? "Every area checked" : (ticked == 0 ? "Not started" : "\(ticked) of \(CheckUpGuide.steps.count) areas checked")
+            let total = CheckUpGuide.essentialIDs.count
+            let ticked = Set(checkUpStored.split(separator: ",").map(String.init)).intersection(CheckUpGuide.essentialIDs).count
+            return overall.parts[.checkup] != nil ? "Check-up done" : (ticked == 0 ? "Not started" : "\(ticked) of \(total) essentials done")
         case .home, .settings:
             return ""
         }

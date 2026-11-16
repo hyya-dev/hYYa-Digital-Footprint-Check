@@ -146,6 +146,8 @@ private struct Results: View {
     @State private var showingFormula = false
     /// Saved on this device, like the open page, so the walk-through is still open on return.
     @AppStorage("nav.fixing") private var fixing = false
+    /// The full list starts closed on every visit (simple by default); kept only while the app is open.
+    @SceneStorage("results.showAll") private var showAll = false
     /// The clues you can fix, most points first.
     private var fixes: [Finding] {
         scanner.concerning.filter { FootprintScore.isFixable($0) && FootprintScore.points(for: $0) > 0 }
@@ -162,45 +164,47 @@ private struct Results: View {
             .sheet(isPresented: $showingFormula) { FormulaSheet() }
             .sheet(isPresented: $fixing, onDismiss: { FixWizard.forget(); Task { await scanner.scan(quietly: true) } }) { FixWizard(fixes: fixes) }
 
+        // Simple by default (1.1.0, tester feedback): what you can fix comes first, in plain words;
+        // everything an app can read is one tap away.
         VStack(alignment: .leading, spacing: 14) {
             Brand.eyebrow("Check 1 · Footprint")
                 .padding(.top, 20)
-            Text("\(score.level.title): \(score.value)")
-                .font(.title2.weight(.bold))
+            Text(fixes.isEmpty ? "Nothing here for you to fix"
+                 : fixes.count == 1 ? "1 thing you can fix" : "\(fixes.count) things you can fix")
+                .scaledFont(28, weight: .bold, relativeTo: .title)
                 .foregroundStyle(Brand.ink)
-            Text("Any app can read \(scanner.allFindings.count) clues about this device. \(concerning.isEmpty ? "None stands out." : "\(concerning.count) are worth a look.")")
+                .fixedSize(horizontal: false, vertical: true)
+            Text(fixes.isEmpty ? "Your Footprint score is \(score.value) out of 100. What's left, only Apple can change."
+                 : "Your Footprint score is \(score.value) out of 100. Fixing \(fixes.count == 1 ? "it" : "these") takes a few minutes.")
                 .font(.body)
                 .foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
-            let seen = scanner.allFindings
-            SummaryRing(slices: [
-                .alert(seen.filter(\.isConcerning).count, "worth a look"),
-                .amber(seen.filter { !$0.isConcerning && $0.severity > .low }.count, "worth knowing"),
-                .fine(seen.filter { $0.severity == .low }.count, "minor"),
-            ], caption: "clues")
-            // With fixes waiting, fixing is the main step; scanning again comes after.
-            if fixes.isEmpty {
-                Button("Scan again") { Task { await scanner.scan() } }
-                    .buttonStyle(PrimaryCTAButtonStyle())
-            } else {
-                Button("Fix them with me") { FixWizard.forget(); fixing = true }
-                    .buttonStyle(PrimaryCTAButtonStyle())
-                Button("Scan again") { Task { await scanner.scan() } }
-                    .buttonStyle(GhostButtonStyle())
-                    .frame(maxWidth: .infinity)
-            }
-            Button("How the score works") { showingFormula = true }
-                .buttonStyle(.plain)
-                .font(.footnote)
-                .foregroundStyle(Brand.textSubtle)
-                .frame(maxWidth: .infinity)
         }
 
-        ScoreGuideCard(score: score, fixes: fixes, all: scanner.allFindings, showsFixButton: false) { FixWizard.forget(); fixing = true }
-            .task { if LaunchOptions.has("-openFix") && !fixes.isEmpty { FixWizard.forget(); fixing = true } }
-
-
-        SectionDivider()
+        if !fixes.isEmpty {
+            Panel {
+                ForEach(fixes) { finding in
+                    Button { openFinding(finding.id) } label: {
+                        RowCard(symbol: finding.definition.section.symbol,
+                                title: finding.definition.fixTitle,
+                                subtitle: finding.definition.headline,
+                                tileFG: Brand.concern) {
+                            HStack(spacing: 8) {
+                                Text("+\(FootprintScore.points(for: finding))").monospacedDigit().foregroundStyle(Tone.fix.tint)
+                                Image(systemName: "chevron.right")
+                            }
+                        }
+                    }
+                    .buttonStyle(PressableCardStyle())
+                }
+            }
+            Button("Fix them with me") { FixWizard.forget(); fixing = true }
+                .buttonStyle(PrimaryCTAButtonStyle())
+                .task { if LaunchOptions.has("-openFix") { FixWizard.forget(); fixing = true } }
+        }
+        Button("Scan again") { Task { await scanner.scan() } }
+            .buttonStyle(GhostButtonStyle())
+            .frame(maxWidth: .infinity)
 
         if let comparison = scanner.comparison {
             ToneCard(tone: .context) {
@@ -209,21 +213,51 @@ private struct Results: View {
             }
         }
 
-        if !concerning.isEmpty {
-            SectionTitle(title: "Worth a look", trailing: "\(concerning.count)")
-            Panel {
-                ForEach(concerning) { finding in
-                    Button { openFinding(finding.id) } label: {
-                        ClueRow(finding: finding)
+        // Everything any app can read, for anyone who wants it.
+        Button { withAnimation(.smooth) { showAll.toggle() } } label: {
+            HStack {
+                Text(showAll ? "Hide the full list" : "See everything apps can read (\(scanner.allFindings.count))")
+                    .font(.body.weight(.semibold))
+                Spacer()
+                Image(systemName: showAll ? "chevron.up" : "chevron.down")
+            }
+            .foregroundStyle(Brand.sand)
+            .padding(.vertical, 14)
+            .padding(.horizontal, 18)
+            .overlay(Capsule().strokeBorder(Brand.edge.opacity(0.45), lineWidth: 0.75))
+            .contentShape(Capsule())  // the whole pill takes the tap, not just its text and chevron
+        }
+        .buttonStyle(.plain)
+        .accessibilityValue(showAll ? "Expanded" : "Collapsed")
+
+        if showAll {
+            let seen = scanner.allFindings
+            SummaryRing(slices: [
+                .alert(seen.filter(\.isConcerning).count, "worth a look"),
+                .amber(seen.filter { !$0.isConcerning && $0.severity > .low }.count, "worth knowing"),
+                .fine(seen.filter { $0.severity == .low }.count, "minor"),
+            ], caption: "things")
+            ScoreGuideCard(score: score, fixes: fixes, all: seen, showsFixButton: false) { FixWizard.forget(); fixing = true }
+            Button("How the score works") { showingFormula = true }
+                .buttonStyle(.plain)
+                .font(.footnote)
+                .foregroundStyle(Brand.textSubtle)
+                .frame(maxWidth: .infinity)
+            let fixIDs = Set(fixes.map(\.id))
+            let onlyApple = concerning.filter { !fixIDs.contains($0.id) }
+            if !onlyApple.isEmpty {
+                SectionTitle(title: "Only Apple can fix", trailing: "\(onlyApple.count)")
+                Panel {
+                    ForEach(onlyApple) { finding in
+                        Button { openFinding(finding.id) } label: { ClueRow(finding: finding) }
+                            .buttonStyle(PressableCardStyle())
                     }
-                    .buttonStyle(PressableCardStyle())
                 }
             }
+            group(.passive, title: "Seen without asking")
+            group(.advanced, title: "Clever tricks")
+            group(.permission, title: "Seen once you allow it")
         }
-
-        group(.passive, title: "Seen without asking")
-        group(.advanced, title: "Clever tricks")
-        group(.permission, title: "Seen once you allow it")
 
         // Rating, scan history and the scoreboard live in Settings, not on a check's page.
         NextStepCard(step: .sensitive) { goToTab(.sensitive) }
