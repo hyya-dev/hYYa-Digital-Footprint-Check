@@ -317,9 +317,15 @@ enum BookLayout {
     static func isWide(_ size: CGSize) -> Bool { size.width > size.height && size.width >= 700 && size.height >= 560 }
 
     #if os(iOS)
-    /// The left page's width, so the line between the pages falls on the middle of the window: on the open Duo
-    /// that is the hinge, whichever side the navbar is on.
+    /// The left page's width. On the open Duo the line between the pages follows the fold's real position, which
+    /// the system reports as a division region, so the two pages are not the same width beside the navbar (owner,
+    /// 2026-11-16; hYYa ink's lesson: never width / 2). Without a fold (iPad, iOS 26), the middle of the window.
     @MainActor static func leftWidth(_ geo: GeometryProxy) -> CGFloat {
+        if #available(iOS 27.1, *),
+           let fold = geo.reservedRegions(kind: .division, options: .includeInactive).first,
+           fold.frame.width < geo.size.width / 4, fold.frame.midX > 0, fold.frame.midX < geo.size.width {
+            return fold.frame.midX
+        }
         let frame = geo.frame(in: .global)
         let window = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
             .first { $0.activationState == .foregroundActive }?.keyWindow?.bounds.width
