@@ -23,9 +23,10 @@ object WidgetOffer {
             !c.getSharedPreferences("app", Context.MODE_PRIVATE).getBoolean(DISMISSED, false)
     }.getOrDefault(false)
 
-    /** Opens the launcher's own "Add" sheet for the 2 x 2 widget; the person can resize it after. */
+    /** Opens the launcher's own "Add" sheet for the wide 4 x 2 widget, like iOS's medium one (owner, 2026-11-16:
+     *  the 2 x 2 left blank space); the small one stays in the widget picker. */
     fun pin(c: Context): Boolean = runCatching {
-        AppWidgetManager.getInstance(c).requestPinAppWidget(ComponentName(c, ScoreWidget::class.java), null, null)
+        AppWidgetManager.getInstance(c).requestPinAppWidget(ComponentName(c, ScoreWidgetMedium::class.java), null, null)
     }.getOrDefault(false)
 
     fun dismiss(c: Context) {

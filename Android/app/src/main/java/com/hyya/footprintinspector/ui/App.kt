@@ -167,7 +167,7 @@ fun App(startTab: Tab = Tab.HOME, autoScan: Boolean = false, openFinding: String
     val select: (Tab) -> Unit = { t -> tab = t; nav.stack.clear(); view.performHapticFeedback(android.view.HapticFeedbackConstants.CONTEXT_CLICK) }
 
     Scaffold(
-        containerColor = Color.Black,
+        containerColor = Brand.page,
         bottomBar = {
             // Google's standard navigation bar: Score, the four checks and Settings
             // (Settings stays in the bar).
@@ -187,7 +187,7 @@ fun App(startTab: Tab = Tab.HOME, autoScan: Boolean = false, openFinding: String
             }
         },
     ) { inner ->
-        androidx.compose.foundation.layout.Row(Modifier.fillMaxSize().background(Color.Black).padding(inner)) {
+        androidx.compose.foundation.layout.Row(Modifier.fillMaxSize().background(Brand.page).padding(inner)) {
         // Sideways, Google's standard navigation rail down the left edge.
         if (rail) androidx.compose.material3.NavigationRail(containerColor = Brand.surface) {
             Tab.bar.forEach { t ->

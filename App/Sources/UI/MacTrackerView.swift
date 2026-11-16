@@ -53,7 +53,7 @@ struct MacTrackerView: View {
                          mood: done == total ? .happy : .thinking, mascotSize: 96) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(done == total ? "Tracker counts as 100 in your privacy score." : "\(done) of \(total) checked. Tick all \(total) and Tracker counts in your privacy score.")
-                            .font(.subheadline.weight(.semibold)).foregroundStyle(done == total ? Tone.fix.tint : Brand.sand)
+                            .font(.brand(.subheadline, .semibold)).foregroundStyle(done == total ? Tone.fix.tint : Brand.sand)
                         ProgressView(value: Double(done), total: Double(total)).tint(Tone.fix.tint)
                             .animation(.spring, value: done)
                     }
@@ -62,7 +62,7 @@ struct MacTrackerView: View {
                 ForEach(places) { place in
                     let isDone = checked.contains(place.id)
                     ToneCard(tone: isDone ? .fix : place.tone, title: place.title, symbol: isDone ? "checkmark" : place.symbol) {
-                        Text(place.why).font(.body).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                        Text(place.why).font(.brand(.body)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 12) {
                             Button("Open in System Settings") { SettingsLink.open(pane: place.pane); Haptics.selection() }
                                 .buttonStyle(GhostButtonStyle())

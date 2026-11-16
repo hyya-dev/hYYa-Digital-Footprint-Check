@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -60,22 +61,24 @@ object Brand {
     // Each colour has a dark-ground value and a sticky-note value. Inside a
     // StickyNote, LocalOnPaper is true and the same names give dark ink measured to reach WCAG 2.2
     // AA (4.5:1 text, 3:1 marks) on all six papers, as on iOS.
-    val sand: Color @Composable @ReadOnlyComposable get() = pick(0xFFD2AE88, InkRole.ACCENT)
-    val sandDeep: Color @Composable @ReadOnlyComposable get() = pick(0xFF8F7560, InkRole.ACCENT)
+    val sand: Color @Composable @ReadOnlyComposable get() = pick(0xFFD4AF37, InkRole.ACCENT)
+    val sandDeep: Color @Composable @ReadOnlyComposable get() = pick(0xFF8C7426, InkRole.ACCENT)
     /** Card, panel and outline borders: the explain tone's blue. */
-    val edge: Color @Composable @ReadOnlyComposable get() = pick(0xFF7FB2E5, InkRole.EDGE)
-    val concern: Color @Composable @ReadOnlyComposable get() = pick(0xFFEC7F6A, InkRole.CONCERN)
-    val concernSoft = Color(0xFF2A1714)
-    val green: Color @Composable @ReadOnlyComposable get() = pick(0xFF7CD9A8, InkRole.FIX)
-    val ink: Color @Composable @ReadOnlyComposable get() = pick(0xFFF5F5F7, InkRole.TEXT)
-    val textMuted: Color @Composable @ReadOnlyComposable get() = pick(0xFFA1A1A8, InkRole.MUTED)
-    val textSubtle: Color @Composable @ReadOnlyComposable get() = pick(0xFF84848B, InkRole.SUBTLE)
-    val surface: Color @Composable @ReadOnlyComposable get() = if (LocalOnPaper.current) Color.Black.copy(alpha = 0.06f) else Color(0xFF111113)
-    val tile: Color @Composable @ReadOnlyComposable get() = if (LocalOnPaper.current) Color.Black.copy(alpha = 0.08f) else Color(0xFF1D1915)
-    val rule: Color @Composable @ReadOnlyComposable get() = sandDeep.copy(alpha = 0.35f)
+    val edge: Color @Composable @ReadOnlyComposable get() = pick(0xFF8FA8C8, InkRole.EDGE)
+    val concern: Color @Composable @ReadOnlyComposable get() = pick(0xFFE57373, InkRole.CONCERN)
+    val concernSoft = Color(0xFF3A2C2E)
+    val green: Color @Composable @ReadOnlyComposable get() = pick(0xFF81C784, InkRole.FIX)
+    val ink: Color @Composable @ReadOnlyComposable get() = pick(0xFFF1F2F4, InkRole.TEXT)
+    val textMuted: Color @Composable @ReadOnlyComposable get() = pick(0xFFB4B6BB, InkRole.MUTED)
+    val textSubtle: Color @Composable @ReadOnlyComposable get() = pick(0xFF9A9CA2, InkRole.SUBTLE)
+    val surface: Color @Composable @ReadOnlyComposable get() = if (LocalOnPaper.current) Color.Black.copy(alpha = 0.06f) else Color(0xFF25272B)
+    val tile: Color @Composable @ReadOnlyComposable get() = if (LocalOnPaper.current) Color.Black.copy(alpha = 0.08f) else Color(0xFF2C2E33)
+    val rule: Color @Composable @ReadOnlyComposable get() = Color.White.copy(alpha = 0.08f)
+    /** The page: a warm charcoal, not black (Midnight Library, owner 2026-11-16). */
+    val page = Color(0xFF17181A)
     /** The primary button: white on black, dark ink on paper. */
-    val cta: Color @Composable @ReadOnlyComposable get() = pick(0xFFFFFFFF, InkRole.TEXT)
-    val onCta: Color @Composable @ReadOnlyComposable get() = if (LocalOnPaper.current) Color.White else Color.Black
+    val cta: Color @Composable @ReadOnlyComposable get() = pick(0xFFD4AF37, InkRole.TEXT)
+    val onCta: Color @Composable @ReadOnlyComposable get() = if (LocalOnPaper.current) Color.White else Color(0xFF17181A)
 
     @Composable @ReadOnlyComposable
     private fun pick(dark: Long, role: InkRole): Color {
@@ -98,7 +101,7 @@ object Brand {
 fun FootprintTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = darkColorScheme(
-            primary = Brand.sand, onPrimary = Color.Black, background = Color.Black, surface = Brand.surface,
+            primary = Brand.sand, onPrimary = Color(0xFF17181A), background = Brand.page, surface = Brand.surface,
             onBackground = Brand.ink, onSurface = Brand.ink, secondary = Brand.sand,
         ),
         content = content,
@@ -111,7 +114,7 @@ fun Page(resetOn: Any? = null, content: @Composable ColumnScope.() -> Unit) {
     // When a result appears, go back to the top so it's the first thing seen.
     val scroll = rememberScrollState()
     androidx.compose.runtime.LaunchedEffect(resetOn) { if (resetOn != null) scroll.animateScrollTo(0) }
-    Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.TopCenter) {
+    Box(Modifier.fillMaxSize().background(Brand.page), contentAlignment = Alignment.TopCenter) {
         Column(
             Modifier.widthIn(max = 720.dp).fillMaxWidth().verticalScroll(scroll)
                 .statusBarsPadding().padding(horizontal = 20.dp, vertical = 16.dp),
@@ -124,8 +127,14 @@ fun Page(resetOn: Any? = null, content: @Composable ColumnScope.() -> Unit) {
 /** The detective: the night render on the dark page, the cut-out on paper. */
 @Composable
 fun Mascot(size: Int, modifier: Modifier = Modifier) {
-    val art = if (LocalOnPaper.current) R.drawable.mascot_cutout else R.drawable.mascot_night
-    Image(painterResource(art), contentDescription = null, modifier = modifier.size(size.dp))
+    // Midnight Library: the cut-out under a soft warm spotlight, as in a quiet study at night.
+    val glow = Brand.sand
+    Box(modifier.size(size.dp).drawBehind {
+        drawCircle(Brush.radialGradient(listOf(glow.copy(alpha = 0.22f), glow.copy(alpha = 0.06f), Color.Transparent),
+            center = center, radius = this.size.minDimension * 0.62f), radius = this.size.minDimension * 0.62f)
+    }) {
+        Image(painterResource(R.drawable.mascot_cutout), contentDescription = null, modifier = Modifier.fillMaxSize())
+    }
 }
 
 @Composable
@@ -225,7 +234,7 @@ fun Pill(text: String, fg: Color = Brand.textMuted, bg: Color = Color.White.copy
         modifier = Modifier.clip(CircleShape).background(bg).padding(horizontal = 9.dp, vertical = 3.dp))
 }
 
-/** White capsule with black text: the one primary action on a screen. */
+/** Gold capsule with charcoal text: the one primary action on a screen. */
 @Composable
 fun PrimaryButton(text: String, modifier: Modifier = Modifier.fillMaxWidth(), fill: Color = Brand.cta, onClick: () -> Unit) {
     Text(
@@ -239,8 +248,8 @@ fun PrimaryButton(text: String, modifier: Modifier = Modifier.fillMaxWidth(), fi
 @Composable
 fun GhostButton(text: String, modifier: Modifier = Modifier.fillMaxWidth(), onClick: () -> Unit) {
     Text(
-        text, color = Brand.sand, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center,
-        modifier = modifier.pressable(onClick).clip(CircleShape).border(BorderStroke(1.dp, Brand.edge.copy(alpha = 0.55f)), CircleShape)
+        text, color = Brand.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center,
+        modifier = modifier.pressable(onClick).clip(CircleShape).border(BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)), CircleShape)
             .padding(vertical = 13.dp, horizontal = 20.dp),
     )
 }

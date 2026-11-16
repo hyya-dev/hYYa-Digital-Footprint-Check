@@ -23,10 +23,10 @@ enum Tone: Sendable {
     var tint: InkStyle {
         switch self {
         case .alert: Brand.concern                      // #EC7F6A, 6.9:1
-        case .explain: InkStyle(role: .edge, color: Color(dark: 0x7FB2E5, paper: 0x244973)) // 8.6:1 on black
+        case .explain: InkStyle(role: .edge, color: Color(dark: 0x8FA8C8, paper: 0x244973)) // 6.1:1 on the card
         case .context: Brand.sand                       // #D2AE88, 9.4:1
         case .fix: Brand.green                          // #7CD9A8, 11:1
-        case .limit: InkStyle(role: .subtle, color: Color(dark: 0xA7AFBF, paper: 0x424753))   // 8.3:1 on black
+        case .limit: InkStyle(role: .subtle, color: Color(dark: 0xA9ADB5, paper: 0x424753))   // 6.6:1 on the card
         }
     }
 
@@ -60,13 +60,13 @@ struct ToneCard<Content: View, Trailing: View>: View {
                 HStack(alignment: .center, spacing: 10) {
                     if let symbol {
                         Image(systemName: symbol)
-                            .font(.subheadline.weight(.semibold))
+                            .font(.brand(.subheadline, .semibold))
                             .foregroundStyle(tone.tint)
                             .frame(width: 30, height: 30)
                             .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tone.badge))
                     }
                     Text(title)
-                        .font(.headline)
+                        .font(.brand(.headline))
                         .foregroundStyle(Brand.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 8)
@@ -97,13 +97,13 @@ struct ToneBadge: View {
 
     var body: some View {
         HStack(spacing: 5) {
-            if let symbol { Image(systemName: symbol).font(.caption.weight(.semibold)) }
+            if let symbol { Image(systemName: symbol).font(.brand(.caption, .semibold)) }
             Text(text)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .font(.caption.weight(.semibold))
+        .font(.brand(.caption, .semibold))
         .foregroundStyle(tone.tint)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
@@ -171,8 +171,8 @@ struct SummaryRing: View {
                 }
                 VStack(spacing: 0) {
                     Text(centre ?? "\(slices.reduce(0) { $0 + $1.count })")
-                        .font(.title2.weight(.bold).monospacedDigit()).foregroundStyle(Brand.ink)
-                    if let caption { Text(caption).font(.caption2).foregroundStyle(Brand.textSubtle) }
+                        .font(.brand(.title2, .bold).monospacedDigit()).foregroundStyle(Brand.ink)
+                    if let caption { Text(caption).font(.brand(.caption2)).foregroundStyle(Brand.textSubtle) }
                 }
             }
             .frame(width: 104, height: 104)
@@ -180,8 +180,8 @@ struct SummaryRing: View {
                 ForEach(slices) { s in
                     HStack(spacing: 8) {
                         Circle().fill(s.color).frame(width: 10, height: 10)
-                        Text("\(s.count)").font(.subheadline.weight(.bold).monospacedDigit()).foregroundStyle(Brand.ink)
-                        Text(s.label).font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                        Text("\(s.count)").font(.brand(.subheadline, .bold).monospacedDigit()).foregroundStyle(Brand.ink)
+                        Text(s.label).font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }

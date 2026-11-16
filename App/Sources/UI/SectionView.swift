@@ -114,16 +114,16 @@ struct FindingCard: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(finding.definition.headline)
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(Brand.textMuted)
                 Text(finding.reading.value)
-                    .font(.body.weight(.medium).monospacedDigit())
+                    .font(.brand(.body, .medium).monospacedDigit())
                     .foregroundStyle(Brand.ink)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
                 if let note = finding.reading.note {
                     Text(note)
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .foregroundStyle(finding.isConcerning ? Brand.concern : Brand.textSubtle)
                         .multilineTextAlignment(.leading)
                 }
@@ -131,8 +131,8 @@ struct FindingCard: View {
             Spacer(minLength: 8)
             HStack(spacing: 8) {
                 if finding.isConcerning { SeverityDot(severity: .high) }
-                else if let advisory = finding.advisory { Text(advisory.badge).font(.caption.weight(.semibold)).foregroundStyle(Brand.textSubtle) }
-                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Brand.textSubtle)
+                else if let advisory = finding.advisory { Text(advisory.badge).font(.brand(.caption, .semibold)).foregroundStyle(Brand.textSubtle) }
+                Image(systemName: "chevron.right").font(.brand(.footnote, .semibold)).foregroundStyle(Brand.textSubtle)
             }
             .padding(.top, 4)
         }

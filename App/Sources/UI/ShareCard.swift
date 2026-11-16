@@ -14,15 +14,15 @@ struct ShareCardView: View {
             HStack(alignment: .center, spacing: 16) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("MY PRIVACY SCORE")
-                        .font(.caption.weight(.semibold)).tracking(1.4)
+                        .font(.brand(.caption, .semibold)).tracking(1.4)
                         .foregroundStyle(Brand.sand)
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         Text("\(overall.value ?? 0)").font(.system(size: 56, weight: .bold))
-                        Text("/ 100").font(.title3.weight(.semibold)).foregroundStyle(Brand.textMuted)
+                        Text("/ 100").font(.brand(.title3, .semibold)).foregroundStyle(Brand.textMuted)
                     }
                     .foregroundStyle(Brand.ink)
                     Text(overall.level?.title ?? "")
-                        .font(.title3.weight(.semibold))
+                        .font(.brand(.title3, .semibold))
                         .foregroundStyle(ScoreHomeView.tint(overall.level))
                 }
                 Spacer(minLength: 0)
@@ -31,10 +31,10 @@ struct ShareCardView: View {
             VStack(spacing: 0) {
                 ForEach(AppTab.checks) { tab in
                     HStack {
-                        Text(tab.title).font(.body).foregroundStyle(Brand.ink)
+                        Text(tab.title).font(.brand(.body)).foregroundStyle(Brand.ink)
                         Spacer()
                         Text(part(tab).map { "\($0)" } ?? "not done yet")
-                            .font(.body.weight(.semibold).monospacedDigit())
+                            .font(.brand(.body, .semibold).monospacedDigit())
                             .foregroundStyle(part(tab) == nil ? Brand.textSubtle : Brand.ink)
                     }
                     .padding(.vertical, 10)
@@ -42,13 +42,13 @@ struct ShareCardView: View {
                 }
             }
             Text("Check yours with hYYa Digital Footprint Check. Free, open source, and nothing leaves your device.")
-                .font(.footnote)
+                .font(.brand(.footnote))
                 .foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(28)
         .frame(width: 400)
-        .background(Color.black)
+        .background(Brand.page)
         .overlay(RoundedRectangle(cornerRadius: 0).strokeBorder(Brand.rule, lineWidth: 1))
         .environment(\.colorScheme, .dark)
     }

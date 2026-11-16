@@ -87,55 +87,29 @@ struct StickyNote: ViewModifier {
     }
 
     func body(content: Content) -> some View {
-        let h = hash
-        // Between about -1.2° and +1.2°, never exactly level.
-        let steps = [-1.2, -0.9, -0.6, -0.35, 0.35, 0.6, 0.9, 1.2]
-        let tilt = steps[Int(h % UInt64(steps.count))]
-        let pins: [Color] = [Color(hex: 0xB22222), Color(hex: 0x2B5AA8), Color(hex: 0x2E8A4E), Color(hex: 0xD8B020)]
-        let pin = pins[Int((h >> 16) % UInt64(pins.count))]
-        let wear = Wear.allCases[Int((h >> 24) % UInt64(Wear.allCases.count))]
-        let shape = NoteShape(wear: wear, seed: h)
+        // Midnight Library (owner, 2026-11-16): a flat slate card on the warm charcoal page, edged by a
+        // faint line. No paper, tilt, tape or pin. A card's meaning shows as a thin coloured line down
+        // its leading edge: coral for "worth a look", sage for a fix. Content stays in the dark scheme.
+        let shape = RoundedRectangle(cornerRadius: 16, style: .continuous)
         content
-            .environment(\.colorScheme, .light)
-            .environment(\.paper, paper)
-            .background(
-                paper.colour   // solid: the measured contrast holds everywhere on the note
-                    .overlay(alignment: .top) { Rectangle().fill(.black.opacity(0.03)).frame(height: 14) }
-                    .overlay { WearMarks(wear: wear) }
-            )
+            .background(Brand.surface)
+            .overlay(alignment: .leading) {
+                if let mark = Self.mark(for: paper) {
+                    Rectangle().fill(mark).frame(width: 3).accessibilityHidden(true)
+                }
+            }
             .clipShape(shape)
-            .overlay(alignment: .bottomTrailing) {
-                if wear == .curl {      // the rolled-up corner, lit on its back
-                    Path { p in p.move(to: CGPoint(x: 30, y: 0)); p.addLine(to: CGPoint(x: 0, y: 30)); p.addLine(to: CGPoint(x: 4, y: 4)); p.closeSubpath() }
-                        .fill(paper.colour.opacity(0.95)).shadow(color: .black.opacity(0.35), radius: 2, x: -1, y: -1)
-                        .frame(width: 30, height: 30).allowsHitTesting(false)
-                }
-            }
-            .overlay(alignment: .topTrailing) {
-                if wear == .dogEar {    // a corner folded over
-                    Path { p in p.move(to: CGPoint(x: 0, y: 0)); p.addLine(to: CGPoint(x: 24, y: 24)); p.addLine(to: CGPoint(x: 0, y: 24)); p.closeSubpath() }
-                        .fill(.black.opacity(0.16)).frame(width: 24, height: 24).allowsHitTesting(false)
-                }
-            }
-            .overlay(alignment: .top) {
-                Group {
-                    if fixing == .tape {
-                        Rectangle().fill(Color(hex: 0xF3EEDC, alpha: 0.55)).frame(width: 64, height: 18)
-                            .rotationEffect(.degrees(-4)).offset(y: -9)
-                    } else {
-                        Circle().fill(pin).frame(width: 14, height: 14)
-                            .overlay(Circle().fill(.white.opacity(0.45)).frame(width: 5, height: 5).offset(x: -2, y: -2))
-                            .shadow(color: .black.opacity(0.45), radius: 1.5, y: 1.5)
-                            .offset(y: 4)
-                    }
-                }
-                .allowsHitTesting(false)
-            }
-            .compositingGroup()
-            .shadow(color: .black.opacity(0.55), radius: 10, x: 2, y: 8)
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
-            .rotationEffect(.degrees(capped(reduceMotion ? tilt / 2 : tilt)))
+            .overlay(shape.strokeBorder(Color.white.opacity(0.05), lineWidth: 1))
             .padding(.vertical, 2)
+    }
+
+    /// The leading line: only cards with a meaning get one.
+    static func mark(for paper: Paper) -> Color? {
+        switch paper {
+        case .purple, .pink: Brand.concern.color
+        case .green: Brand.green.color
+        default: nil
+        }
     }
 }
 

@@ -25,14 +25,14 @@ struct ReviewCard: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 3) {
                             ForEach(0..<5, id: \.self) { _ in
-                                Image(systemName: "star.fill").font(.caption).foregroundStyle(Brand.sand)
+                                Image(systemName: "star.fill").font(.brand(.caption)).foregroundStyle(Brand.sand)
                             }
                         }
                         Text(tapped ? "Thank you for rating" : "Enjoying hYYa Digital Footprint Check?")
-                            .font(.headline)
+                            .font(.brand(.headline))
                             .foregroundStyle(Brand.ink)
                         Text("Your reviews keep us smiling while coding, and help others find a privacy app they can trust.")
-                            .font(.footnote)
+                            .font(.brand(.footnote))
                             .foregroundStyle(Brand.textMuted)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
@@ -67,7 +67,7 @@ private struct CardPill: View {
 
     var body: some View {
         Text(title)
-            .font(.body.weight(.semibold))
+            .font(.brand(.body, .semibold))
             .lineLimit(typeSize.isAccessibilitySize ? 2 : 1)
             .multilineTextAlignment(.center)
             .minimumScaleFactor(Brand.shrinkToFitFloor)
@@ -95,9 +95,9 @@ struct HyyaCard: View {
                         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("hYYa \u{2728}").font(.headline).foregroundStyle(Brand.ink)
+                        Text("hYYa \u{2728}").font(.brand(.headline)).foregroundStyle(Brand.ink)
                         Text("Companions you can trust: private apps that keep everything on your device.")
-                            .font(.footnote)
+                            .font(.brand(.footnote))
                             .foregroundStyle(Brand.textMuted)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)

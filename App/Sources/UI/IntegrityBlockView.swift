@@ -87,7 +87,7 @@ struct IntegrityBlockView: View {
             .frame(maxWidth: wide ? 960 : 560)
             .frame(width: geo.size.width, height: geo.size.height)
         }
-        .background(Color.black.ignoresSafeArea())
+        .background(Brand.page.ignoresSafeArea())
     }
 
     /// The words at the largest size that fits the space left, never cut off. A scrolling copy is
@@ -115,7 +115,7 @@ struct IntegrityBlockView: View {
                 .fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: gap * 0.6) {
                 Text("HOW TO FIX IT")
-                    .font(.caption.weight(.semibold)).tracking(1.2)
+                    .font(.brand(.caption, .semibold)).tracking(1.2)
                     .foregroundStyle(Brand.sand)
                 ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
                     HStack(alignment: .firstTextBaseline, spacing: 8) {

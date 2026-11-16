@@ -43,7 +43,7 @@ struct CheckUpView: View {
                 Button { withAnimation(.smooth) { showMore.toggle() } } label: {
                     HStack {
                         Text(showMore ? "Hide the other areas" : "More areas (\(CheckUpGuide.others.count))")
-                            .font(.body.weight(.semibold))
+                            .font(.brand(.body, .semibold))
                         Spacer()
                         Image(systemName: showMore ? "chevron.up" : "chevron.down")
                     }
@@ -138,7 +138,7 @@ struct CheckUpStepView: View {
 
             ToneCard(tone: .context, title: "Where to go", symbol: "gearshape") {
                 Text(step.path)
-                    .font(.body.weight(.semibold))
+                    .font(.brand(.body, .semibold))
                     .foregroundStyle(Tone.context.tint)
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
@@ -146,14 +146,14 @@ struct CheckUpStepView: View {
                 // No app can open another Settings page directly, so give the quickest way there.
                 if let term = Self.searchTerm(step.path) {
                     Label("Quickest: open Settings and type \"\(term)\" in its search bar.", systemImage: "magnifyingglass")
-                        .font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                        .font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                 }
                 #endif
             }
             if step.id == "restart", Self.restartedRecently, let boot = Sysctl.bootTime() {
                 ToneCard(tone: .fix, title: "Already done", symbol: "checkmark.seal") {
                     Text("This device last restarted \(boot.formatted(.relative(presentation: .named))). That counts, so I've ticked it for you.")
-                        .font(.body).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                        .font(.brand(.body)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
                 }
             }
             ToneCard(tone: .fix, title: "What to do", symbol: "checklist") {

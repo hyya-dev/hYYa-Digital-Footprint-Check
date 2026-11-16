@@ -38,7 +38,7 @@ struct ScoreHomeView: View {
                 if overall.value != nil {
                     ToneCard(tone: .context, title: "Stay on top of it", symbol: "calendar.badge.clock") {
                         Text("A restart once a week clears some kinds of spyware and gives apps a new restart time. I can remind you.")
-                            .font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                            .font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                         WeeklyReminderToggle()
                     }
                     WidgetOfferCard(value: overall.value ?? 0)
@@ -64,7 +64,7 @@ struct ScoreHomeView: View {
                     .foregroundStyle(Brand.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Four quick checks show what apps can learn about you, then help you fix it.")
-                    .font(.body)
+                    .font(.brand(.body))
                     .foregroundStyle(Brand.textMuted)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -76,7 +76,7 @@ struct ScoreHomeView: View {
                 }
                 .buttonStyle(PrimaryCTAButtonStyle())
                 Text("Nothing leaves your device · Open source")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(Brand.textSubtle)
                     .frame(maxWidth: .infinity)
             }
@@ -107,13 +107,13 @@ struct ScoreHomeView: View {
                 AccentRule().padding(.vertical, 4)
                 Text(left == 0 ? "All \(overall.total) checks done. Higher is better." :
                         "\(overall.doneCount) of \(overall.total) checks done. Higher is better.")
-                    .font(.body)
+                    .font(.brand(.body))
                     .foregroundStyle(Brand.textMuted)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
                 Button("How the score works") { showingFormula = true }
                     .buttonStyle(.plain)
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(Brand.textSubtle)
                     .padding(.top, 2)
             }
@@ -166,14 +166,14 @@ private struct WidgetOfferCard: View {
                             .environment(\.colorScheme, .dark)
                             // Drawn at the real small-widget size, then scaled, so it looks exactly as it will.
                             .frame(width: 158, height: 158)
-                            .background(Color.black)
+                            .background(Brand.page)
                             .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                             .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Brand.border, lineWidth: 1))
                             .scaleEffect(0.81, anchor: .topLeading)
                             .frame(width: 128, height: 128, alignment: .topLeading)
                             .accessibilityHidden(true)
                         Text("See your privacy score and your last check at a glance.")
-                            .font(.subheadline).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                            .font(.brand(.subheadline)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
                     }
                     StepList(steps: Self.steps, tint: Brand.sand)
                     Button("Got it") { withAnimation { dismissed = true } }

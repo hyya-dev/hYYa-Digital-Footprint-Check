@@ -34,22 +34,22 @@ struct ScoreGuideCard: View {
 
     var body: some View {
         ToneCard(tone: fixes.isEmpty ? .fix : .context, title: "What the footprint score means", symbol: "gauge.with.dots.needle.33percent") {
-            Text(meaning).font(.subheadline).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+            Text(meaning).font(.brand(.subheadline)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
             ScoreBands(value: score.value)
             if fixes.isEmpty {
                 Label("Nothing left that you can fix. What remains is up to Apple.", systemImage: "checkmark.seal.fill")
-                    .font(.subheadline).foregroundStyle(Tone.fix.tint)
+                    .font(.brand(.subheadline)).foregroundStyle(Tone.fix.tint)
             } else {
                 Text("Fix \(fixes.count == 1 ? "this one thing" : "these \(fixes.count) things") and your score could reach \(reachable):")
-                    .font(.subheadline.weight(.semibold)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                    .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(fixes.prefix(5)) { f in
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text("+\(FootprintScore.points(for: f))").font(.subheadline.weight(.bold).monospacedDigit()).foregroundStyle(Tone.fix.tint).frame(minWidth: 34, alignment: .leading)
-                            Text(f.definition.fixTitle).font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                            Text("+\(FootprintScore.points(for: f))").font(.brand(.subheadline, .bold).monospacedDigit()).foregroundStyle(Tone.fix.tint).frame(minWidth: 34, alignment: .leading)
+                            Text(f.definition.fixTitle).font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    if fixes.count > 5 { Text("and \(fixes.count - 5) more").font(.footnote).foregroundStyle(Brand.textSubtle) }
+                    if fixes.count > 5 { Text("and \(fixes.count - 5) more").font(.brand(.footnote)).foregroundStyle(Brand.textSubtle) }
                 }
                 if showsFixButton {
                     Button("Fix them with me", action: onFix)
@@ -66,8 +66,8 @@ private struct ScoreBands: View {
 
     private func band(_ name: String, _ range: String, _ color: InkStyle, _ align: HorizontalAlignment) -> some View {
         VStack(alignment: align, spacing: 1) {
-            Text(name).font(.caption.weight(.semibold)).foregroundStyle(color)
-            Text(range).font(.caption2).foregroundStyle(Brand.textSubtle)
+            Text(name).font(.brand(.caption, .semibold)).foregroundStyle(color)
+            Text(range).font(.brand(.caption2)).foregroundStyle(Brand.textSubtle)
         }
     }
     var body: some View {
@@ -160,11 +160,11 @@ struct FixWizard: View {
             MascotSays(line: "This one is worth \(FootprintScore.points(for: f)) points. Do it and your Footprint score could reach \(projected(after: f)).",
                        mood: .happy, size: 72, tone: .context)
             Text("Apps can't change these settings for you, so I'll take you to each one. Come back here after each change.")
-                .font(.footnote).foregroundStyle(Brand.textSubtle).fixedSize(horizontal: false, vertical: true)
+                .font(.brand(.footnote)).foregroundStyle(Brand.textSubtle).fixedSize(horizontal: false, vertical: true)
             ToneCard(tone: .fix, title: f.definition.fixTitle, symbol: "wrench.and.screwdriver") {
                 ToneBadge(text: "+\(FootprintScore.points(for: f)) points", tone: .fix)
             } content: {
-                Text(f.definition.fix.summary).font(.body).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                Text(f.definition.fix.summary).font(.brand(.body)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
                 if !f.definition.fix.steps.isEmpty { StepList(steps: f.definition.fix.steps, tint: Tone.fix.tint) }
                 if f.definition.isRestart { WeeklyReminderToggle() }
                 #if os(macOS)
@@ -194,7 +194,7 @@ struct FixWizard: View {
             .padding(.top, 10)
             .padding(.bottom, 6)
             .frame(maxWidth: .infinity)
-            .background { ZStack { Color.black; Brand.surface }.ignoresSafeArea(edges: .bottom) }
+            .background { ZStack { Brand.page; Brand.surface }.ignoresSafeArea(edges: .bottom) }
             .overlay(alignment: .top) { Rectangle().fill(Brand.rule).frame(height: 0.5) }
         }
     }

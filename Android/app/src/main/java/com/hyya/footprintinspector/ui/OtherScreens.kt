@@ -66,6 +66,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -88,7 +90,9 @@ private fun prefs(c: Context) = c.getSharedPreferences("app", Context.MODE_PRIVA
 @Composable
 fun SensitiveScreen(scanner: com.hyya.footprintinspector.scan.Scanner) {
     val context = LocalContext.current
-    var chosen by remember { mutableStateOf(prefs(context).getStringSet("sensitiveCategories", emptySet())!!.toSet()) }
+    // Every kind is on until the person turns some off (owner, 2026-11-16). No saved choice means all.
+    val allIds = Sensitive.categories.map { it.id }.toSet()
+    var chosen by remember { mutableStateOf(if (prefs(context).contains("sensitiveCategories")) prefs(context).getStringSet("sensitiveCategories", emptySet())!!.toSet() else allIds) }
     var results by remember { mutableStateOf<Map<String, List<SensitiveApp>>?>(null) }
     var revealed by remember { mutableStateOf(false) }
 
@@ -102,7 +106,7 @@ fun SensitiveScreen(scanner: com.hyya.footprintinspector.scan.Scanner) {
 
     Page(resetOn = "${results != null}-$revealed") {
         HeroCard("Sensitive apps", "Which apps could reveal you?",
-            "Any app can ask whether certain apps are installed, one by one, without asking you. Pick the kinds to check.", 104)
+            "Any app can ask whether certain apps are installed, one by one, without asking you. Every kind is on; turn off any you'd rather skip.", 104)
         results?.let { r ->
             val found = Sensitive.categories.flatMap { c -> (r[c.id] ?: emptyList()).map { c to it } }
             val checked = Sensitive.categories.filter { it.id in chosen }.sumOf { it.apps.size }
@@ -130,6 +134,12 @@ fun SensitiveScreen(scanner: com.hyya.footprintinspector.scan.Scanner) {
             NextStepCard(Tab.TRACKER)
         } else {
             SectionTitle("Kinds of apps", "${chosen.size} on")
+            val all = chosen.size == allIds.size
+            Text(if (all) "Clear all" else "Select all", color = Brand.sand, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.End, modifier = Modifier.fillMaxWidth().clickableNoRipple {
+                    chosen = if (all) emptySet() else allIds
+                    scanner.saveSensitiveChoice(chosen); results = null; revealed = false
+                }.semantics { role = androidx.compose.ui.semantics.Role.Button }.padding(vertical = 4.dp))
             Panel {
                 Sensitive.categories.forEachIndexed { i, c ->
                     val on = c.id in chosen
@@ -342,7 +352,7 @@ fun CheckUpStepScreen(index: Int, nav: Nav) {
             "google-account" -> GhostButton("Open Google Account") { openUrl(context, "https://myaccount.google.com/security") }
             else -> GhostButton("Open Settings") { openSettings(context, step.action) }
         }
-        PrimaryButton(if (done) "Checked ✓" else "I've checked this", fill = if (done) Brand.green else androidx.compose.ui.graphics.Color.White) {
+        PrimaryButton(if (done) "Checked ✓" else "I've checked this", fill = if (done) Brand.green else Brand.cta) {
             done = !done
             val set = prefs(context).getStringSet("checkUpDone", emptySet())!!.toMutableSet()
             if (done) set.add(step.id) else set.remove(step.id)
@@ -374,6 +384,23 @@ object Links {
 fun SettingsScreen(scanner: Scanner, nav: Nav) {
     val context = LocalContext.current
     var count by remember { mutableIntStateOf(scanner.history.snapshots.size) }
+    var confirmingClear by remember { mutableStateOf(false) }
+    var cleared by remember { mutableStateOf(false) }
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    if (confirmingClear) androidx.compose.material3.AlertDialog(
+        onDismissRequest = { confirmingClear = false },
+        title = { Text("Clear all saved scans?") },
+        text = { Text("Your score history, saved check results and before/after comparisons start over.") },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = {
+                scanner.clearSaved(); count = 0; cleared = true; confirmingClear = false
+                haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.Confirm)
+                android.widget.Toast.makeText(context, "History cleared", android.widget.Toast.LENGTH_SHORT).show()
+            }) { Text("Clear history", color = Brand.concern) }
+        },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = { confirmingClear = false }) { Text("Cancel", color = Brand.ink) } },
+        containerColor = Brand.surface, titleContentColor = Brand.ink, textContentColor = Brand.textMuted,
+    )
     Page {
         if (nav.stack.isNotEmpty()) BackBar("Settings", nav)
         HeroCard("Settings", "hYYa Digital Footprint Check", "Everything here stays on this device.")
@@ -381,8 +408,11 @@ fun SettingsScreen(scanner: Scanner, nav: Nav) {
         Panel {
             RowCard(Icons.Outlined.History, "Scan history") { Text("$count", color = Brand.textSubtle) }
             ReminderRow()
-            RowCard(Icons.Outlined.Delete, "Clear history", tint = Brand.concern, showDivider = false,
-                onClick = { scanner.clearSaved(); count = 0 })
+            // As on iOS: ask first, then say it's done, and grey the row out while nothing is saved.
+            val nothingSaved = count == 0 && scanner.sensitiveFound == null && checkUpDoneCount(context) == 0 && scanner.history.latest == null
+            RowCard(Icons.Outlined.Delete, "Clear history", subtitle = if (cleared) "History cleared" else null,
+                tint = if (nothingSaved) Brand.textSubtle else Brand.concern, showDivider = false,
+                onClick = if (nothingSaved) null else ({ confirmingClear = true }))
         }
         Text("Only scores and counts are kept, never which apps you have. Clear history removes them too.", color = Brand.textSubtle, fontSize = 12.sp)
         // Rating card, as on iOS.

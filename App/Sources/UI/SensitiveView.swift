@@ -18,16 +18,21 @@ struct SensitiveView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(PrivacyCheck.self) private var check
 
+    /// Every kind is on until the person turns some off (owner, 2026-11-16): no saved choice means all,
+    /// and "-" means none.
     private var chosen: Set<String> {
-        Set(storedChoice.split(separator: ",").map(String.init))
+        if storedChoice.isEmpty { return Self.allIDs }
+        if storedChoice == "-" { return [] }
+        return Set(storedChoice.split(separator: ",").map(String.init))
     }
+    private static var allIDs: Set<String> { Set(SensitiveCatalogue.categories.map(\.id)) }
 
     #if os(macOS)
-    static let heroLine = "Any app on a Mac can list every app you've installed, without asking you. Pick the kinds to check."
+    static let heroLine = "Any app on a Mac can list every app you've installed, without asking you. Every kind is on; turn off any you'd rather skip."
     static let limitLine = "On a Mac there's no limit: any app can see everything in your Applications folder. These are the apps that say the most about a person."
     static let othersLine = "Every app on this Mac can see all your apps, including banking, government, employer and ID apps."
     #else
-    static let heroLine = "Any app can ask whether certain apps are installed, one by one, without asking you. Pick the kinds to check."
+    static let heroLine = "Any app can ask whether certain apps are installed, one by one, without asking you. Every kind is on; turn off any you'd rather skip."
     static let limitLine = "The system lets each app ask about 25 apps at most, so I picked the ones that say the most about a person."
     static let othersLine = "Any app on this device can run this same check, including banking, government, employer and ID apps."
     #endif
@@ -62,6 +67,16 @@ struct SensitiveView: View {
                     NextStepCard(step: .tracker) { goToTab(.tracker) }
                 } else {
                     SectionTitle(title: "Kinds of apps", trailing: "\(chosen.count) on")
+                    let all = chosen.count == Self.allIDs.count
+                    Button(all ? "Clear all" : "Select all") {
+                        storedChoice = all ? "-" : ""
+                        results = nil; revealed = false
+                        Haptics.selection()
+                    }
+                    .font(.brand(.subheadline, .semibold))
+                    .foregroundStyle(Brand.sand)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.top, -10)
                     Panel {
                         ForEach(SensitiveCatalogue.categories) { category in
                             CategoryToggle(category: category, isOn: chosen.contains(category.id)) { toggle(category.id) }
@@ -75,7 +90,7 @@ struct SensitiveView: View {
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lock.fill").foregroundStyle(Brand.sand)
                         Text("Runs only on this device and nothing is sent. The result stays hidden until you tap it. For your score, only the number found is kept, never which apps.")
-                            .font(.footnote)
+                            .font(.brand(.footnote))
                             .foregroundStyle(Brand.textSubtle)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -133,7 +148,7 @@ struct SensitiveView: View {
                 } else {
                     ToneCard(tone: .alert, title: "Hidden for your privacy", symbol: "eye.slash") {
                         Text("The names stay hidden in case someone is looking over your shoulder. Show them when you're ready.")
-                            .font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                            .font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                         Button {
                             withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85)) { revealed = true }
                             Haptics.soft()
@@ -156,7 +171,7 @@ struct SensitiveView: View {
     private func toggle(_ id: String) {
         var set = chosen
         if set.contains(id) { set.remove(id) } else { set.insert(id) }
-        storedChoice = set.sorted().joined(separator: ",")
+        storedChoice = set.isEmpty ? "-" : (set == Self.allIDs ? "" : set.sorted().joined(separator: ","))
         results = nil
         revealed = false
     }
@@ -180,11 +195,11 @@ private struct FoundAppCard: View {
         ToneCard(tone: .alert, title: "Any app can see you have \(app.name)", symbol: category.symbol) {
             ToneBadge(text: "Worth a look", symbol: "exclamationmark.circle.fill", tone: .alert)
             Text([category.tells, category.risk].compactMap { $0 }.joined(separator: " "))
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
             Text(Brand.brandUppercased("What to do"))
-                .font(.caption.weight(.semibold))
+                .font(.brand(.caption, .semibold))
                 .tracking(1.1)
                 .foregroundStyle(Tone.fix.tint)
                 .padding(.top, 4)
@@ -203,7 +218,7 @@ private struct OthersCanCheckCard: View {
     var body: some View {
         ToneCard(tone: .context, title: "Who else can check this?", symbol: "building.columns") {
             Text(SensitiveView.othersLine)
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
             Label {
@@ -211,7 +226,7 @@ private struct OthersCanCheckCard: View {
             } icon: {
                 Image(systemName: "safari").foregroundStyle(Tone.fix.tint)
             }
-            .font(.subheadline)
+            .font(.brand(.subheadline))
             .foregroundStyle(Brand.ink)
         }
     }
@@ -228,7 +243,7 @@ private struct CategoryToggle: View {
                     subtitle: category.checkedApps.map(\.name).joined(separator: ", "),
                     tileFG: isOn ? Brand.ink : Brand.textSubtle) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
+                    .font(.brand(.title3))
                     .foregroundStyle(isOn ? Brand.ink : Brand.textSubtle)
             }
         }

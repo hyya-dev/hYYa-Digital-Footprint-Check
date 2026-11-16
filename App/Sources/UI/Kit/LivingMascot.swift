@@ -83,6 +83,12 @@ struct LivingMascot: View {
             default: 0
             }
             ZStack(alignment: .bottom) {
+                // Midnight Library: a soft warm spotlight behind him, as in a quiet study at night.
+                RadialGradient(colors: [Brand.sand.color.opacity(0.22), Brand.sand.color.opacity(0.06), .clear],
+                               center: .center, startRadius: 0, endRadius: size * 0.62)
+                    .frame(width: size * 1.3, height: size * 1.3)
+                    .offset(y: -size * 0.05)
+                    .allowsHitTesting(false)
                 Ellipse()
                     .fill(Color.white.opacity(0.10))
                     .frame(width: size * 0.62, height: size * 0.09)
@@ -106,7 +112,7 @@ struct LivingMascot: View {
 
     private func bubble(_ text: String, tailOnTrailing: Bool) -> some View {
         Text(text)
-            .font(.subheadline)
+            .font(.brand(.subheadline))
             .foregroundStyle(Brand.ink)
             .padding(.horizontal, 14)
             .padding(.vertical, 10)

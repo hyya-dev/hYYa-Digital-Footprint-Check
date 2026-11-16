@@ -153,7 +153,7 @@ struct RootView: View {
                 VStack(spacing: 6) {
                     MascotArt().frame(height: 64).accessibilityHidden(true)
                     Text(Brand.brandUppercased("hYYa Digital Footprint Check"))
-                        .font(.caption2.weight(.semibold)).tracking(1.2)
+                        .font(.brand(.caption2, .semibold)).tracking(1.2)
                         .foregroundStyle(Brand.textSubtle)
                         .multilineTextAlignment(.center)
                     SwiftUI.SettingsLink { Label("Settings", systemImage: "gearshape").labelStyle(.titleAndIcon) }
@@ -311,7 +311,7 @@ private struct WidgetLab: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 ForEach(modes, id: \.0) { name, mode in
-                    Text(name).font(.headline).foregroundStyle(.white)
+                    Text(name).font(.brand(.headline)).foregroundStyle(.white)
                     HStack(alignment: .top, spacing: 14) {
                         face(mode, .systemSmall, width: 158)
                         face(mode, .systemMedium, width: 338).frame(maxWidth: .infinity, alignment: .leading)
