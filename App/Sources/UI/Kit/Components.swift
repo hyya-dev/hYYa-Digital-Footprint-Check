@@ -17,7 +17,7 @@ struct ScaledFont: ViewModifier {
         self.weight = weight
     }
 
-    func body(content: Content) -> some View { content.font(.system(size: size, weight: weight)) }
+    func body(content: Content) -> some View { content.font(.custom("Avenir Next", fixedSize: size).weight(weight)) }
 }
 
 extension View {
@@ -63,7 +63,7 @@ struct Page<Content: View>: View {
         .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { topInset = $0 }
         .overlay(alignment: .top) {
             if topInset > 24 {
-                LinearGradient(colors: [.black, .black.opacity(0)], startPoint: .top, endPoint: .bottom)
+                LinearGradient(colors: [Brand.page, Brand.page.opacity(0)], startPoint: .top, endPoint: .bottom)
                     .frame(height: 64)
                     .ignoresSafeArea(edges: .top)
                     .allowsHitTesting(false)
@@ -106,7 +106,7 @@ struct HeroCard<Trailing: View>: View {
             AccentRule()
             if let subtitle {
                 Text(subtitle)
-                    .font(.body)
+                    .font(.brand(.body))
                     .foregroundStyle(Brand.textMuted)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -139,7 +139,7 @@ struct Panel<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) { content }
-            .padding(.top, 10)
+            .padding(.top, 4)
             .stickyNote(paper, seed: seed, fixing: .tape)
     }
 }
@@ -187,13 +187,13 @@ struct RowCard<Accessory: View>: View {
                 .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(tileFG.opacity(0.22), lineWidth: 0.5))
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.body)
+                    .font(.brand(.body))
                     .foregroundStyle(Brand.ink)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.footnote)
+                        .font(.brand(.footnote))
                         .foregroundStyle(Brand.textSubtle)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
@@ -201,7 +201,7 @@ struct RowCard<Accessory: View>: View {
             }
             Spacer(minLength: 8)
             accessory
-                .font(.footnote.weight(.semibold))
+                .font(.brand(.footnote, .semibold))
                 .foregroundStyle(Brand.textSubtle)
         }
         .padding(.horizontal, 16)
@@ -228,13 +228,13 @@ struct SectionTitle: View {
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
             Text(Brand.brandUppercased(title))
-                .font(.caption.weight(.semibold))
+                .font(.brand(.caption, .semibold))
                 .tracking(1)
                 .foregroundStyle(Brand.sand)
             Rectangle().fill(Brand.rule).frame(height: 0.5)
             if let trailing {
                 Text(trailing)
-                    .font(.caption.weight(.semibold).monospacedDigit())
+                    .font(.brand(.caption, .semibold).monospacedDigit())
                     .foregroundStyle(Brand.sand)
                     .padding(.horizontal, 7)
                     .padding(.vertical, 2)
@@ -263,7 +263,7 @@ struct MascotSays: View {
                 LivingMascot(mood: mood, size: min(size, 64))
                     .accessibilityHidden(true)
                 Text(line)
-                    .font(.body)
+                    .font(.brand(.body))
                     .foregroundStyle(Brand.ink)
                     .fixedSize(horizontal: false, vertical: true)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -300,7 +300,7 @@ struct ScoreOrb: View {
                     .foregroundStyle(Brand.ink)
                     .contentTransition(.numericText(value: Double(value)))
                 Text("of 100")
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .foregroundStyle(Brand.textSubtle)
             }
         }
@@ -322,10 +322,10 @@ struct Pill: View {
 
     var body: some View {
         HStack(spacing: 4) {
-            if let symbol { Image(systemName: symbol).font(.caption2) }
+            if let symbol { Image(systemName: symbol).font(.brand(.caption2)) }
             Text(text).lineLimit(2).fixedSize(horizontal: false, vertical: true)
         }
-        .font(.caption.weight(.medium))
+        .font(.brand(.caption, .medium))
         .foregroundStyle(fg)
         .padding(.horizontal, 9)
         .padding(.vertical, 4)
@@ -359,13 +359,13 @@ struct StepList: View {
             ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
                 HStack(alignment: .firstTextBaseline, spacing: 14) {
                     Text("\(i + 1)")
-                        .font(.footnote.weight(.semibold).monospacedDigit())
+                        .font(.brand(.footnote, .semibold).monospacedDigit())
                         .foregroundStyle(tint)
                         .frame(width: 24, height: 24)
                         .background(Circle().fill(tint.opacity(0.10)))
                         .overlay(Circle().strokeBorder(tint.opacity(0.5), lineWidth: 0.75))
                     Text(step)
-                        .font(.body)
+                        .font(.brand(.body))
                         .foregroundStyle(Brand.ink)
                         .fixedSize(horizontal: false, vertical: true)
                 }

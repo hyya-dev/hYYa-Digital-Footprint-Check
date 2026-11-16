@@ -57,7 +57,7 @@ struct SettingsLinkLab: View {
                 HStack {
                     VStack(alignment: .leading) {
                         Text(candidate.label)
-                        Text(candidate.id).font(.caption.monospaced()).foregroundStyle(.secondary)
+                        Text(candidate.id).font(.brand(.caption).monospaced()).foregroundStyle(.secondary)
                     }
                     Spacer()
                     switch results[candidate.id] {

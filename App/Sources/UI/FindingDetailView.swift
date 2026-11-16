@@ -45,16 +45,16 @@ struct FindingDetailView: View {
                     .foregroundStyle(Brand.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(def.brief)
-                    .font(.body)
+                    .font(.brand(.body))
                     .foregroundStyle(Brand.ink)
                     .fixedSize(horizontal: false, vertical: true)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(Brand.brandUppercased("On your device"))
-                        .font(.caption.weight(.semibold))
+                        .font(.brand(.caption, .semibold))
                         .tracking(1.1)
                         .foregroundStyle(Brand.textSubtle)
                     Text(finding.reading.value)
-                        .font(.title2.weight(.light).monospacedDigit())
+                        .font(.brand(.title2, .light).monospacedDigit())
                         .foregroundStyle(Brand.ink)
                         .fixedSize(horizontal: false, vertical: true)
                         .textSelection(.enabled)
@@ -65,7 +65,7 @@ struct FindingDetailView: View {
                     } icon: {
                         Image(systemName: current.isConcerning ? "exclamationmark.triangle.fill" : "info.circle")
                     }
-                    .font(.subheadline.weight(.semibold))
+                    .font(.brand(.subheadline, .semibold))
                     .foregroundStyle(current.isConcerning ? Tone.alert.tint : Brand.textMuted)
                 }
             }
@@ -83,13 +83,13 @@ struct FindingDetailView: View {
                                 .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous).strokeBorder(Color.black.opacity(0.12), lineWidth: 1))
                                 .accessibilityHidden(true)
                         }
-                        Text(suggestion.reason).font(.body).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                        Text(suggestion.reason).font(.brand(.body)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
                     }
                     HStack(spacing: 12) {
                         Button("See \(suggestion.appName)") { markSeen(suggestion); openURL(suggestion.url) }
                             .buttonStyle(GhostButtonStyle())
                         Button("No thanks") { withAnimation { markSeen(suggestion) } }
-                            .buttonStyle(.plain).font(.subheadline).foregroundStyle(Brand.ink)
+                            .buttonStyle(.plain).font(.brand(.subheadline)).foregroundStyle(Brand.ink)
                     }
                 }
             }
@@ -101,7 +101,7 @@ struct FindingDetailView: View {
             // are one tap away, out of the way of the answer.
             Button { withAnimation(.smooth) { showMore.toggle() } } label: {
                 HStack {
-                    Label("More about this", systemImage: "text.book.closed").font(.body.weight(.semibold))
+                    Label("More about this", systemImage: "text.book.closed").font(.brand(.body, .semibold))
                     Spacer()
                     Image(systemName: showMore ? "chevron.up" : "chevron.down")
                 }
@@ -132,7 +132,7 @@ struct FindingDetailView: View {
                                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                                         Circle().fill(Tone.explain.tint.opacity(0.7)).frame(width: 5, height: 5)
                                         Text(item)
-                                            .font(.subheadline)
+                                            .font(.brand(.subheadline))
                                             .foregroundStyle(Brand.textMuted)
                                             .fixedSize(horizontal: false, vertical: true)
                                             .textSelection(.enabled)
@@ -143,7 +143,7 @@ struct FindingDetailView: View {
                             .padding(.top, 8)
                         } label: {
                             Text("All the details (\(finding.reading.items.count))")
-                                .font(.subheadline.weight(.semibold))
+                                .font(.brand(.subheadline, .semibold))
                                 .foregroundStyle(Tone.explain.tint)
                         }
                         .tint(Tone.explain.tint)
@@ -166,7 +166,7 @@ struct FindingDetailView: View {
         } content: {
             if let line = SignalImpact.inPractice[def.id] {
                 Text(line)
-                    .font(.body.weight(.medium))
+                    .font(.brand(.body, .medium))
                     .foregroundStyle(Brand.ink)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -179,17 +179,17 @@ struct FindingDetailView: View {
 
     private func moreRow(_ title: String, _ text: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Brand.ink)
-            Text(text).font(.body).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text(title).font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink)
+            Text(text).font(.brand(.body)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func impactRow(_ symbol: String, _ title: String, _ text: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Image(systemName: symbol).font(.subheadline).foregroundStyle(Brand.textSubtle).frame(width: 20)
+            Image(systemName: symbol).font(.brand(.subheadline)).foregroundStyle(Brand.textSubtle).frame(width: 20)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Brand.ink)
-                Text(text).font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                Text(title).font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink)
+                Text(text).font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -204,11 +204,11 @@ struct FindingDetailView: View {
         } content: {
             if let advisory = current.advisory {
                 Label { Text(advisory.line).fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: "info.circle") }
-                    .font(.subheadline.weight(.semibold))
+                    .font(.brand(.subheadline, .semibold))
                     .foregroundStyle(Brand.ink)
             }
             Text(def.fix.summary)
-                .font(.body)
+                .font(.brand(.body))
                 .foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
             if !def.fix.steps.isEmpty {

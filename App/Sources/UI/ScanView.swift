@@ -81,7 +81,7 @@ private struct IdleHome: View {
                         .foregroundStyle(Brand.ink)
                         .fixedSize(horizontal: false, vertical: true)
                     Text("A quick scan reads only what any app could, without asking you. Then I'll help you fix what you can.")
-                        .font(.body)
+                        .font(.brand(.body))
                         .foregroundStyle(Brand.textMuted)
                         .lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
@@ -92,7 +92,7 @@ private struct IdleHome: View {
                 Button("Start with check 1") { Task { await scanner.scan() } }
                     .buttonStyle(PrimaryCTAButtonStyle())
                 Text("Nothing leaves your device · Open source")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(Brand.textSubtle)
                     .frame(maxWidth: .infinity)
             }
@@ -111,7 +111,7 @@ private struct ScanningView: View {
                 .padding(.top, 60)
             VStack(spacing: 10) {
                 Text(Self.line(for: scanner.progress))
-                    .font(.title2.weight(.semibold))
+                    .font(.brand(.title2, .semibold))
                     .foregroundStyle(Brand.ink)
                     .contentTransition(.opacity)
                     .animation(.easeInOut, value: Self.line(for: scanner.progress))
@@ -119,7 +119,7 @@ private struct ScanningView: View {
                     .tint(Brand.ink)
                     .frame(width: 180)
                 Text("Reading only what any app could. Nothing is sent anywhere.")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(Brand.textSubtle)
                     .multilineTextAlignment(.center)
             }
@@ -176,7 +176,7 @@ private struct Results: View {
                 .fixedSize(horizontal: false, vertical: true)
             Text(fixes.isEmpty ? "Your Footprint score is \(score.value) out of 100. What's left, only Apple can change."
                  : "Your Footprint score is \(score.value) out of 100. Fixing \(fixes.count == 1 ? "it" : "these") takes a few minutes.")
-                .font(.body)
+                .font(.brand(.body))
                 .foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -217,7 +217,7 @@ private struct Results: View {
         Button { withAnimation(.smooth) { showAll.toggle() } } label: {
             HStack {
                 Text(showAll ? "Hide the full list" : "See everything apps can read (\(scanner.allFindings.count))")
-                    .font(.body.weight(.semibold))
+                    .font(.brand(.body, .semibold))
                 Spacer()
                 Image(systemName: showAll ? "chevron.up" : "chevron.down")
             }
@@ -240,7 +240,7 @@ private struct Results: View {
             ScoreGuideCard(score: score, fixes: fixes, all: seen, showsFixButton: false) { FixWizard.forget(); fixing = true }
             Button("How the score works") { showingFormula = true }
                 .buttonStyle(.plain)
-                .font(.footnote)
+                .font(.brand(.footnote))
                 .foregroundStyle(Brand.textSubtle)
                 .frame(maxWidth: .infinity)
             let fixIDs = Set(fixes.map(\.id))
@@ -329,8 +329,8 @@ struct FormulaSheet: View {
         NavigationStack {
             Page {
                 MascotSays(line: "No secret maths. Here's exactly how I score.", mood: .thinking)
-                ToneCard(tone: .context, title: "Your privacy score", symbol: "function") { Text(OverallScore.explanation).font(.body).foregroundStyle(Brand.textMuted).lineSpacing(3).fixedSize(horizontal: false, vertical: true) }
-                ToneCard(tone: .context, title: "The footprint score in detail", symbol: "pawprint") { Text(FootprintScore.explanation).font(.body).foregroundStyle(Brand.textMuted).lineSpacing(3).fixedSize(horizontal: false, vertical: true) }
+                ToneCard(tone: .context, title: "Your privacy score", symbol: "function") { Text(OverallScore.explanation).font(.brand(.body)).foregroundStyle(Brand.textMuted).lineSpacing(3).fixedSize(horizontal: false, vertical: true) }
+                ToneCard(tone: .context, title: "The footprint score in detail", symbol: "pawprint") { Text(FootprintScore.explanation).font(.brand(.body)).foregroundStyle(Brand.textMuted).lineSpacing(3).fixedSize(horizontal: false, vertical: true) }
             }
             .navigationTitle("How the score works")
             .inlineTitle()

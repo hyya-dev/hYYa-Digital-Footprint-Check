@@ -87,19 +87,19 @@ struct NextStepCard: View {
             HStack(spacing: 14) {
                 ZStack {
                     Circle().fill(Brand.sand.opacity(0.14))
-                    Text("\(step.step ?? 0)").font(.headline.monospacedDigit()).foregroundStyle(Brand.sand)
+                    Text("\(step.step ?? 0)").font(.brand(.headline).monospacedDigit()).foregroundStyle(Brand.sand)
                 }
                 .frame(width: 40, height: 40)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(Brand.brandUppercased("Next: \(step.title)"))
-                        .font(.caption.weight(.semibold)).tracking(1.1).foregroundStyle(Brand.sand)
+                        .font(.brand(.caption, .semibold)).tracking(1.1).foregroundStyle(Brand.sand)
                     Text(step.pitch)
-                        .font(.subheadline).foregroundStyle(Brand.ink)
+                        .font(.brand(.subheadline)).foregroundStyle(Brand.ink)
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
-                Image(systemName: "arrow.right.circle.fill").font(.title2).foregroundStyle(Brand.sand)
+                Image(systemName: "arrow.right.circle.fill").font(.brand(.title2)).foregroundStyle(Brand.sand)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -254,25 +254,25 @@ struct ChecksPanel: View {
             ZStack {
                 Circle().fill(done ? Tone.fix.tint.opacity(0.16) : Brand.sand.opacity(0.12))
                 if done {
-                    Image(systemName: "checkmark").font(.subheadline.weight(.bold)).foregroundStyle(Tone.fix.tint)
+                    Image(systemName: "checkmark").font(.brand(.subheadline, .bold)).foregroundStyle(Tone.fix.tint)
                 } else {
-                    Text("\(number)").font(.subheadline.weight(.semibold).monospacedDigit()).foregroundStyle(Brand.sand)
+                    Text("\(number)").font(.brand(.subheadline, .semibold).monospacedDigit()).foregroundStyle(Brand.sand)
                 }
             }
             .frame(width: 32, height: 32)
             VStack(alignment: .leading, spacing: 2) {
-                Text(tab.title).font(.body.weight(.semibold)).foregroundStyle(Brand.ink)
-                Text(tab.pitch).font(.footnote).foregroundStyle(Brand.textSubtle)
+                Text(tab.title).font(.brand(.body, .semibold)).foregroundStyle(Brand.ink)
+                Text(tab.pitch).font(.brand(.footnote)).foregroundStyle(Brand.textSubtle)
                     .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
                 Text(status(tab, value: value))
-                    .font(.footnote.weight(.semibold))
+                    .font(.brand(.footnote, .semibold))
                     .foregroundStyle(done ? Tone.fix.tint : Brand.sand)
             }
             Spacer(minLength: 8)
             if let value {
-                Text("\(value)").font(.title3.weight(.semibold).monospacedDigit()).foregroundStyle(Brand.ink)
+                Text("\(value)").font(.brand(.title3, .semibold).monospacedDigit()).foregroundStyle(Brand.ink)
             }
-            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(Brand.textSubtle)
+            Image(systemName: "chevron.right").font(.brand(.footnote, .semibold)).foregroundStyle(Brand.textSubtle)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
@@ -324,7 +324,7 @@ struct DetailPlaceholder: View {
         VStack(spacing: 16) {
             LivingMascot(mood: .thinking, size: 120)
             Text(line)
-                .font(.body)
+                .font(.brand(.body))
                 .foregroundStyle(Brand.textMuted)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)

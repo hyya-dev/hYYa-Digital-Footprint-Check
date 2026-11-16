@@ -120,7 +120,7 @@ fun RootWarning(finding: IntegrityFinding, onContinue: () -> Unit) {
 @Composable
 private fun Frame(compact: Boolean = false, content: @Composable (Float) -> Unit) {
     val m = if (compact) 0.55f else 1f // sideways only: upright has the room
-    BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black).safeDrawingPadding()) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Brand.page).safeDrawingPadding()) {
         val wide = maxWidth > maxHeight
         val height = maxHeight.value
         Box(Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 12.dp), contentAlignment = Alignment.Center) {

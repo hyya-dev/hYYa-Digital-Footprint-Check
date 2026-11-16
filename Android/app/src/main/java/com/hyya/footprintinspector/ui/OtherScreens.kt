@@ -342,7 +342,7 @@ fun CheckUpStepScreen(index: Int, nav: Nav) {
             "google-account" -> GhostButton("Open Google Account") { openUrl(context, "https://myaccount.google.com/security") }
             else -> GhostButton("Open Settings") { openSettings(context, step.action) }
         }
-        PrimaryButton(if (done) "Checked ✓" else "I've checked this", fill = if (done) Brand.green else androidx.compose.ui.graphics.Color.White) {
+        PrimaryButton(if (done) "Checked ✓" else "I've checked this", fill = if (done) Brand.green else Brand.cta) {
             done = !done
             val set = prefs(context).getStringSet("checkUpDone", emptySet())!!.toMutableSet()
             if (done) set.add(step.id) else set.remove(step.id)

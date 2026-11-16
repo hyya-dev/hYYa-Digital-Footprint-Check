@@ -67,8 +67,8 @@ struct SettingsView: View {
                             }
                         } label: {
                             HStack(spacing: 6) {
-                                Text(ScanReminder(rawValue: reminder)?.title ?? "Off").font(.body.weight(.semibold))
-                                Image(systemName: "chevron.up.chevron.down").font(.footnote)
+                                Text(ScanReminder(rawValue: reminder)?.title ?? "Off").font(.brand(.body, .semibold))
+                                Image(systemName: "chevron.up.chevron.down").font(.brand(.footnote))
                             }
                             .foregroundStyle(Brand.sand)
                             .padding(.vertical, 9)
@@ -85,7 +85,7 @@ struct SettingsView: View {
                     .disabled(history.snapshots.isEmpty && check.isEmpty)
                 }
                 Text("Only scores and counts are kept, never which apps you have. Clear history removes them too.")
-                    .font(.footnote).foregroundStyle(Brand.textSubtle).padding(.horizontal, 4).padding(.top, -14)
+                    .font(.brand(.footnote)).foregroundStyle(Brand.textSubtle).padding(.horizontal, 4).padding(.top, -14)
 
                 ReviewCard()
 
@@ -188,15 +188,15 @@ struct SupportRow: View {
                 .foregroundStyle(Brand.iconTint)
                 .frame(width: 26)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.subheadline.weight(.bold)).foregroundStyle(Brand.textPrimary)
+                Text(title).font(.brand(.subheadline, .bold)).foregroundStyle(Brand.textPrimary)
                 Text(tagline)
                     .fixedSize(horizontal: false, vertical: true)
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .foregroundStyle(Brand.textSubtle)
             }
             Spacer(minLength: 8)
             Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
+                .font(.brand(.caption, .semibold))
                 .foregroundStyle(Brand.textSubtle)
         }
         .padding(.vertical, 4)

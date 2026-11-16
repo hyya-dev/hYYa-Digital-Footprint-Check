@@ -53,7 +53,7 @@ struct PrivacyReportView: View {
 
                 if let problem {
                     ToneCard(tone: .alert, title: "Couldn't read that file", symbol: "exclamationmark.triangle") {
-                        Text(problem).font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                        Text(problem).font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                     }
                 }
 
@@ -65,7 +65,7 @@ struct PrivacyReportView: View {
                         Text("Read only on this device and never sent. For your score, only the number of apps that shared your data is kept, never the report itself. Apps you choose to keep are remembered by their ID only.")
                             .fixedSize(horizontal: false, vertical: true)
                     } icon: { Image(systemName: "lock.fill").foregroundStyle(Brand.sand) }
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(Brand.textSubtle)
                 } else {
                     Button("Analyze a newer report") { importing = true }
@@ -144,12 +144,12 @@ struct PrivacyReportView: View {
         if !calm.isEmpty {
             ToneCard(tone: .fix, title: "Nothing unusual", symbol: "checkmark.seal") {
                 Text("\(calm.count) apps only talked to their own servers, Apple, or the sign-in and hosting services apps are built on. Some send crash reports, which is usually harmless.")
-                    .font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                    .font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                 Button(showNormal ? "Hide them" : "Show them") {
                     withAnimation(reduceMotion ? nil : .snappy) { showNormal.toggle() }
                     Haptics.selection()
                 }
-                .font(.subheadline.weight(.semibold))
+                .font(.brand(.subheadline, .semibold))
                 .foregroundStyle(Tone.fix.tint)
             }
             if showNormal {
@@ -170,8 +170,8 @@ struct PrivacyReportView: View {
 
     private func summaryLine(_ n: Int, one: String, many: String, tone: Tone) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text("\(n)").font(.title3.weight(.bold).monospacedDigit()).foregroundStyle(tone.tint).frame(minWidth: 28, alignment: .leading)
-            Text(n == 1 ? one : many).font(.subheadline).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+            Text("\(n)").font(.brand(.title3, .bold).monospacedDigit()).foregroundStyle(tone.tint).frame(minWidth: 28, alignment: .leading)
+            Text(n == 1 ? one : many).font(.brand(.subheadline)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -193,7 +193,7 @@ struct PrivacyReportView: View {
     private func bullet(_ text: String) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Circle().fill(Tone.limit.tint.opacity(0.7)).frame(width: 5, height: 5)
-            Text(text).font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text(text).font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -201,13 +201,13 @@ struct PrivacyReportView: View {
     private func appListCard(_ r: PrivacyReport) -> some View {
         ToneCard(tone: .explain, title: "Did any app send my list of apps?", symbol: "questionmark.app") {
             Text("Nothing on your device records that: the system doesn't log when an app checks which other apps you have, and this report can't see inside what apps send.")
-                .font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                .font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
             if r.sharing.isEmpty {
                 Text("No app here shared data with an outside advertising or analytics company, so there's nowhere obvious it could have gone.")
-                    .font(.subheadline.weight(.semibold)).foregroundStyle(Tone.fix.tint).fixedSize(horizontal: false, vertical: true)
+                    .font(.brand(.subheadline, .semibold)).foregroundStyle(Tone.fix.tint).fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("What it does show: \(r.sharing.count == 1 ? "one app" : "\(r.sharing.count) apps") shared data with outside advertising or analytics companies. That's where details like that usually end up:")
-                    .font(.subheadline.weight(.semibold)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
+                    .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink).fixedSize(horizontal: false, vertical: true)
                 FlowRow {
                     ForEach(r.sharing.prefix(12)) { app in ToneBadge(text: app.name, tone: .alert) }
                 }
@@ -290,16 +290,16 @@ private struct AppActivityCard: View {
             if !app.isThisApp && AppNames.knownName(for: app.bundleID) == nil {
                 // Not a widely used app: the name comes from its ID, so say so instead of guessing.
                 Text("Name worked out from the app's ID\(AppNames.maker(ofUnnamed: app.bundleID).map { ", made by \($0)" } ?? ""). It may look different on your Home Screen.")
-                    .font(.footnote).foregroundStyle(Brand.textSubtle).fixedSize(horizontal: false, vertical: true)
+                    .font(.brand(.footnote)).foregroundStyle(Brand.textSubtle).fixedSize(horizontal: false, vertical: true)
             }
-            Text(why).font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text(why).font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
             if app.verdict == .contentTrackers {
                 Text("Turn on Settings › Apps › Mail › Privacy Protection to block email trackers.")
-                    .font(.footnote).foregroundStyle(Tone.fix.tint).fixedSize(horizontal: false, vertical: true)
+                    .font(.brand(.footnote)).foregroundStyle(Tone.fix.tint).fixedSize(horizontal: false, vertical: true)
             }
             if !app.uses.isEmpty {
                 Text(Brand.brandUppercased("Used"))
-                    .font(.caption.weight(.semibold)).tracking(1.1).foregroundStyle(Brand.textSubtle)
+                    .font(.brand(.caption, .semibold)).tracking(1.1).foregroundStyle(Brand.textSubtle)
                 FlowRow {
                     ForEach(app.sortedUses, id: \.0) { kind, count in
                         ToneBadge(text: count > 1 ? "\(kind.title) ×\(count)" : kind.title, symbol: kind.symbol, tone: .explain)
@@ -308,23 +308,23 @@ private struct AppActivityCard: View {
             }
             if !app.sites.isEmpty {
                 Text(Brand.brandUppercased("Talked to"))
-                    .font(.caption.weight(.semibold)).tracking(1.1).foregroundStyle(Brand.textSubtle)
+                    .font(.brand(.caption, .semibold)).tracking(1.1).foregroundStyle(Brand.textSubtle)
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(app.groups, id: \.0) { kind, sites in
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Image(systemName: kind.symbol)
-                                .font(.subheadline)
+                                .font(.brand(.subheadline))
                                 .foregroundStyle(kind.isOutsideTracking ? Tone.alert.tint : Brand.textSubtle)
                                 .frame(width: 20)
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("\(kind.title) · \(sites.count)")
-                                    .font(.subheadline.weight(.semibold))
+                                    .font(.brand(.subheadline, .semibold))
                                     .foregroundStyle(kind.isOutsideTracking ? Tone.alert.tint : Brand.ink)
-                                Text(kind.meaning).font(.footnote).foregroundStyle(Brand.textSubtle).fixedSize(horizontal: false, vertical: true)
+                                Text(kind.meaning).font(.brand(.footnote)).foregroundStyle(Brand.textSubtle).fixedSize(horizontal: false, vertical: true)
                                 if showSites {
                                     ForEach(sites) { site in
                                         Text(SiteKind.company(for: site.domain).map { "\($0) · \(site.domain)" } ?? site.domain)
-                                            .font(.footnote.monospaced())
+                                            .font(.brand(.footnote).monospaced())
                                             .foregroundStyle(Brand.textMuted)
                                             .fixedSize(horizontal: false, vertical: true)
                                             .textSelection(.enabled)
@@ -338,7 +338,7 @@ private struct AppActivityCard: View {
                     withAnimation(reduceMotion ? nil : .snappy) { showSites.toggle() }
                     Haptics.selection()
                 }
-                .font(.footnote.weight(.semibold))
+                .font(.brand(.footnote, .semibold))
                 .foregroundStyle(Brand.sand)
             }
             if let onKeep, app.verdict == .sharesOutside {

@@ -16,24 +16,24 @@ struct ComparisonCard: View {
                 Brand.eyebrow("Since your last scan")
                 Spacer()
                 Text(comparison.previous.date, style: .relative)
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .foregroundStyle(Brand.textSubtle)
             }
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text("\(comparison.previous.score)")
                     .foregroundStyle(Brand.textSubtle)
                 Image(systemName: "arrow.right")
-                    .font(.caption)
+                    .font(.brand(.caption))
                     .foregroundStyle(Brand.textSubtle)
                 Text("\(comparison.current.score)")
                     .foregroundStyle(Brand.textPrimary)
                 deltaLabel
             }
-            .font(.title2.weight(.bold).monospacedDigit())
+            .font(.brand(.title2, .bold).monospacedDigit())
 
             if comparison.osChanged {
                 Label("You updated the system since then.", systemImage: "arrow.down.app")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(Brand.accent)
             }
             if !comparison.resolved.isEmpty {
@@ -45,12 +45,12 @@ struct ComparisonCard: View {
             let others = comparison.changed.filter { !comparison.resolved.contains($0) && !comparison.newConcerns.contains($0) }
             if !others.isEmpty {
                 Text("\(others.count) other value\(others.count == 1 ? "" : "s") changed, such as \(Self.titles(others.prefix(3)).joined(separator: ", ")).")
-                    .font(.footnote)
+                    .font(.brand(.footnote))
                     .foregroundStyle(Brand.textMuted)
             }
             if comparison.resolved.isEmpty && comparison.newConcerns.isEmpty && others.isEmpty {
                 Text("No other changes found.")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(Brand.textMuted)
             }
         }
@@ -61,17 +61,17 @@ struct ComparisonCard: View {
         let d = comparison.scoreDelta
         if d != 0 {
             Text(d > 0 ? "+\(d)" : "\(d)")
-                .font(.subheadline.weight(.bold))
+                .font(.brand(.subheadline, .bold))
                 .foregroundStyle(d > 0 ? Brand.calm : Brand.concern)
         }
     }
 
     private func changeList(_ title: String, ids: [String], symbol: String, tint: InkStyle) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.subheadline.weight(.semibold))
+            Text(title).font(.brand(.subheadline, .semibold))
             ForEach(Self.titles(ids), id: \.self) { name in
                 Label(name, systemImage: symbol)
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
                     .foregroundStyle(tint)
             }
         }
@@ -121,12 +121,12 @@ struct HistoryView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(snapshot.date.formatted(date: .abbreviated, time: .shortened))
                             Text("\(snapshot.concerningIDs.count) worth a look · \(Self.shortOS(snapshot.osVersion))")
-                                .font(.caption)
+                                .font(.brand(.caption))
                                 .foregroundStyle(Brand.textSubtle)
                         }
                         Spacer()
                         Text("\(snapshot.score)")
-                            .font(.title3.weight(.bold).monospacedDigit())
+                            .font(.brand(.title3, .bold).monospacedDigit())
                             .foregroundStyle(Brand.accent)
                     }
                 }
@@ -166,11 +166,11 @@ struct ScoreboardView: View {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("You're on \(System.name) \(System.version)")
-                        .font(.headline)
+                        .font(.brand(.headline))
                     Text(Self.majorVersion < 27
                          ? "Updating to \(System.name) 27 brings the fixes below."
                          : "You have Apple's latest fixes.")
-                        .font(.subheadline)
+                        .font(.brand(.subheadline))
                         .foregroundStyle(Brand.textMuted)
                 }
                 .padding(.vertical, 4)
@@ -180,7 +180,7 @@ struct ScoreboardView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Label(def.title, systemImage: "checkmark.seal.fill")
                             .foregroundStyle(Brand.calm)
-                        Text(note).font(.footnote).foregroundStyle(Brand.textMuted)
+                        Text(note).font(.brand(.footnote)).foregroundStyle(Brand.textMuted)
                     }
                 }
             } header: {
@@ -191,7 +191,7 @@ struct ScoreboardView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Label(def.title, systemImage: "exclamationmark.circle.fill")
                             .foregroundStyle(Brand.concern)
-                        Text(def.reveals).font(.footnote).foregroundStyle(Brand.textMuted)
+                        Text(def.reveals).font(.brand(.footnote)).foregroundStyle(Brand.textMuted)
                     }
                 }
             } header: {

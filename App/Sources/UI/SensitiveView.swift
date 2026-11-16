@@ -75,7 +75,7 @@ struct SensitiveView: View {
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "lock.fill").foregroundStyle(Brand.sand)
                         Text("Runs only on this device and nothing is sent. The result stays hidden until you tap it. For your score, only the number found is kept, never which apps.")
-                            .font(.footnote)
+                            .font(.brand(.footnote))
                             .foregroundStyle(Brand.textSubtle)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -133,7 +133,7 @@ struct SensitiveView: View {
                 } else {
                     ToneCard(tone: .alert, title: "Hidden for your privacy", symbol: "eye.slash") {
                         Text("The names stay hidden in case someone is looking over your shoulder. Show them when you're ready.")
-                            .font(.subheadline).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
+                            .font(.brand(.subheadline)).foregroundStyle(Brand.textMuted).fixedSize(horizontal: false, vertical: true)
                         Button {
                             withAnimation(reduceMotion ? nil : .spring(response: 0.4, dampingFraction: 0.85)) { revealed = true }
                             Haptics.soft()
@@ -180,11 +180,11 @@ private struct FoundAppCard: View {
         ToneCard(tone: .alert, title: "Any app can see you have \(app.name)", symbol: category.symbol) {
             ToneBadge(text: "Worth a look", symbol: "exclamationmark.circle.fill", tone: .alert)
             Text([category.tells, category.risk].compactMap { $0 }.joined(separator: " "))
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
             Text(Brand.brandUppercased("What to do"))
-                .font(.caption.weight(.semibold))
+                .font(.brand(.caption, .semibold))
                 .tracking(1.1)
                 .foregroundStyle(Tone.fix.tint)
                 .padding(.top, 4)
@@ -203,7 +203,7 @@ private struct OthersCanCheckCard: View {
     var body: some View {
         ToneCard(tone: .context, title: "Who else can check this?", symbol: "building.columns") {
             Text(SensitiveView.othersLine)
-                .font(.subheadline)
+                .font(.brand(.subheadline))
                 .foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
             Label {
@@ -211,7 +211,7 @@ private struct OthersCanCheckCard: View {
             } icon: {
                 Image(systemName: "safari").foregroundStyle(Tone.fix.tint)
             }
-            .font(.subheadline)
+            .font(.brand(.subheadline))
             .foregroundStyle(Brand.ink)
         }
     }
@@ -228,7 +228,7 @@ private struct CategoryToggle: View {
                     subtitle: category.checkedApps.map(\.name).joined(separator: ", "),
                     tileFG: isOn ? Brand.ink : Brand.textSubtle) {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
+                    .font(.brand(.title3))
                     .foregroundStyle(isOn ? Brand.ink : Brand.textSubtle)
             }
         }
