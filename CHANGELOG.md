@@ -43,6 +43,7 @@ What's in it (every platform; the Android details are marked):
 | Google Play | 1.1.0 (versionCode 29) | 2026-11-16 | tag `v1.1.0-android29` |
 | Google Play | 1.1.0 (versionCode 30): the Score page says when it was last checked and offers "Check everything again" | 2026-11-16 | tag `v1.1.0-android30` |
 | App Store (iPhone and iPad) | 1.1.0 (build 43) | 2026-11-16 | tag `v1.1.0-build43` |
+| Mac App Store | 1.1.0 (build 43) | 2026-11-16 | tag `v1.1.0-build43` |
 
 ## 1.0.8
 
