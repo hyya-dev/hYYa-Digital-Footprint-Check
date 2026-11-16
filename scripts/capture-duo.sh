@@ -24,10 +24,10 @@ shot() { local name=$1; shift
   xcrun simctl io $UDID screenshot --display="$DISP" "$OUT/$name.png" >/dev/null 2>&1
   echo "$name"
 }
-shot store-01-home
+shot store-01-home -firstRun
 shot store-02-results -autoScan -startTab home
 shot store-03-footprint -autoScan
-shot store-04-finding -autoScan -openFinding boot-time
+shot store-04-finding -autoScan -openFinding audio-route
 shot store-05-sensitive -startTab sensitive -sensitiveCategories dating,health,circumvention
 shot store-06-checkup -startTab checkup
 shot store-08-tracker -startTab tracker

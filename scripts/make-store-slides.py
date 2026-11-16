@@ -131,9 +131,11 @@ def make_slide(spec, raw_dir, w, h, mascot):
     # Brand lockup: small mascot + full name
     m_small = mascot.resize((int(150 * unit), int(150 * unit * mascot.height / mascot.width)), Image.LANCZOS)
     top = int(110 * unit)
-    spot = Image.new("RGBA", (int(m_small.width * 1.6), int(m_small.width * 1.6)), (0, 0, 0, 0))
-    ImageDraw.Draw(spot).ellipse((0, 0, spot.width, spot.height), fill=SAND + (60,))
-    spot = spot.filter(ImageFilter.GaussianBlur(spot.width * 0.18))
+    # The canvas is wide enough that the blur fades to nothing before its edge (no square halo).
+    spot = Image.new("RGBA", (int(m_small.width * 2.6), int(m_small.width * 2.6)), (0, 0, 0, 0))
+    inset = spot.width * 0.3
+    ImageDraw.Draw(spot).ellipse((inset, inset, spot.width - inset, spot.height - inset), fill=SAND + (60,))
+    spot = spot.filter(ImageFilter.GaussianBlur(m_small.width * 0.2))
     canvas.alpha_composite(spot, (margin + m_small.width // 2 - spot.width // 2, top + m_small.height // 2 - spot.height // 2))
     canvas.alpha_composite(m_small, (margin, top))
     name_f = font(int(54 * unit), "Semibold")
