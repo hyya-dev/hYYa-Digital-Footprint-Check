@@ -310,6 +310,13 @@ struct ChecksPanel: View {
 /// everywhere else, including an open Duo held upright, it's one column and rows push. A split
 /// that hides its list behind a button left an open Duo upright on a blank page.
 /// The Mac's pages already sit inside its own sidebar.
+/// The book pose (owner, 2026-11-16): two pages side by side where the screen is wide and tall enough, which is
+/// the open iPhone Duo held sideways and an iPad in landscape. Phones (even large ones sideways) and the folded
+/// Duo keep one column.
+enum BookLayout {
+    static func isWide(_ size: CGSize) -> Bool { size.width > size.height && size.width >= 700 && size.height >= 560 }
+}
+
 struct ListDetailStack<Content: View, Placeholder: View>: View {
     @ViewBuilder var content: Content
     @ViewBuilder var placeholder: Placeholder

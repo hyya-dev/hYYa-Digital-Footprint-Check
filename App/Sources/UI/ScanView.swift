@@ -11,11 +11,50 @@ struct ScanView: View {
     @AppStorage("nav.finding") private var openedFinding = ""
     @AppStorage("nav.section") private var openedSection = ""
 
-    private func stored(_ value: Binding<String>) -> Binding<String?> {
-        Binding(get: { value.wrappedValue.isEmpty ? nil : value.wrappedValue }, set: { value.wrappedValue = $0 ?? "" })
+    var body: some View {
+        #if os(iOS)
+        // Book pose (owner, 2026-11-16): with a finding or category open on a wide screen, the results move to
+        // the left page and the detail opens on the right. Otherwise one column, as on a phone.
+        GeometryReader { geo in
+            if BookLayout.isWide(geo.size) && (!openedFinding.isEmpty || !openedSection.isEmpty) {
+                HStack(spacing: 0) {
+                    stack(pushesDetails: false).frame(width: geo.size.width / 2)
+                    Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
+                    NavigationStack { detailPage }
+                }
+            } else {
+                stack(pushesDetails: true)
+            }
+        }
+        #else
+        stack(pushesDetails: true)
+        #endif
     }
 
-    var body: some View {
+    /// The right page in the book pose: the open finding, else the open category, with a way back.
+    @ViewBuilder private var detailPage: some View {
+        Group {
+            if !openedFinding.isEmpty, let finding = scanner.allFindings.first(where: { $0.id == openedFinding }) {
+                FindingDetailView(finding: finding)
+            } else if let section = SignalSection(rawValue: openedSection) {
+                SectionView(section: section)
+            } else {
+                ProgressView().tint(Brand.ink)
+            }
+        }
+        #if os(iOS)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    if !openedFinding.isEmpty { openedFinding = "" } else { openedSection = "" }
+                } label: { Image(systemName: "chevron.left") }
+                .accessibilityLabel("Back")
+            }
+        }
+        #endif
+    }
+
+    private func stack(pushesDetails: Bool) -> some View {
         NavigationStack {
             Page(resetOn: AnyHashable("\(scanner.phase)")) {
                 switch scanner.phase {
@@ -29,6 +68,32 @@ struct ScanView: View {
                 if LaunchOptions.autoScan, scanner.allFindings.isEmpty { await scanner.scan() }
                 if let id = LaunchOptions.value(after: "-openFinding") { openedFinding = id }
             }
+            .modifier(DetailDestinations(enabled: pushesDetails, openedFinding: $openedFinding, openedSection: $openedSection))
+            .sensoryFeedback(.impact(weight: .light, intensity: 0.4), trigger: Int(scanner.progress * 16))
+            .sensoryFeedback(trigger: scanner.phase) { _, new in
+                guard new == .done else { return nil }
+                return scanner.concerning.isEmpty ? .success : .warning
+            }
+            .animation(.easeInOut(duration: 0.35), value: scanner.phase)
+        }
+    }
+}
+
+/// One column: the finding or category is pushed on top of the results. In the book pose the right page
+/// shows it instead, so nothing is pushed.
+private struct DetailDestinations: ViewModifier {
+    @Environment(Scanner.self) private var scanner
+    let enabled: Bool
+    @Binding var openedFinding: String
+    @Binding var openedSection: String
+
+    private func stored(_ value: Binding<String>) -> Binding<String?> {
+        Binding(get: { enabled && !value.wrappedValue.isEmpty ? value.wrappedValue : nil },
+                set: { if enabled { value.wrappedValue = $0 ?? "" } })
+    }
+
+    func body(content: Content) -> some View {
+        content
             .navigationDestination(item: stored($openedFinding)) { id in
                 if let finding = scanner.allFindings.first(where: { $0.id == id }) {
                     FindingDetailView(finding: finding)
@@ -42,13 +107,6 @@ struct ScanView: View {
             .navigationDestination(item: stored($openedSection)) { id in
                 if let section = SignalSection(rawValue: id) { SectionView(section: section) }
             }
-            .sensoryFeedback(.impact(weight: .light, intensity: 0.4), trigger: Int(scanner.progress * 16))
-            .sensoryFeedback(trigger: scanner.phase) { _, new in
-                guard new == .done else { return nil }
-                return scanner.concerning.isEmpty ? .success : .warning
-            }
-            .animation(.easeInOut(duration: 0.35), value: scanner.phase)
-        }
     }
 }
 

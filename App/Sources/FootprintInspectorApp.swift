@@ -187,7 +187,7 @@ struct RootView: View {
         #else
         // Our own navbar (build 21's six-button bar, Settings included): it
         // follows the Duo's own placement and sits along the bottom or left edge elsewhere.
-        NavBarRoot(tab: Binding(get: { tab }, set: { go($0) })) { page($0) }
+        NavBarRoot(tab: Binding(get: { tab }, set: { go($0) })) { BookPages(tab: $0, page: page) }
         .environment(\.goToTab, go)
         .onAppear(perform: restore)
         .modifier(KeepScoreFresh())
@@ -200,7 +200,9 @@ struct RootView: View {
     }
 
     #if os(iOS)
-    @ViewBuilder private func page(_ t: AppTab) -> some View {
+    private func page(_ t: AppTab) -> AnyView { AnyView(pageView(t)) }
+
+    @ViewBuilder private func pageView(_ t: AppTab) -> some View {
         switch t {
         case .home: ScoreHomeView()
         case .settings: SettingsView()
@@ -212,6 +214,53 @@ struct RootView: View {
     }
     #endif
 }
+
+#if os(iOS)
+/// The book pose (owner, 2026-11-16): on a wide, tall screen (the open Duo sideways, an iPad in landscape) the
+/// Score is the left page and the chosen check the right one. When something inside the check opens (a finding,
+/// a category, a Check-up area), the check moves to the left page and that detail takes the right. Everywhere
+/// else, one page, as before.
+private struct BookPages: View {
+    let tab: AppTab
+    let page: (AppTab) -> AnyView
+    @Environment(Scanner.self) private var scanner
+    @Environment(HistoryStore.self) private var history
+    @Environment(PrivacyCheck.self) private var check
+    @AppStorage("nav.finding") private var openedFinding = ""
+    @AppStorage("nav.section") private var openedSection = ""
+    @AppStorage("nav.checkup") private var openStep = ""
+
+    /// Something inside the check is open, so the check itself becomes the left page.
+    private var detailOpen: Bool {
+        switch tab {
+        case .footprint: !openedFinding.isEmpty || !openedSection.isEmpty
+        case .checkup: !openStep.isEmpty
+        default: false
+        }
+    }
+
+    /// On the Score page, the right page is the next check to do (Footprint once all are done).
+    private var rightOfScore: AppTab {
+        let overall = OverallScore.current(scanner: scanner, history: history, check: check,
+                                           checkUpStored: check.checkUpDone, trackerStored: check.trackerChecked)
+        return ScoreHomeView.nextCheck(overall) ?? .footprint
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            if BookLayout.isWide(geo.size) && !detailOpen {
+                HStack(spacing: 0) {
+                    page(.home).frame(width: geo.size.width / 2)
+                    Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
+                    page(tab == .home ? rightOfScore : tab)
+                }
+            } else {
+                page(tab)
+            }
+        }
+    }
+}
+#endif
 
 /// Keeps the Footprint part of the score current: on launch, and each time the app comes back to
 /// the screen (after changing a setting, say), it re-reads quietly if a scan was done before.

@@ -22,10 +22,47 @@ struct CheckUpView: View {
     private var done: Set<String> { Set(stored.split(separator: ",").map(String.init)) }
 
     var body: some View {
+        #if os(iOS)
+        // Book pose (owner, 2026-11-16): with an area open on a wide screen, the list is the left page and the
+        // area the right one, half and half. Otherwise as before.
+        GeometryReader { geo in
+            if BookLayout.isWide(geo.size) && !openStep.isEmpty {
+                HStack(spacing: 0) {
+                    NavigationStack { list(pushesStep: false) }.frame(width: geo.size.width / 2)
+                    Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
+                    NavigationStack {
+                        stepPage(openStep)
+                            .toolbar {
+                                ToolbarItem(placement: .topBarLeading) {
+                                    Button { openStep = "" } label: { Image(systemName: "chevron.left") }
+                                        .accessibilityLabel("Back")
+                                }
+                            }
+                    }
+                }
+            } else {
+                ListDetailStack { list(pushesStep: true) } placeholder: {
+                    DetailPlaceholder(line: "Pick an area to see where to go and what to do.")
+                }
+            }
+        }
+        #else
+        ListDetailStack { list(pushesStep: true) } placeholder: {
+            DetailPlaceholder(line: "Pick an area to see where to go and what to do.")
+        }
+        #endif
+    }
+
+    @ViewBuilder private func stepPage(_ id: String) -> some View {
+        if let i = CheckUpGuide.steps.firstIndex(where: { $0.id == id }) {
+            CheckUpStepView(step: CheckUpGuide.steps[i], number: i + 1, isDone: binding(for: id))
+        }
+    }
+
+    private func list(pushesStep: Bool) -> some View {
         let total = CheckUpGuide.essentialIDs.count
         let essentialsDone = CheckUpGuide.essentialIDs.filter { done.contains($0) }.count
-        ListDetailStack {
-            Page {
+        return Page {
                 HeroCard(eyebrow: "Check-up",
                          title: essentialsDone == total ? "Essentials done!" : "\(essentialsDone) of \(total) essentials done",
                          subtitle: Self.introLine,
@@ -68,16 +105,12 @@ struct CheckUpView: View {
             // Footprint and Settings.
             .hiddenNavigationBar()
             .sensoryFeedback(.success, trigger: done.count == total)
-            .navigationDestination(item: Binding(get: { openStep.isEmpty ? nil : openStep }, set: { openStep = $0 ?? "" })) { id in
-                if let i = CheckUpGuide.steps.firstIndex(where: { $0.id == id }) {
-                    CheckUpStepView(step: CheckUpGuide.steps[i], number: i + 1, isDone: binding(for: id))
-                }
+            .navigationDestination(item: Binding(get: { pushesStep && !openStep.isEmpty ? openStep : nil },
+                                                 set: { if pushesStep { openStep = $0 ?? "" } })) { id in
+                stepPage(id)
             }
             // A restart in the last week is the restart step done: tick it without asking.
             .task { if CheckUpStepView.restartedRecently { binding(for: "restart").wrappedValue = true } }
-        } placeholder: {
-            DetailPlaceholder(line: "Pick an area to see where to go and what to do.")
-        }
     }
 
     private func stepPanel(_ steps: [CheckUpStep]) -> some View {

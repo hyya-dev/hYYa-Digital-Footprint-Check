@@ -53,6 +53,30 @@ final class ReviewRendersUITests: XCTestCase {
             shot("s04-checkup-more")
         }
     }
+    /// Book pose (owner, 2026-11-16): two pages side by side on a wide, tall screen. Run on an iPad sideways
+    /// (or the open Duo in Device Hub). Score | next check, Score | each check, then check | detail.
+    func testBook() {
+        tag = "book"
+        launch(["-autoScan"], .landscapeLeft)
+        sleep(14)
+        tab("Score"); shot("b01-score")
+        tab("Footprint"); shot("b02-footprint")
+        launch(["-autoScan", "-openFinding", "audio-route"], .landscapeLeft)
+        sleep(14)
+        shot("b03-finding")
+        launch(["-startTab", "sensitive"], .landscapeLeft)
+        shot("b04-sensitive")
+        launch(["-startTab", "checkup"], .landscapeLeft)
+        shot("b05-checkup")
+        let first = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Safety Check'")).firstMatch
+        if first.waitForExistence(timeout: 5) { first.tap(); sleep(2) }
+        shot("b06-checkup-step")
+        launch(["-startTab", "tracker"], .landscapeLeft)
+        shot("b07-tracker")
+        launch(["-startTab", "settings"], .landscapeLeft)
+        shot("b08-settings")
+    }
+
     /// Just the score-rise and hYYa-suggestion shots, upright and sideways.
     func testRiseAndSuggestion() {
         for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
