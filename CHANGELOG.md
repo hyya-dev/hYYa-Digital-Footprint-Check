@@ -21,7 +21,8 @@ What's in it (Android):
   serious" in view, and the rest folds under "More about this".
 - Check-up opens on five essentials, with the other areas one tap away. It counts toward your score once the five
   are done; if you had already finished every area that counted before, you keep that credit.
-- Every finished check has "Check again" on the Score page.
+- Every finished check has "Check again" on the Score page, and (versionCode 30) the Score page says when it was
+  last checked and offers "Check everything again".
 - Sensitive apps checks every kind by default, with Select all / Clear all.
 - Clear history asks first and says when it's done.
 - "Add the widget" places the wide widget; the small one is roomier.
@@ -30,6 +31,7 @@ What's in it (Android):
 | Store | Version | Live | Source |
 |---|---|---|---|
 | Google Play | 1.1.0 (versionCode 29) | 2026-11-16 | tag `v1.1.0-android29` |
+| Google Play | 1.1.0 (versionCode 30): the Score page says when it was last checked and offers "Check everything again" | 2026-11-16 | tag `v1.1.0-android30` |
 
 ## 1.0.8
 
