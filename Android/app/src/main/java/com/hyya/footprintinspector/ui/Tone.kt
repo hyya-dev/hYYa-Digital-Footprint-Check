@@ -4,6 +4,9 @@
 
 package com.hyya.footprintinspector.ui
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -294,6 +297,16 @@ fun ChecksPanel(overall: com.hyya.footprintinspector.model.OverallScore, scanner
                         Text(tab.label, color = Brand.ink, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                         Text(tab.pitch, color = Brand.textSubtle, fontSize = 12.sp, lineHeight = 16.sp)
                         Text(status, color = if (done) Tone.FIX.tint else Brand.sand, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        // A finished check can always be run again from here (owner, 2026-11-16).
+                        if (done) Text("Check again", color = Brand.sand, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.padding(top = 6.dp).clip(CircleShape)
+                                .border(1.dp, Color.White.copy(alpha = 0.16f), CircleShape)
+                                .pressable {
+                                    go(tab)
+                                    if (tab == Tab.SCAN || tab == Tab.TRACKER) scanner.scan()
+                                }
+                                .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = "Check ${tab.label} again" }
+                                .padding(horizontal = 14.dp, vertical = 6.dp))
                     }
                     if (value != null) Text("$value", color = Brand.ink, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
                     Icon(androidx.compose.material.icons.Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Brand.textSubtle)

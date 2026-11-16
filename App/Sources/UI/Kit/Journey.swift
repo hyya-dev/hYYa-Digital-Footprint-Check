@@ -209,6 +209,26 @@ struct ChecksPanel: View {
                     row(number: i + 1, tab: tab)
                 }
                 .buttonStyle(PressableCardStyle())
+                // A finished check can always be run again from here (owner, 2026-11-16).
+                if part(tab).flatMap({ overall.parts[$0] }) != nil {
+                    Button("Check again") {
+                        Haptics.selection()
+                        goToTab(tab)
+                        if tab == .footprint { Task { await scanner.scan() } }
+                    }
+                    .font(.brand(.subheadline, .semibold))
+                    .foregroundStyle(Brand.sand)
+                    .padding(.horizontal, 14).padding(.vertical, 6)
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+                    .contentShape(Capsule())
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Check \(tab.title) again")
+                    .padding(.leading, 62)
+                    .padding(.top, -6)
+                    .padding(.bottom, 12)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .overlay(alignment: .bottom) { Rectangle().fill(Brand.rule).frame(height: 0.5).padding(.leading, 62) }
+                }
             }
         }
     }
@@ -277,7 +297,7 @@ struct ChecksPanel: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .contentShape(Rectangle())
-        .overlay(alignment: .bottom) { Rectangle().fill(Brand.rule).frame(height: 0.5).padding(.leading, 62) }
+        .overlay(alignment: .bottom) { if !done { Rectangle().fill(Brand.rule).frame(height: 0.5).padding(.leading, 62) } }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Step \(number): \(tab.title). \(status(tab, value: value))\(value.map { ". Score \($0)" } ?? "")")
     }
