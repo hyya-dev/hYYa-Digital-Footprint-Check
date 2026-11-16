@@ -2,9 +2,9 @@ hYYa Digital Footprint Check is a free privacy-education app. It reads the same 
 
 No login is required. To review:
 1. Tap "Start with check 1" on the first screen. Results appear in about 3 seconds, with one privacy score that averages the checks done so far.
-2. Tap any clue to see what it reveals and how to fix it. "Fix them with me" walks through fixable clues and opens Settings; the app changes no setting itself.
+2. Footprint lists what can be fixed ("See everything apps can read" shows the rest). "Fix them with me" opens Settings step by step; it changes no setting.
 3. Each permission category ("Seen once you allow it") asks for that permission only when the user taps "Show me", then shows counts and summaries (never contacts' names, numbers or event titles).
-4. "Sensitive apps" tab: the user picks categories, then taps Check.
+4. "Sensitive apps" tab: all categories are on by default (any can be turned off); the user taps Check.
 5. "Tracker" tab: the user opens the App Privacy Report file they saved from Settings with the system file picker. It is read on the device only; never stored or sent.
 
 About CallKit (guideline 5, China): the app no longer includes or links CallKit in any territory.
@@ -13,7 +13,7 @@ About VPN (automated question, 2026-10-19): the app has NO VPN functionality. It
 
 About fingerprinting (5.1.2): the app does not fingerprint anyone. Every value is displayed to the device owner on screen and never leaves the device. Scan history keeps only salted one-way hashes, the score and the ids of notable findings, never the values, and is excluded from backups.
 
-About LSApplicationQueriesSchemes (25 schemes): these are used only for the user-initiated "Sensitive apps" check, which shows the user which kinds of apps any other app could detect on their device with canOpenURL. Categories are off by default, results are blurred until tapped, cleared when the app leaves the screen, and never sent. Only the count found stays on the device, never which apps.
+About LSApplicationQueriesSchemes (25 schemes): these are used only for the user-initiated "Sensitive apps" check, which shows the user which kinds of apps any other app could detect on their device with canOpenURL. It runs only when the user taps Check, results are hidden until tapped, cleared when the app leaves the screen, and never sent. Only the count found stays on the device, never which apps.
 
 About Required Reason APIs: system boot time, disk space, active keyboards, file timestamps and user defaults are read solely to display them to the user as part of the privacy report. The privacy manifest declares them.
 
