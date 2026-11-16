@@ -48,7 +48,7 @@ flags what's worth a look, and walks you through hiding what can be hidden.
 | **Footprint** | Details any app can read without asking: device and system, storage, screen, sound and accessories, language and region, accessibility, sensors, network and security set-up, plus what survives deleting and reinstalling an app | ✓ | ✓, including the serial number, your full name and every installed app | ✓ |
 | **What websites see** | What a web page can read about this device | ✓ | — | — |
 | **Permissions** | What an app gets once you say yes, shown only when you tap: location, photos, contacts, calendars, Bluetooth and more | ✓ | ✓ | ✓ |
-| **Sensitive apps** | Whether apps in categories you choose (dating, faith, health, VPN, messaging, crypto and more) can be spotted by other apps | ✓ | ✓ | ✓ |
+| **Sensitive apps** | Whether apps in sensitive categories (dating, faith, health, VPN, messaging, crypto and more) can be spotted by other apps | ✓ | ✓ | ✓ |
 | **Tracker** | Which apps used your data and who they talked to (from your own App Privacy Report on iPhone and iPad), or what holds special access (Android); on a Mac, where to look | ✓ | ✓ | ✓ |
 | **Check-up** | A guided walk through Settings to take access back, step by step | ✓ | ✓ | ✓ |
 
@@ -63,12 +63,12 @@ flags what's worth a look, and walks you through hiding what can be hidden.
 - **What apps see once you say yes.** Tap a permission (Location, Photos, Contacts, Calendars,
   Bluetooth, Local Network, Motion and more) to see exactly what an app gets. You're asked only
   when you tap.
-- **Which apps give you away.** Apps can ask whether specific apps are installed. Choose the
-  categories to check (dating, faith, health, VPN, messaging, crypto and more). Results are
-  blurred until you tap and cleared when you leave. They stay on your device, and we have no
+- **Which apps give you away.** Apps can ask whether specific apps are installed. Every category
+  is checked (dating, faith, health, VPN, messaging, crypto and more) unless you turn it off.
+  Results are hidden until you tap and cleared when you leave. They stay on your device, and we have no
   access to them.
 - **Permission check-up.** The system never tells one app which other apps can reach your data,
-  so a guided walk through Settings does it instead.
+  so a guided walk through Settings does it instead, starting with five essential steps.
 - **Keep track.**
   - Before/after comparisons and a scoreboard of what has been fixed over time.
   - Scan history kept only on your device.
@@ -128,7 +128,7 @@ edition skips the signature check and only warns about root.
 |---|---|
 | `App/Sources/Readers`, `App/Sources/Permissions` | How each signal is read |
 | `App/Sources/Model` | What we say about each signal: meaning, persistence, severity, fix |
-| `App/Sources/UI` | The interface (dark "Quiet Noir" look) |
+| `App/Sources/UI` | The interface (dark "Midnight Library" look) |
 | `App/Sources/MacReaders` | Mac-only readers |
 | `Android/` | The Android app |
 | `docs/` | Research and signal inventory |
