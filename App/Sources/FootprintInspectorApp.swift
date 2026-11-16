@@ -182,7 +182,7 @@ struct RootView: View {
         // Quitting is a fresh start on the Mac: the next launch opens on Score.
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in SavedPlace.forget() }
         // Store screenshots: a Sensitive check with nothing found, as on iOS.
-        .task { if LaunchOptions.has("-sampleData") { check.recordSensitive(found: 0) } }
+        .task { if LaunchOptions.has("-sampleData") && !LaunchOptions.has("-firstRun") { check.recordSensitive(found: 0) } }
         .task { if LaunchOptions.has("-openSettings") { openSettings() } }
         #else
         // Our own navbar (build 21's six-button bar, Settings included): it
@@ -195,7 +195,7 @@ struct RootView: View {
         // Store screenshots: the sample Tracker report and a Sensitive check with nothing found, so
         // every screen can be captured from launch switches alone (the iPhone Duo can't be tapped
         // by tests in every pose).
-        .task { if LaunchOptions.has("-sampleData") { check.recordTracker(sharing: PrivacyReport.sample.sharing.count); check.recordSensitive(found: 0) } }
+        .task { if LaunchOptions.has("-sampleData") && !LaunchOptions.has("-firstRun") { check.recordTracker(sharing: PrivacyReport.sample.sharing.count); check.recordSensitive(found: 0) } }
         #endif
     }
 

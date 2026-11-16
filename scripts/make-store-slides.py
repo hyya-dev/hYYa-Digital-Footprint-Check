@@ -67,7 +67,7 @@ def device(screen, width):
     s = s.resize((width, int(s.height * scale)), Image.LANCZOS)
     tablet = s.width / s.height > 0.6
     bezel = int(width * (0.016 if tablet else 0.022))
-    r = int(width * (0.035 if tablet else 0.115))
+    r = int(width * (0.035 if tablet else (0.075 if OPEN_FONT else 0.115)))   # Play phones: the clock sits in the corner
     frame = Image.new("RGBA", (s.width + bezel * 2, s.height + bezel * 2), (0, 0, 0, 0))
     d = ImageDraw.Draw(frame)
     d.rounded_rectangle((0, 0, frame.width - 1, frame.height - 1), r + bezel, fill=(38, 36, 34))

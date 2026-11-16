@@ -11,7 +11,7 @@
   the iPhone and the iPad crop keep (see header()).
 - Search results, 3:2 at 3840 x 2560: says what the app does at a glance and shows the real
   interface, as Apple advises. The headline, three iPhone screens (the mascot is on the centre one) are all centred.
-Quiet Noir palette, shared with the slides. No alpha channel (Apple rejects transparency).
+Midnight Library palette, shared with the slides. No alpha channel (Apple rejects transparency).
 """
 import importlib.util, sys
 from pathlib import Path
@@ -64,6 +64,26 @@ def concern(canvas, x, y, label, value, anchor, w):
     d.ellipse((x0 + pad_x, y0 + pad_y + 30, x0 + pad_x + dot, y0 + pad_y + 30 + dot), fill=CORAL)
     d.text((tx, y0 + pad_y - 6), label, font=lf, fill=INK)
     d.text((tx, y0 + pad_y + 72 + 12), value, font=vf, fill=MUTED)
+
+
+def slate_card(canvas, cx, cy, label, value):
+    """Midnight Library (owner, 2026-11-16): a flat slate card with a faint edge and a coral line down its
+    leading edge, as findings worth a look appear in the app. Inter (open font), so the Play feature
+    graphic cut from this header may use it too."""
+    bold = ImageFont.truetype(str(slides.INTER_DIR / "Inter-SemiBold.otf"), 62)
+    reg = ImageFont.truetype(str(slides.INTER_DIR / "Inter-Regular.otf"), 42)
+    probe = ImageDraw.Draw(Image.new("RGB", (8, 8)))
+    nw = int(max(probe.textlength(label, font=bold), probe.textlength(value, font=reg)) + 120)
+    nh = 210
+    card = Image.new("RGBA", (nw, nh), (0, 0, 0, 0)); d = ImageDraw.Draw(card)
+    d.rounded_rectangle((0, 0, nw - 1, nh - 1), 34, fill=slides.CARD + (245,), outline=(255, 255, 255, 18), width=2)
+    mask = Image.new("L", (nw, nh), 0); ImageDraw.Draw(mask).rounded_rectangle((0, 0, nw - 1, nh - 1), 34, fill=255)
+    line = Image.new("RGBA", (nw, nh), (0, 0, 0, 0)); ImageDraw.Draw(line).rectangle((0, 0, 8, nh), fill=(229, 115, 115, 255))
+    line.putalpha(Image.composite(line.getchannel("A"), Image.new("L", (nw, nh), 0), mask))
+    card.alpha_composite(line)
+    d.text((56, 42), label, font=bold, fill=slides.INK)
+    d.text((56, 124), value, font=reg, fill=slides.MUTED)
+    canvas.alpha_composite(card, (int(cx - nw / 2), int(cy - nh / 2)))
 
 
 def sticky_note(canvas, cx, cy, label, value, angle, colour, wear, pin):
@@ -152,7 +172,7 @@ def header(out):
     import random
     random.seed(7)
     w, h = 3840, 1646
-    c = Image.new("RGBA", (w, h), (0, 0, 0, 255))
+    c = Image.new("RGBA", (w, h), slides.PAGE + (255,))
     floor_y = int(h * 0.84)
     # Stage floor: warm boards rising out of the dark behind the detective, fading again at the front.
     floor = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -185,7 +205,7 @@ def header(out):
     vig = Image.new("L", (w, h), 0)
     ImageDraw.Draw(vig).ellipse((-w * 0.15, -h * 0.35, w * 1.15, h * 1.25), fill=255)
     vig = vig.filter(ImageFilter.GaussianBlur(260))
-    black = Image.new("RGBA", (w, h), (0, 0, 0, 255))
+    black = Image.new("RGBA", (w, h), slides.PAGE + (255,))
     c = Image.composite(c, black, vig)
     # Six things an app can learn, on a detective's aged sticky notes either side of him.
     spots = [(0.27, 0.40, -4), (0.225, 0.575, 3), (0.28, 0.745, -2), (0.73, 0.40, 3), (0.775, 0.575, -3), (0.72, 0.745, 2)]
@@ -196,8 +216,8 @@ def header(out):
              ((160, 200, 230), "torn", (220, 180, 40)),    # blue, torn edge, yellow pin
              ((240, 178, 110), "dogear", (230, 230, 230)), # orange, folded corner, white pin
              ((236, 224, 196), "aged", "tape")]            # cream, yellowed and creased, taped
-    for (fx, fy, angle), (colour, wear, pin), (label, value) in zip(spots, notes, CONCERNS):
-        sticky_note(c, w * fx, h * fy, label, value, angle, colour, wear, pin)
+    for (fx, fy, angle), (label, value) in zip(spots, CONCERNS):
+        slate_card(c, w * fx, h * fy, label, value)
     c.convert("RGB").save(out / "header-3840x1646.png", optimize=True)
 
 

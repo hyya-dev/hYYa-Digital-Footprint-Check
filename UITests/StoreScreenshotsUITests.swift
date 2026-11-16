@@ -160,10 +160,17 @@ final class StoreScreenshotsUITests: XCTestCase {
     func testCaptureStoreScreensLandscape() { captureStoreScreens(landscape: true) }
 
     private func captureStoreScreens(landscape: Bool = false) {
+        // The first page as a new user sees it, with no check done (store plan M3, slide 7).
+        app.launchArguments += ["-firstRun"]
         app.launch()
         if landscape { XCUIDevice.shared.orientation = .landscapeLeft }
         sleep(2)
         shot("store-01-home")
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "-firstRun" }
+        app.launch()
+        if landscape { XCUIDevice.shared.orientation = .landscapeLeft }
+        sleep(2)
 
         // Checks 2 and 3 first, so the results show one privacy score built from three checks.
         tab("Sensitive apps")
@@ -200,11 +207,12 @@ final class StoreScreenshotsUITests: XCTestCase {
         tab("Footprint")
         XCTAssertTrue(app.buttons["Scan again"].waitForExistence(timeout: 20))
 
-        let clue = app.buttons.containing(NSPredicate(format: "label CONTAINS 'last restart'")).firstMatch
+        // A different finding from the fix slide's (store plan M2): the headphones' name.
+        let clue = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Rename your headphones'")).firstMatch
         scrollTo(clue, max: 14)
-        XCTAssertTrue(clue.exists, "The restart clue isn't on the page")
+        XCTAssertTrue(clue.exists, "The headphones finding isn't on the page")
         clue.tap()
-        shot("store-04-finding", showing: app.staticTexts["Your last restart time gives you away"])
+        shot("store-04-finding", showing: app.staticTexts["Apps can see your headphones' name"])
         back()
         sleep(1)
         app.swipeDown(velocity: .fast); app.swipeDown(velocity: .fast)
