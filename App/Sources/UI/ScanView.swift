@@ -225,6 +225,7 @@ private struct Results: View {
             .padding(.vertical, 14)
             .padding(.horizontal, 18)
             .overlay(Capsule().strokeBorder(Brand.edge.opacity(0.45), lineWidth: 0.75))
+            .contentShape(Capsule())  // the whole pill takes the tap, not just its text and chevron
         }
         .buttonStyle(.plain)
         .accessibilityValue(showAll ? "Expanded" : "Collapsed")
