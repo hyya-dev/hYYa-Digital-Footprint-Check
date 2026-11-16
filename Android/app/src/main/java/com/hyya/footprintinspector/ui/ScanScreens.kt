@@ -24,11 +24,14 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -152,28 +155,30 @@ private fun Results(scanner: Scanner, nav: Nav) {
     val score = scanner.score
     val concerning = scanner.concerning
     Page {
-        // Check 1 in detail: the footprint score and its clues. The overall score is on the Score page.
+        // Simple by default (1.1.0, tester feedback): what you can fix comes first, in plain words;
+        // everything an app can read is one tap away.
+        val fixes = fixesOf(scanner)
+        var showAll by rememberSaveable { mutableStateOf(false) }
         Spacer(Modifier.padding(top = 8.dp))
         Eyebrow("Check 1 · Footprint")
-        Text("${score.level.title}: ${score.value}", color = Brand.ink, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text("Any app can read ${scanner.findings.size} clues about this device. " +
-            (if (concerning.isEmpty()) "None stands out." else "${concerning.size} are worth a look."),
+        Text(when (fixes.size) { 0 -> "Nothing here for you to fix"; 1 -> "1 thing you can fix"; else -> "${fixes.size} things you can fix" },
+            color = Brand.ink, fontSize = 26.sp, fontWeight = FontWeight.Bold, lineHeight = 31.sp)
+        Text(if (fixes.isEmpty()) "Your Footprint score is ${score.value} out of 100. What's left, only Google or the device maker can change."
+             else "Your Footprint score is ${score.value} out of 100. Fixing ${if (fixes.size == 1) "it" else "these"} takes a few minutes.",
             color = Brand.textMuted, fontSize = 15.sp, lineHeight = 21.sp)
-        val seen = scanner.findings
-        SummaryRing(listOf(
-            Slice("worth a look", seen.count { it.isConcerning }, SliceKind.ALERT),
-            Slice("worth knowing", seen.count { !it.isConcerning && it.severity != Severity.LOW }, SliceKind.AMBER),
-            Slice("minor", seen.count { it.severity == Severity.LOW }, SliceKind.FINE),
-        ), "clues")
-        // With fixes waiting, fixing is the main step; scanning again comes after.
-        if (fixesOf(scanner).isEmpty()) PrimaryButton("Scan again") { scanner.scan() }
-        else {
+        if (fixes.isNotEmpty()) {
+            Panel {
+                fixes.forEachIndexed { i, f ->
+                    RowCard(f.definition.section.icon(), PlainWords.text[f.id]?.action ?: f.definition.title, f.definition.headline,
+                        tint = Brand.concern, showDivider = i < fixes.lastIndex, onClick = { nav.push(Route.FindingRoute(f.id)) }) {
+                        Text("+${FootprintScore.points(f)}", color = Tone.FIX.tint, fontSize = 14.sp)
+                        Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Brand.textSubtle)
+                    }
+                }
+            }
             PrimaryButton("Fix them with me") { nav.push(Route.FixRoute) }
-            GhostButton("Scan again") { scanner.scan() }
         }
-        Text("How the score works", color = Brand.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().clickableNoRipple { nav.push(Route.ScoreRoute) })
-        ScoreGuide(scanner, nav, showFixButton = false)
+        GhostButton("Scan again") { scanner.scan() }
         scanner.comparison?.let { cmp ->
             InfoCard("Since your last scan", Tone.CONTEXT, Icons.Outlined.History) {
                 Text("${cmp.previous.score} → ${cmp.current.score}", color = Brand.ink, fontSize = 18.sp)
@@ -184,29 +189,36 @@ private fun Results(scanner: Scanner, nav: Nav) {
             }
         }
 
-        if (concerning.isNotEmpty()) {
-            SectionTitle("Worth a look", concerning.size.toString())
-            Panel { concerning.forEachIndexed { i, f -> ClueRow(f, nav, i < concerning.lastIndex) } }
-        }
-        for ((group, title) in listOf(Group.PASSIVE to "Seen without asking", Group.ADVANCED to "Clever tricks", Group.PERMISSION to "Seen once you allow it")) {
-            val sections = Section.entries.filter { it.group == group }
-            if (group == Group.WATCH) {
-                // The headline check: its findings sit right on the Scan screen, one tap from the fix.
-                val fs = sections.flatMap { scanner.findings(it) }
-                if (fs.isEmpty()) continue
-                SectionTitle(title, fs.count { it.severity != Severity.LOW }.takeIf { it > 0 }?.toString())
-                Panel { fs.forEachIndexed { i, f -> FindingRow(f, nav, i < fs.lastIndex) } }
-                continue
+        // Everything any app can read, for anyone who wants it.
+        FoldButton(if (showAll) "Hide the full list" else "See everything apps can read (${scanner.findings.size})", showAll) { showAll = !showAll }
+        if (showAll) {
+            val seen = scanner.findings
+            SummaryRing(listOf(
+                Slice("worth a look", seen.count { it.isConcerning }, SliceKind.ALERT),
+                Slice("worth knowing", seen.count { !it.isConcerning && it.severity != Severity.LOW }, SliceKind.AMBER),
+                Slice("minor", seen.count { it.severity == Severity.LOW }, SliceKind.FINE),
+            ), "things")
+            ScoreGuide(scanner, nav, showFixButton = false)
+            Text("How the score works", color = Brand.sand, fontSize = 13.sp, textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().clickableNoRipple { nav.push(Route.ScoreRoute) })
+            val fixIds = fixes.map { it.id }.toSet()
+            val onlyMaker = concerning.filter { it.id !in fixIds }
+            if (onlyMaker.isNotEmpty()) {
+                SectionTitle("Only Google or the maker can fix", onlyMaker.size.toString())
+                Panel { onlyMaker.forEachIndexed { i, f -> ClueRow(f, nav, i < onlyMaker.lastIndex) } }
             }
-            SectionTitle(title)
-            Panel {
-                sections.forEachIndexed { i, s ->
-                    val fs = scanner.findings(s)
-                    val worth = fs.count { it.isConcerning }
-                    RowCard(s.icon(), s.title, showDivider = i < sections.lastIndex, onClick = { nav.push(Route.SectionRoute(s)) }) {
-                        Text(if (fs.isEmpty() && group == Group.PERMISSION) "Show me" else "${fs.size}", color = Brand.textSubtle, fontSize = 13.sp)
-                        if (worth > 0) { Spacer(Modifier.width(6.dp)); SeverityDot(Severity.HIGH) }
-                        Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Brand.textSubtle)
+            for ((group, title) in listOf(Group.PASSIVE to "Seen without asking", Group.ADVANCED to "Clever tricks", Group.PERMISSION to "Seen once you allow it")) {
+                val sections = Section.entries.filter { it.group == group }
+                SectionTitle(title)
+                Panel {
+                    sections.forEachIndexed { i, s ->
+                        val fs = scanner.findings(s)
+                        val worth = fs.count { it.isConcerning }
+                        RowCard(s.icon(), s.title, showDivider = i < sections.lastIndex, onClick = { nav.push(Route.SectionRoute(s)) }) {
+                            Text(if (fs.isEmpty() && group == Group.PERMISSION) "Show me" else "${fs.size}", color = Brand.textSubtle, fontSize = 13.sp)
+                            if (worth > 0) { Spacer(Modifier.width(6.dp)); SeverityDot(Severity.HIGH) }
+                            Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, null, tint = Brand.textSubtle)
+                        }
                     }
                 }
             }
@@ -215,10 +227,22 @@ private fun Results(scanner: Scanner, nav: Nav) {
     }
 }
 
-/** Check-up areas ticked, out of the current list. */
+/** A fold-out toggle: one outlined pill, chevron at the end, its state read out by TalkBack. */
+@Composable
+fun FoldButton(text: String, open: Boolean, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).border(0.75.dp, Brand.edge.copy(alpha = 0.45f), RoundedCornerShape(50))
+        .pressable(onClick).padding(horizontal = 18.dp, vertical = 14.dp)
+        .semantics(mergeDescendants = true) { stateDescription = if (open) "Expanded" else "Collapsed" },
+        verticalAlignment = Alignment.CenterVertically) {
+        Text(text, color = Brand.sand, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+        Icon(if (open) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = Brand.sand)
+    }
+}
+
+/** Check-up essentials ticked, out of five. */
 fun checkUpDoneCount(context: android.content.Context): Int =
     context.getSharedPreferences("app", android.content.Context.MODE_PRIVATE).getStringSet("checkUpDone", emptySet())!!
-        .intersect(com.hyya.footprintinspector.catalogue.CheckUp.steps.map { it.id }.toSet()).size
+        .intersect(com.hyya.footprintinspector.catalogue.CheckUp.essentialIds.toSet()).size
 
 @Composable
 private fun ClueRow(f: Finding, nav: Nav, divider: Boolean) {
@@ -244,8 +268,8 @@ fun SectionScreen(scanner: Scanner, section: Section, nav: Nav) {
             when {
                 kind != null && !kind.granted(context) -> "Here's what any app you allow gets to see."
                 findings.isEmpty() -> "Nothing to read here on this device."
-                section.group == Group.PERMISSION -> "${findings.size} clue${if (findings.size == 1) "" else "s"} an app gets once you allow it. Advice for deciding what to allow, not in your score."
-                else -> "${findings.size} clue${if (findings.size == 1) "" else "s"}, ${findings.count { it.isConcerning }.let { if (it == 0) "nothing alarming" else "$it worth a look" }}."
+                section.group == Group.PERMISSION -> "${findings.size} thing${if (findings.size == 1) "" else "s"} an app gets once you allow it. Advice for deciding what to allow, not in your score."
+                else -> "${findings.size} thing${if (findings.size == 1) "" else "s"} apps can see, ${findings.count { it.isConcerning }.let { if (it == 0) "nothing alarming" else "$it worth a look" }}."
             })
         if (kind != null && !kind.granted(context)) {
             InfoCard("See it for yourself", Tone.EXPLAIN, Icons.Outlined.PanTool) {
@@ -300,35 +324,16 @@ fun FindingScreen(scanner: Scanner, id: String, nav: Nav) {
                 Text(f.reading.value, color = Brand.ink, fontSize = 20.sp, fontWeight = FontWeight.Light, lineHeight = 26.sp)
             }
             f.reading.note?.let { Text(it, color = if (f.isConcerning) Tone.ALERT.tint else Brand.textMuted, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, lineHeight = 19.sp) }
-            BadgeRow {
-                ToneBadge(d.persistence.label, Tone.LIMIT, Icons.Outlined.Schedule)
-                ToneBadge(if (d.section.group == Group.PERMISSION) "Needs permission" else "No permission needed", Tone.LIMIT, Icons.Outlined.Visibility)
-            }
-            if (f.reading.items.isNotEmpty()) {
-                androidx.compose.material3.HorizontalDivider(color = head.tint.copy(alpha = 0.2f), thickness = 0.5.dp)
-                Row(Modifier.fillMaxWidth().pressable { showDetails = !showDetails }
-                    .semantics(mergeDescendants = true) { stateDescription = if (showDetails) "Expanded" else "Collapsed" }, verticalAlignment = Alignment.CenterVertically) {
-                    Text("All the details (${f.reading.items.size})", color = head.tint, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    Icon(if (showDetails) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = head.tint)
-                }
-                if (showDetails) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    f.reading.items.take(60).forEach { item ->
-                        Row(verticalAlignment = Alignment.Top) {
-                            Box(Modifier.padding(top = 7.dp).size(5.dp).clip(CircleShape).background(head.tint.copy(alpha = 0.7f)))
-                            Spacer(Modifier.width(8.dp))
-                            Text(item, color = Brand.textMuted, fontSize = 14.sp, lineHeight = 19.sp)
-                        }
-                    }
-                }
-            }
         }
         // How serious: a level, who can read it, how long it lasts and what it lets someone do.
-        val sTone = when { f.isConcerning -> Tone.ALERT; f.severity == com.hyya.footprintinspector.model.Severity.LOW -> Tone.LIMIT; else -> Tone.CONTEXT }
-        ToneCard(sTone, "How serious", Icons.Outlined.Speed, trailing = { ToneBadge(f.advisory?.badge ?: com.hyya.footprintinspector.model.Impact.level(f.severity), sTone) }) {
-            com.hyya.footprintinspector.model.Impact.inPractice[d.id]?.let { Text(it, color = Brand.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 21.sp) }
-            ImpactRow(Icons.Outlined.Visibility, "Who can read it", if (d.section.group == Group.PERMISSION) "Only apps you've given this permission." else "Any app on this device, without asking you.")
-            ImpactRow(Icons.Outlined.Schedule, "How long it lasts", com.hyya.footprintinspector.model.Impact.lasting(d.persistence))
-            ImpactRow(Icons.Outlined.Link, "What it lets them do", com.hyya.footprintinspector.model.Impact.reach(f.severity))
+        val seriousCard: @Composable () -> Unit = {
+            val sTone = when { f.isConcerning -> Tone.ALERT; f.severity == com.hyya.footprintinspector.model.Severity.LOW -> Tone.LIMIT; else -> Tone.CONTEXT }
+            ToneCard(sTone, "How serious", Icons.Outlined.Speed, trailing = { ToneBadge(f.advisory?.badge ?: com.hyya.footprintinspector.model.Impact.level(f.severity), sTone) }) {
+                com.hyya.footprintinspector.model.Impact.inPractice[d.id]?.let { Text(it, color = Brand.ink, fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 21.sp) }
+                ImpactRow(Icons.Outlined.Visibility, "Who can read it", if (d.section.group == Group.PERMISSION) "Only apps you've given this permission." else "Any app on this device, without asking you.")
+                ImpactRow(Icons.Outlined.Schedule, "How long it lasts", com.hyya.footprintinspector.model.Impact.lasting(d.persistence))
+                ImpactRow(Icons.Outlined.Link, "What it lets them do", com.hyya.footprintinspector.model.Impact.reach(f.severity))
+            }
         }
         val fixTone = if (d.fix.fixable) Tone.FIX else Tone.LIMIT
         ToneCard(fixTone, if (d.fix.fixable) (PlainWords.text[d.id]?.action ?: "How to fix it") else "Only Google or the device maker can fix this",
@@ -344,18 +349,38 @@ fun FindingScreen(scanner: Scanner, id: String, nav: Nav) {
             if (f.canKeep) GhostButton("Keep it: I trust this") { scanner.setKept(d.id, true) }
             else if (f.advisory == com.hyya.footprintinspector.model.Advisory.KEPT) GhostButton("Undo: count it again") { scanner.setKept(d.id, false) }
         }
-        // The fuller explanation, for anyone who wants it, out of the way of the answer.
-        ToneCard(Tone.EXPLAIN) {
-            Row(Modifier.fillMaxWidth().pressable { showMore = !showMore }
-                .semantics(mergeDescendants = true) { stateDescription = if (showMore) "Expanded" else "Collapsed" }, verticalAlignment = Alignment.CenterVertically) {
-                Text("More about this", color = Tone.EXPLAIN.tint, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                Icon(if (showMore) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = Tone.EXPLAIN.tint)
-            }
-            if (showMore) {
+        // A finding worth a look keeps "How serious" in view; calm ones fold it, with the rest, under
+        // "More about this" (simple by default, 1.1.0).
+        if (f.isConcerning) seriousCard()
+        FoldButton("More about this", showMore) { showMore = !showMore }
+        if (showMore) {
+            if (!f.isConcerning) seriousCard()
+            ToneCard(Tone.EXPLAIN) {
                 Text("What it tells an app", color = Brand.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 Text(d.reveals, color = Brand.textMuted, fontSize = 15.sp, lineHeight = 21.sp)
                 Text("Why the system allows it", color = Brand.ink, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 Text(d.why, color = Brand.textMuted, fontSize = 15.sp, lineHeight = 21.sp)
+                BadgeRow {
+                    ToneBadge(d.persistence.label, Tone.LIMIT, Icons.Outlined.Schedule)
+                    ToneBadge(if (d.section.group == Group.PERMISSION) "Needs permission" else "No permission needed", Tone.LIMIT, Icons.Outlined.Visibility)
+                }
+                if (f.reading.items.isNotEmpty()) {
+                    androidx.compose.material3.HorizontalDivider(color = Tone.EXPLAIN.tint.copy(alpha = 0.2f), thickness = 0.5.dp)
+                    Row(Modifier.fillMaxWidth().pressable { showDetails = !showDetails }
+                        .semantics(mergeDescendants = true) { stateDescription = if (showDetails) "Expanded" else "Collapsed" }, verticalAlignment = Alignment.CenterVertically) {
+                        Text("All the details (${f.reading.items.size})", color = Tone.EXPLAIN.tint, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Icon(if (showDetails) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore, null, tint = Tone.EXPLAIN.tint)
+                    }
+                    if (showDetails) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        f.reading.items.take(60).forEach { item ->
+                            Row(verticalAlignment = Alignment.Top) {
+                                Box(Modifier.padding(top = 7.dp).size(5.dp).clip(CircleShape).background(Tone.EXPLAIN.tint.copy(alpha = 0.7f)))
+                                Spacer(Modifier.width(8.dp))
+                                Text(item, color = Brand.textMuted, fontSize = 14.sp, lineHeight = 19.sp)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -395,7 +420,7 @@ private fun ScoreGuide(scanner: Scanner, nav: Nav, showFixButton: Boolean = true
     val reach = FootprintScore.of(scanner.findings.filter { f -> fixes.none { it.id == f.id } }).value
     val meaning = when (score.level) {
         FootprintScore.Level.LIGHT -> "Higher is better, and you're in good shape: apps learn little that could single out this device."
-        FootprintScore.Level.MODERATE -> "Higher is better. You're in the middle: a few clues together could single out this device."
+        FootprintScore.Level.MODERATE -> "Higher is better. You're in the middle: a few details together could single out this device."
         FootprintScore.Level.HEAVY -> "Higher is better. A low score means apps can easily tell this device apart from others and recognise you."
     }
     ToneCard(if (fixes.isEmpty()) Tone.FIX else Tone.CONTEXT, "What the footprint score means", Icons.Outlined.Speed) {
@@ -496,7 +521,7 @@ fun HomeScreen(scanner: Scanner, nav: Nav) {
             Text(overall.level?.title ?: "", color = Brand.ink, fontSize = 26.sp, fontWeight = FontWeight.Bold)
             AccentRule()
             Text(if (left == 0) "All ${overall.total} checks done. Higher is better."
-                else "Based on ${overall.doneCount} of ${overall.total} checks. Do the other $left to complete your score.",
+                else "${overall.doneCount} of ${overall.total} checks done. Higher is better.",
                 color = Brand.textMuted, fontSize = 15.sp, lineHeight = 21.sp)
             Text("How the score works", color = Brand.sand, fontSize = 13.sp, modifier = Modifier.clickableNoRipple { nav.push(Route.ScoreRoute) })
             // Until every check is done, the next check is the one obvious step; sharing waits.

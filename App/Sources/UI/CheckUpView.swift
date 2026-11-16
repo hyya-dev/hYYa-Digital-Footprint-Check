@@ -16,27 +16,28 @@ struct CheckUpView: View {
     /// The open area, saved on this device so it's still open after the person goes to Settings,
     /// even if iOS quit the app meanwhile.
     @AppStorage("nav.checkup") private var openStep = ""
-    /// The other areas, open or closed, remembered on this device.
-    @AppStorage("checkup.showMore") private var showMore = false
+    /// The other areas start closed on every visit (simple by default); kept only while the app is open.
+    @SceneStorage("checkup.showMore") private var showMore = false
 
     private var done: Set<String> { Set(stored.split(separator: ",").map(String.init)) }
 
     var body: some View {
-        let total = CheckUpGuide.steps.count
+        let total = CheckUpGuide.essentialIDs.count
+        let essentialsDone = CheckUpGuide.essentialIDs.filter { done.contains($0) }.count
         ListDetailStack {
             Page {
                 HeroCard(eyebrow: "Check-up",
-                         title: done.count == total ? "All checked!" : "\(done.count) of \(total) checked",
+                         title: essentialsDone == total ? "Essentials done!" : "\(essentialsDone) of \(total) essentials done",
                          subtitle: Self.introLine,
-                         mood: done.count == total ? .happy : .idle,
+                         mood: essentialsDone == total ? .happy : .idle,
                          mascotSize: 104) {
-                    ProgressView(value: Double(done.count), total: Double(total))
+                    ProgressView(value: Double(essentialsDone), total: Double(total))
                         .tint(Tone.fix.tint)
                         .padding(.top, 6)
-                        .animation(.spring, value: done.count)
+                        .animation(.spring, value: essentialsDone)
                 }
 
-                SectionTitle(title: "The essentials", trailing: "\(CheckUpGuide.essentials.filter { done.contains($0.id) }.count) of \(CheckUpGuide.essentials.count)")
+                SectionTitle(title: "The essentials", trailing: "\(essentialsDone) of \(total)")
                 stepPanel(CheckUpGuide.essentials)
 
                 Button { withAnimation(.smooth) { showMore.toggle() } } label: {

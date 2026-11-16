@@ -65,11 +65,17 @@ enum CheckUpGuide {
         #if os(macOS)
         ["mac-filevault", "mac-lock", "mac-apple-account", "mac-updates", "mac-passwords"]
         #else
-        ["lock-device", "apple-account", "updates", "passwords", "safety-check"]
+        ["safety-check", "lock-device", "apple-account", "updates", "passwords"]
         #endif
     }
     static var essentials: [CheckUpStep] { essentialIDs.compactMap { id in steps.first { $0.id == id } } }
     static var others: [CheckUpStep] { steps.filter { !essentialIDs.contains($0.id) } }
+    /// The steps the score counts: the five essentials. Anyone who had already finished every area that
+    /// counted before 1.1.0 keeps that credit, so an update never lowers a score.
+    static func scoredIDs(ticked: Set<String>) -> Set<String> {
+        let legacy = Set(steps.filter(\.counts).map(\.id))
+        return legacy.isSubset(of: ticked) ? legacy : Set(essentialIDs)
+    }
 
     static var steps: [CheckUpStep] {
         #if os(macOS)

@@ -55,6 +55,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -281,20 +282,34 @@ fun CheckUpScreen(nav: Nav) {
         if ("restart" !in set) prefs(context).edit().putStringSet("checkUpDone", set + "restart").apply()
     }
     val done = prefs(context).getStringSet("checkUpDone", emptySet())!!
+    var showMore by rememberSaveable { mutableStateOf(false) }
+    val essentials = CheckUp.essentialIds.mapNotNull { id -> CheckUp.steps.indexOfFirst { it.id == id }.takeIf { it >= 0 } }
+    val others = CheckUp.steps.indices.filter { it !in essentials }
+    val essentialsDone = essentials.count { CheckUp.steps[it].id in done }
+    val total = essentials.size
     Page {
-        HeroCard("Check-up", if (done.size == CheckUp.steps.size) "All checked!" else "${done.size} of ${CheckUp.steps.size} checked",
-            "Start with simple protection steps, then see which apps can reach your location, contacts or notifications. Only Settings knows, so let's look together, one area at a time.")
-        LinearProgressIndicator(progress = { done.size.toFloat() / CheckUp.steps.size }, color = Tone.FIX.tint, trackColor = Brand.tile,
+        HeroCard("Check-up", if (essentialsDone == total) "Essentials done!" else "$essentialsDone of $total essentials done",
+            "Start with five simple steps. Then, if you like, see which apps can reach your location, contacts or notifications.")
+        LinearProgressIndicator(progress = { essentialsDone.toFloat() / total }, color = Tone.FIX.tint, trackColor = Brand.tile,
             modifier = Modifier.fillMaxWidth())
-        Panel {
-            CheckUp.steps.forEachIndexed { i, s ->
-                RowCard(if (s.id in done) Icons.Outlined.CheckCircle else Icons.Outlined.Security, s.title, s.hint ?: s.path.substringBefore(" (on Samsung").let { if (it.length > 60 && "Permission manager" in it) "Permission manager › " + s.path.substringAfterLast("› ") else it.substringBefore(", then") },
-                    tint = if (s.id in done) Brand.green else Brand.sand, showDivider = i < CheckUp.steps.lastIndex,
-                    state = if (s.id in done) "Done" else null,
-                    onClick = { nav.push(Route.CheckUpRoute(i)) }) {
-                    Icon(if (s.id in done) Icons.Outlined.CheckCircle else Icons.AutoMirrored.Outlined.KeyboardArrowRight, null,
-                        tint = if (s.id in done) Tone.FIX.tint else Brand.textSubtle)
-                }
+        SectionTitle("The essentials", "$essentialsDone of $total")
+        StepPanel(essentials, done, nav)
+        FoldButton(if (showMore) "Hide the other areas" else "More areas (${others.size})", showMore) { showMore = !showMore }
+        if (showMore) StepPanel(others, done, nav)
+    }
+}
+
+@Composable
+private fun StepPanel(indices: List<Int>, done: Set<String>, nav: Nav) {
+    Panel {
+        indices.forEachIndexed { n, i ->
+            val s = CheckUp.steps[i]
+            RowCard(if (s.id in done) Icons.Outlined.CheckCircle else Icons.Outlined.Security, s.title, s.hint ?: s.path.substringBefore(" (on Samsung").let { if (it.length > 60 && "Permission manager" in it) "Permission manager › " + s.path.substringAfterLast("› ") else it.substringBefore(", then") },
+                tint = if (s.id in done) Brand.green else Brand.sand, showDivider = n < indices.lastIndex,
+                state = if (s.id in done) "Done" else null,
+                onClick = { nav.push(Route.CheckUpRoute(i)) }) {
+                Icon(if (s.id in done) Icons.Outlined.CheckCircle else Icons.AutoMirrored.Outlined.KeyboardArrowRight, null,
+                    tint = if (s.id in done) Tone.FIX.tint else Brand.textSubtle)
             }
         }
     }

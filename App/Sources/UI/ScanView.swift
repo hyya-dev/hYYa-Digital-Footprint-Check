@@ -146,8 +146,8 @@ private struct Results: View {
     @State private var showingFormula = false
     /// Saved on this device, like the open page, so the walk-through is still open on return.
     @AppStorage("nav.fixing") private var fixing = false
-    /// The full list, open or closed, remembered on this device.
-    @AppStorage("results.showAll") private var showAll = false
+    /// The full list starts closed on every visit (simple by default); kept only while the app is open.
+    @SceneStorage("results.showAll") private var showAll = false
     /// The clues you can fix, most points first.
     private var fixes: [Finding] {
         scanner.concerning.filter { FootprintScore.isFixable($0) && FootprintScore.points(for: $0) > 0 }

@@ -51,6 +51,20 @@ struct PrivacyCheckTests {
         }
     }
 
+    /// 1.1.0: Check-up counts once the five essentials are done, and an update never takes away earlier credit.
+    @Test func checkUpCountsTheEssentialsAndKeepsOldCredit() {
+        #expect(CheckUpGuide.essentialIDs.count == 5)
+        #expect(CheckUpGuide.essentials.count == 5)
+        let essentials = Set(CheckUpGuide.essentialIDs)
+        #expect(CheckUpGuide.scoredIDs(ticked: []) == essentials)
+        #expect(CheckUpGuide.scoredIDs(ticked: essentials) == essentials)
+        let legacy = Set(CheckUpGuide.steps.filter(\.counts).map(\.id))
+        let ids = CheckUpGuide.scoredIDs(ticked: legacy)
+        #expect(ids == legacy)
+        let score = OverallScore(footprint: nil, sensitiveFound: nil, trackerSharing: nil, checkUpDone: legacy.intersection(ids).count, checkUpTotal: ids.count)
+        #expect(score.parts[.checkup] == 100)
+    }
+
     /// The spyware and leaked-password steps are guidance, not detection claims.
     @Test func securityStepsMakeNoDetectionClaims() {
         let ids = ["updates", "restart", "passwords", "lockdown"]

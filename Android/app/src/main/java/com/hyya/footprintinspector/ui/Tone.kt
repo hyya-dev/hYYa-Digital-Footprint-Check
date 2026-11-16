@@ -271,7 +271,7 @@ fun ChecksPanel(overall: com.hyya.footprintinspector.model.OverallScore, scanner
                     val n = scanner.findings(com.hyya.footprintinspector.model.Section.WATCH).count { it.isConcerning }
                     if (n == 0) "Nothing worth a look" else if (n == 1) "1 power worth a look" else "$n powers worth a look"
                 }
-                Tab.CHECKUP -> if (checkUpDone == com.hyya.footprintinspector.catalogue.CheckUp.steps.size) "Every area checked" else if (checkUpDone == 0) "Not started" else "$checkUpDone of ${com.hyya.footprintinspector.catalogue.CheckUp.steps.size} areas checked"
+                Tab.CHECKUP -> if (value != null) "Check-up done" else if (checkUpDone == 0) "Not started" else "$checkUpDone of ${com.hyya.footprintinspector.catalogue.CheckUp.essentialIds.size} essentials done"
                 Tab.HOME, Tab.SETTINGS -> ""
             }
             val done = value != null

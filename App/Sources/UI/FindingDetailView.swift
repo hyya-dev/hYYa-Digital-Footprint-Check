@@ -94,6 +94,9 @@ struct FindingDetailView: View {
                 }
             }
 
+            // A finding worth a look keeps its "How serious" card in view; only calm ones fold it.
+            if current.isConcerning { seriousCard }
+
             // Simple by default (1.1.0): how serious it is, why the system allows it and every detail
             // are one tap away, out of the way of the answer.
             Button { withAnimation(.smooth) { showMore.toggle() } } label: {
@@ -111,7 +114,7 @@ struct FindingDetailView: View {
             .accessibilityValue(showMore ? "Expanded" : "Collapsed")
 
             if showMore {
-                seriousCard
+                if !current.isConcerning { seriousCard }
                 ToneCard(tone: .explain) {
                     moreRow("What it tells an app", def.reveals)
                     moreRow("Why the system allows it", def.why)

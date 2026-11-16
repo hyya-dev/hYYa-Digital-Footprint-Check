@@ -45,4 +45,18 @@ class LaunchExtrasTest {
         val unguarded = src.lines().filter { "intent.get" in it && "dev" !in it }
         assertTrue("Extras read without the debug guard: $unguarded", unguarded.isEmpty())
     }
+
+    /** 1.1.0: Check-up counts once the five essentials are done, and an update never takes away earlier credit. */
+    @Test fun checkUpCountsTheEssentialsAndKeepsOldCredit() {
+        val cu = com.hyya.footprintinspector.catalogue.CheckUp
+        assertEquals(5, cu.essentialIds.size)
+        assertTrue(cu.essentialIds.all { id -> cu.steps.any { it.id == id } })
+        val essentials = cu.essentialIds.toSet()
+        assertEquals(essentials, cu.scoredIds(emptySet()))
+        assertEquals(essentials, cu.scoredIds(essentials))
+        val legacy = cu.steps.filter { it.counts }.map { it.id }.toSet()
+        assertEquals(legacy, cu.scoredIds(legacy))
+        val ticked = cu.scoredIds(legacy)
+        assertEquals(100, OverallScore.of(null, null, null, legacy.intersect(ticked).size, ticked.size).parts[OverallScore.Part.CHECKUP])
+    }
 }

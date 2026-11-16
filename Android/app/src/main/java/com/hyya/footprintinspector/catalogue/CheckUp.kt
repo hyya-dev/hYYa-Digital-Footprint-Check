@@ -21,6 +21,18 @@ data class CheckUpStep(
 )
 
 object CheckUp {
+    /** Simple by default (1.1.0): the five that matter most come first; the other areas are one tap away. */
+    val essentialIds = listOf("safety", "screen-lock", "google-account", "updates", "passwords")
+
+    /**
+     * The steps the score counts: the five essentials. Anyone who had already finished every area that
+     * counted before 1.1.0 keeps that credit, so an update never lowers a score.
+     */
+    fun scoredIds(ticked: Set<String>): Set<String> {
+        val legacy = steps.filter { it.counts }.map { it.id }.toSet()
+        return if (ticked.containsAll(legacy)) legacy else essentialIds.toSet()
+    }
+
     private val here = Directions.here
     private val PM = here.permissionManager
 
