@@ -4,6 +4,21 @@ Each store release, with the store's What's New and the date it went live on eac
 Every release has a matching tag and a [GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases).
 Website: [hyya.com/hyya-digital-footprint-check.html](https://hyya.com/hyya-digital-footprint-check.html)
 
+## 1.1.1
+
+What's New (App Store):
+> This release contains general bug fixes and stability improvements.
+
+What's in it (App Store, iPhone and iPad):
+- On a wide screen without a fold, such as a tablet held sideways, the two pages now split at the middle of the
+  app's own window. With two windows of the app side by side, one could split at the other's middle.
+
+| Store | Version | Live | Source |
+|---|---|---|---|
+| App Store (iPhone and iPad) | 1.1.1 (build 44) | 2026-11-18 | tag `v1.1.1-build44` |
+
+The Mac App Store and Google Play stay on 1.1.0; nothing changed there.
+
 ## 1.1.0
 
 What's New (Google Play):
