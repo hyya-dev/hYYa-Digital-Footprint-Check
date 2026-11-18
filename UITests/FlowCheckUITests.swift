@@ -39,6 +39,20 @@ final class FlowCheckUITests: XCTestCase {
                       "\(what): off screen (top at \(Int(f.minY)), visible area \(Int(window.minY))–\(Int(tabBarTop)))", file: file, line: line)
     }
 
+    /// Two pages side by side (an open Duo sideways, iPad landscape): the Score page on the left, the check in
+    /// front on the right.
+    private var bookPose: Bool {
+        let w = app.windows.firstMatch.frame
+        return w.width > w.height && w.width >= 700 && w.height >= 560
+    }
+
+    /// The match on the page in front: in the book pose the rightmost one, since the left page can show the same
+    /// button (the Score page's "Check again", "How the score works"); otherwise the first.
+    private func front(_ q: XCUIElementQuery) -> XCUIElement {
+        guard bookPose else { return q.firstMatch }
+        return q.allElementsBoundByIndex.filter { $0.exists && $0.frame.width > 0 }.max { $0.frame.minX < $1.frame.minX } ?? q.firstMatch
+    }
+
     private func card(_ s: String) -> XCUIElement {
         app.buttons.matching(NSPredicate(format: "label CONTAINS %@", s)).firstMatch
     }
@@ -97,7 +111,11 @@ final class FlowCheckUITests: XCTestCase {
         shot("footprint-start")
         start.tap()
         XCTAssertTrue(app.buttons["Scan again"].waitForExistence(timeout: 25), "scan didn't finish")
-        XCTAssertFalse(app.buttons["Share my result"].exists, "Share belongs on the Score page only")
+        // In the book pose the Score page, with its Share button, is the left page beside Footprint.
+        let mid = app.windows.firstMatch.frame.midX
+        let shareHere = app.buttons.matching(NSPredicate(format: "label == %@", "Share my result")).allElementsBoundByIndex
+            .contains { !bookPose || $0.frame.minX > mid }
+        XCTAssertFalse(shareHere, "Share belongs on the Score page only")
         shot("footprint-result")
         tab("Score")
         assertVisible(text("checks"), "overall score line")
@@ -137,11 +155,11 @@ final class FlowCheckUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Scan again"].waitForExistence(timeout: 25), "scan didn't finish")
 
         // How the score works sits in the full list (1.1.0, simple by default): open it first.
-        let all = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'See everything apps can read'")).firstMatch
+        let all = front(app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'See everything apps can read'")))
         scrollUntil(all)
         if all.exists { all.tap(); sleep(1) }
         // How the score works: Done.
-        let how = app.buttons["How the score works"]
+        let how = front(app.buttons.matching(NSPredicate(format: "label == %@", "How the score works")))
         scrollUntil(how)
         how.tap()
         assertClosesByTapping(app.buttons["Done"].firstMatch, unique: text("The footprint score in detail"), "how-\(tag)")
@@ -205,7 +223,7 @@ final class FlowCheckUITests: XCTestCase {
         tab("Sensitive apps")
         assertVisible(text("Which apps could reveal you"), "Sensitive title")
         shot("sensitive-start")
-        let check = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Check '")).firstMatch
+        let check = front(app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Check '")))
         scrollUntil(check)
         check.tap()
         sleep(1)
