@@ -319,20 +319,40 @@ enum BookLayout {
     #if os(iOS)
     /// The left page's width. On the open Duo the line between the pages follows the fold's real position, which
     /// the system reports as a division region, so the two pages are not the same width beside the navbar (owner,
-    /// 2026-11-16; hYYa ink's lesson: never width / 2). Without a fold (iPad, iOS 26), the middle of the window.
-    @MainActor static func leftWidth(_ geo: GeometryProxy) -> CGFloat {
+    /// 2026-11-16; hYYa ink's lesson: never width / 2). Without a fold (iPad, iOS 26), the middle of the window
+    /// this page is in: `windowWidth` is that window's own width, so two windows side by side each split their own.
+    @MainActor static func leftWidth(_ geo: GeometryProxy, windowWidth: CGFloat?) -> CGFloat {
         if #available(iOS 27.1, *),
            let fold = geo.reservedRegions(kind: .division, options: .includeInactive).first,
            fold.frame.width < geo.size.width / 4, fold.frame.midX > 0, fold.frame.midX < geo.size.width {
             return fold.frame.midX
         }
         let frame = geo.frame(in: .global)
-        let window = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-            .first { $0.activationState == .foregroundActive }?.keyWindow?.bounds.width
-        guard let window else { return geo.size.width / 2 }
-        return min(max(window / 2 - frame.minX, geo.size.width * 0.35), geo.size.width * 0.65)
+        guard let windowWidth, windowWidth > 0 else { return geo.size.width / 2 }
+        return min(max(windowWidth / 2 - frame.minX, geo.size.width * 0.35), geo.size.width * 0.65)
     }
     #endif
+}
+
+extension EnvironmentValues {
+    /// The full width of the window a view is in, safe areas included. Each window measures its own at its root
+    /// (`measuresWindowWidth()`), so nothing has to look across the app's other windows to find it.
+    @Entry var windowWidth: CGFloat? = nil
+}
+
+private struct MeasuresWindowWidth: ViewModifier {
+    @State private var width: CGFloat?
+
+    func body(content: Content) -> some View {
+        content
+            .onGeometryChange(for: CGFloat.self) { $0.size.width + $0.safeAreaInsets.leading + $0.safeAreaInsets.trailing } action: { width = $0 }
+            .environment(\.windowWidth, width)
+    }
+}
+
+extension View {
+    /// Put on a window's root view: tells the pages inside how wide their window is.
+    func measuresWindowWidth() -> some View { modifier(MeasuresWindowWidth()) }
 }
 
 struct ListDetailStack<Content: View, Placeholder: View>: View {

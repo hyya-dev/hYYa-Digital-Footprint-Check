@@ -18,6 +18,7 @@ struct CheckUpView: View {
     @AppStorage("nav.checkup") private var openStep = ""
     /// The other areas start closed on every visit (simple by default); kept only while the app is open.
     @SceneStorage("checkup.showMore") private var showMore = false
+    @Environment(\.windowWidth) private var windowWidth
 
     private var done: Set<String> { Set(stored.split(separator: ",").map(String.init)) }
 
@@ -28,7 +29,7 @@ struct CheckUpView: View {
         GeometryReader { geo in
             if BookLayout.isWide(geo.size) && !openStep.isEmpty {
                 HStack(spacing: 0) {
-                    NavigationStack { list(pushesStep: false) }.frame(width: BookLayout.leftWidth(geo))
+                    NavigationStack { list(pushesStep: false) }.frame(width: BookLayout.leftWidth(geo, windowWidth: windowWidth))
                     Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
                     NavigationStack {
                         stepPage(openStep)

@@ -10,6 +10,7 @@ struct ScanView: View {
     /// app while the person changes a setting. Screenshot runs can open one with `-openFinding <id>`.
     @AppStorage("nav.finding") private var openedFinding = ""
     @AppStorage("nav.section") private var openedSection = ""
+    @Environment(\.windowWidth) private var windowWidth
 
     var body: some View {
         #if os(iOS)
@@ -18,7 +19,7 @@ struct ScanView: View {
         GeometryReader { geo in
             if BookLayout.isWide(geo.size) && (!openedFinding.isEmpty || !openedSection.isEmpty) {
                 HStack(spacing: 0) {
-                    stack(pushesDetails: false).frame(width: BookLayout.leftWidth(geo))
+                    stack(pushesDetails: false).frame(width: BookLayout.leftWidth(geo, windowWidth: windowWidth))
                     Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
                     NavigationStack { detailPage }
                 }

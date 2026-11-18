@@ -66,6 +66,9 @@ struct FootprintInspectorApp: App {
             }
             .tint(Brand.accent)
             .preferredColorScheme(.dark)
+            #if os(iOS)
+            .measuresWindowWidth()
+            #endif
             #if os(macOS)
             .frame(minWidth: 820, minHeight: 600)
             // A widget click brings the open window forward instead of opening a second one.
@@ -229,6 +232,7 @@ private struct BookPages: View {
     @AppStorage("nav.finding") private var openedFinding = ""
     @AppStorage("nav.section") private var openedSection = ""
     @AppStorage("nav.checkup") private var openStep = ""
+    @Environment(\.windowWidth) private var windowWidth
 
     /// Something inside the check is open, so the check itself becomes the left page.
     private var detailOpen: Bool {
@@ -250,7 +254,7 @@ private struct BookPages: View {
         GeometryReader { geo in
             if BookLayout.isWide(geo.size) && !detailOpen {
                 HStack(spacing: 0) {
-                    page(.home).frame(width: BookLayout.leftWidth(geo))
+                    page(.home).frame(width: BookLayout.leftWidth(geo, windowWidth: windowWidth))
                     Rectangle().fill(Brand.rule).frame(width: 0.5).ignoresSafeArea()
                     page(tab == .home ? rightOfScore : tab)
                 }
