@@ -155,6 +155,33 @@ final class StoreScreenshotsUITests: XCTestCase {
         tab("Footprint"); sleep(3)                                  // back to the score
     }
 
+    /// The scripted App Store preview video (Marketing, 2026-11-20), recorded with
+    /// `xcrun simctl io <device> recordVideo` while it runs: open, check 1, the score, one finding and
+    /// its details, then "Fix them with me" with its Settings steps. Sample data only. Every pause
+    /// is here, so a retake is a re-run. Trimmed to 15–30 s afterwards.
+    func testPreviewVideo() {
+        app.launchArguments += ["-firstRun"]
+        app.launch()
+        sleep(3)                                                        // the first page (the lead-in is trimmed)
+        tab("Footprint"); sleep(1)
+        tap("Start with check 1")
+        XCTAssertTrue(app.buttons["Scan again"].waitForExistence(timeout: 20))
+        sleep(2)                                                        // the score and what to fix
+        let clue = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Rename your headphones'")).firstMatch
+        XCTAssertTrue(clue.waitForExistence(timeout: 5), "The headphones finding isn't on the page")
+        clue.tap(); sleep(2)                                            // one finding, in plain words
+        app.swipeUp(velocity: 500); sleep(1)
+        let details = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'All the details'")).firstMatch
+        if details.waitForExistence(timeout: 2) && details.isHittable {
+            details.tap(); sleep(2)                                     // what an app reads
+        }
+        back(); sleep(1)
+        let fix = app.buttons["Fix them with me"]
+        XCTAssertTrue(fix.waitForExistence(timeout: 5), "Fix them with me isn't on the page")
+        fix.tap(); sleep(3)                                             // fix 1: the steps
+        app.buttons["Done, next"].firstMatch.tap(); sleep(4)            // fix 2: where in Settings, and the score it could reach
+    }
+
     /// The same screens sideways, for the iPhone Duo's landscape slides (its controls sit on the
     /// side). Captures come out rotated; `scripts/make-landscape-slides.py` turns them upright.
     func testCaptureStoreScreensLandscape() { captureStoreScreens(landscape: true) }
