@@ -18,8 +18,8 @@ What's in it:
 | Store | Version | Live | Source |
 |---|---|---|---|
 | Google Play | 1.1.2 (versionCode 31) | 2026-11-19 | tag `v1.1.2-android31` |
-| App Store (iPhone and iPad) | 1.1.2 (build 45) | in review | tag `v1.1.2-build45` on live day |
-| Mac App Store | 1.1.2 (build 45) | in review | tag `v1.1.2-build45` on live day |
+| App Store (iPhone and iPad) | 1.1.2 (build 45) | 2026-11-19 | tag `v1.1.2-build45` |
+| Mac App Store | 1.1.2 (build 45) | 2026-11-19 | tag `v1.1.2-build45` |
 
 ## 1.1.1
 
