@@ -96,18 +96,35 @@ private struct DetailDestinations: ViewModifier {
     func body(content: Content) -> some View {
         content
             .navigationDestination(item: stored($openedFinding)) { id in
-                if let finding = scanner.allFindings.first(where: { $0.id == id }) {
-                    FindingDetailView(finding: finding)
-                } else {
-                    // Waiting for the first scan after a relaunch. Once it's in and this clue
-                    // isn't there, say, because a fix cleared it, go back instead of waiting on.
-                    ProgressView().tint(Brand.ink)
-                        .task(id: scanner.lastScan) { if scanner.lastScan != nil { openedFinding = "" } }
-                }
+                FindingDestination(id: id, openedFinding: $openedFinding)
             }
             .navigationDestination(item: stored($openedSection)) { id in
                 if let section = SignalSection(rawValue: id) { SectionView(section: section) }
             }
+    }
+}
+
+/// A finding opened before its scan is in (a relaunch that comes back to it, a screenshot run). Its own view, so it
+/// watches the scanner: the destination closure alone was never redrawn, and stayed on the spinner (1.1.0, 1.1.1).
+private struct FindingDestination: View {
+    @Environment(Scanner.self) private var scanner
+    let id: String
+    @Binding var openedFinding: String
+
+    var body: some View {
+        if let finding = scanner.allFindings.first(where: { $0.id == id }) {
+            FindingDetailView(finding: finding)
+        } else {
+            // Waiting for the scan. Once it's in and this clue isn't there, say, because a fix cleared it, go back
+            // instead of waiting on.
+            ProgressView().tint(Brand.ink)
+                .task(id: scanner.lastScan) {
+                    // Nothing else will read the device (no scan kept from before): read it now.
+                    if scanner.lastScan == nil, scanner.phase == .idle { await scanner.scan(quietly: true) }
+                    if scanner.lastScan != nil, scanner.phase != .scanning,
+                       !scanner.allFindings.contains(where: { $0.id == id }) { openedFinding = "" }
+                }
+        }
     }
 }
 

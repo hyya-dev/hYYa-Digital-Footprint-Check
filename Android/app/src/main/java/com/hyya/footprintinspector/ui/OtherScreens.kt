@@ -332,7 +332,8 @@ fun CheckUpStepScreen(index: Int, nav: Nav) {
     var done by remember { mutableStateOf(step.id in prefs(context).getStringSet("checkUpDone", emptySet())!!) }
     Page {
         BackBar(step.title, nav)
-        HeroCard("Step ${index + 1}", step.title, step.why)
+        // Not a number: the list shows the essentials first, so the catalogue position read as the wrong step (1.1.0).
+        HeroCard("Check-up", step.title, step.why)
         InfoCard("Where to go", Tone.CONTEXT, Icons.Outlined.Settings) { Text(step.path, color = Tone.CONTEXT.tint, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp) }
         if (step.id == "restart" && restartedRecently()) {
             val days = android.os.SystemClock.elapsedRealtime() / 86_400_000
