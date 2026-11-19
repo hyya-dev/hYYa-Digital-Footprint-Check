@@ -4,6 +4,23 @@ Each store release, with the store's What's New and the date it went live on eac
 Every release has a matching tag and a [GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases).
 Website: [hyya.com/hyya-digital-footprint-check.html](https://hyya.com/hyya-digital-footprint-check.html)
 
+## 1.1.2
+
+What's New (every store):
+> This release contains general bug fixes and stability improvements.
+
+What's in it:
+- App Store and Mac App Store: a finding opened before its scan was in (reopening the app on a finding you had open)
+  stayed on a loading spinner. It now opens once the scan is in.
+- Google Play: each Check-up step's page is labelled "Check-up". Before, it showed a step number taken from the full
+  list, which didn't match the order on screen.
+
+| Store | Version | Live | Source |
+|---|---|---|---|
+| Google Play | 1.1.2 (versionCode 31) | 2026-11-19 | tag `v1.1.2-android31` |
+| App Store (iPhone and iPad) | 1.1.2 (build 45) | in review | tag `v1.1.2-build45` on live day |
+| Mac App Store | 1.1.2 (build 45) | in review | tag `v1.1.2-build45` on live day |
+
 ## 1.1.1
 
 What's New (App Store):
