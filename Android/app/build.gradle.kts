@@ -39,7 +39,7 @@ android {
         // versionName is the marketing version (1.0.0 on every store); versionCode is the
         // build number and may be bumped freely, but Play refuses a code it already holds.
         versionCode = 31
-        versionName = "1.1.1"
+        versionName = "1.1.2"
     }
 
     signingConfigs {
