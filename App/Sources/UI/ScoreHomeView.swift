@@ -50,14 +50,18 @@ struct ScoreHomeView: View {
             }
             .hiddenNavigationBar()
             .sheet(isPresented: $showingFormula) { FormulaSheet() }
-            .onAppear {
-                // Only once a check is done; a new install meets it in Settings instead.
-                guard overall.value != nil, SaleNotice.isDue(seen: saleSeen) else { return }
-                saleShowing = true
-                // Seen once shown: it never comes back for this sale.
-                if !SaleNotice.preview { saleSeen = SaleNotice.current.id }
-            }
+            // Only once a check is done (a new install meets it in Settings instead). Checked again when the
+            // first score arrives, which can be after the page has appeared.
+            .onAppear { showSaleIfDue(hasScore: overall.value != nil) }
+            .onChange(of: overall.value != nil) { _, hasScore in showSaleIfDue(hasScore: hasScore) }
         }
+    }
+
+    private func showSaleIfDue(hasScore: Bool) {
+        guard hasScore, !saleShowing, SaleNotice.isDue(seen: saleSeen) else { return }
+        withAnimation { saleShowing = true }
+        // Seen once shown: it never comes back for this sale.
+        if !SaleNotice.preview { saleSeen = SaleNotice.current.id }
     }
 
     /// Before any check: what the app does and the first step.

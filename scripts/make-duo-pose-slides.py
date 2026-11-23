@@ -2,8 +2,9 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
-"""Builds the App Store iPhone Duo slides (APP_IPHONE_DUO, 2853 x 2007) in the three poses Apple asks for:
-fully closed and upright, half open like a book, and fully open and upright (owner's rule, 2026-11-11).
+"""Builds the App Store iPhone Duo slides (APP_IPHONE_DUO, 2853 x 2007) in two poses: fully closed and upright,
+and half open like a book. Never fully open (owner, 2026-11-23; replaces the three-pose rule of 2026-11-11).
+The open-dir argument stays for older runs and is unused while PLAN has no "open".
 
     python3 scripts/make-duo-pose-slides.py <closed-dir> <book-dir> <open-dir> <out-dir>
 
@@ -22,9 +23,9 @@ spec = importlib.util.spec_from_file_location("slides", ROOT / "scripts/make-sto
 slides = importlib.util.module_from_spec(spec); spec.loader.exec_module(slides)
 W, H = 2853, 2007
 
-# Which screen in which pose: three closed, two book, two open, so every pose shows.
-PLAN = [("closed", "store-02-results"), ("book", "store-04-finding"), ("open", "store-09-fix"),
-        ("closed", "store-08-tracker"), ("book", "store-05-sensitive"), ("open", "store-06-checkup"),
+# Which screen in which pose. Owner, 2026-11-23: book pose and fully closed upright only, never fully open.
+PLAN = [("closed", "store-02-results"), ("book", "store-04-finding"), ("book", "store-09-fix"),
+        ("closed", "store-08-tracker"), ("book", "store-05-sensitive"), ("book", "store-06-checkup"),
         ("closed", "store-01-home")]
 
 
