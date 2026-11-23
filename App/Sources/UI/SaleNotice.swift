@@ -40,10 +40,11 @@ enum SaleNotice {
         title: "Seasonal sale on hYYa apps",
         body: "Other hYYa apps are up to 50% off until 31 December.",
         apps: [
-            App(id: "ink", name: "ink", appStoreID: "6786209046", icon: "SaleInk"),
-            App(id: "folder", name: "Encrypted Folder", appStoreID: "6786135330", icon: "SaleFolder"),
-            App(id: "notes", name: "Encrypted Notes", appStoreID: "6792328099", icon: "SaleNotes"),
-            App(id: "tracker", name: "Subscription Tracker", appStoreID: "6760548018", icon: "SaleTracker"),
+            // Full names, as on the App Store (read 2026-11-23); ids pinned here, never taken from anywhere else.
+            App(id: "ink", name: "hYYa ink", appStoreID: "6786209046", icon: "SaleInk"),
+            App(id: "folder", name: "hYYa Encrypted Folder", appStoreID: "6786135330", icon: "SaleFolder"),
+            App(id: "notes", name: "hYYa Encrypted Notes", appStoreID: "6792328099", icon: "SaleNotes"),
+            App(id: "tracker", name: "hYYa Subscription Tracker", appStoreID: "6760548018", icon: "SaleTracker"),
         ])
 
     static let seenKey = "sale.seen"
@@ -81,31 +82,47 @@ struct SaleNoticeCard: View {
             Text(sale.body)
                 .font(.brand(.subheadline)).foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
-            HStack(alignment: .top, spacing: 8) {
-                ForEach(sale.apps) { app in
-                    Button { AppStorePage.open(app.appStoreID) } label: {
-                        VStack(spacing: 8) {
-                            Image(app.icon)
-                                .resizable().scaledToFill()
-                                .frame(width: 52, height: 52)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                .accessibilityHidden(true)
-                            Text(app.name)
-                                .font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink)
-                                .multilineTextAlignment(.center)
-                                .lineLimit(2).minimumScaleFactor(0.85)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12).padding(.horizontal, 4)
-                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.05)))
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(PressableCardStyle())
-                    .accessibilityLabel("\(app.name), opens the App Store")
+            // Exactly four in a row where each tile has room, otherwise two by two: never a lone tile or a half-empty row.
+            ViewThatFits(in: .horizontal) {
+                row(sale.apps, minWidth: 140)
+                VStack(spacing: 8) {
+                    row(Array(sale.apps.prefix(2)), minWidth: 0)
+                    row(Array(sale.apps.dropFirst(2)), minWidth: 0)
                 }
             }
         }
+    }
+
+    /// Tiles side by side, all the same height.
+    private func row(_ apps: [SaleNotice.App], minWidth: CGFloat) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            ForEach(apps) { app in tile(app).frame(minWidth: minWidth, maxWidth: .infinity, maxHeight: .infinity) }
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private func tile(_ app: SaleNotice.App) -> some View {
+        Button { AppStorePage.open(app.appStoreID) } label: {
+            VStack(spacing: 8) {
+                Image(app.icon)
+                    .resizable().scaledToFill()
+                    .frame(width: 52, height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .accessibilityHidden(true)
+                Text(app.name)
+                    .font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.vertical, 12).padding(.horizontal, 6)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.05)))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressableCardStyle())
+        .accessibilityLabel("\(app.name), opens the App Store")
     }
 }
 
@@ -117,10 +134,21 @@ enum AppStorePage {
         guard let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first(where: { $0.activationState == .foregroundActive }),
               var top = scene.keyWindow?.rootViewController else { return }
         while let next = top.presentedViewController { top = next }
+        let presenter = top
+        // Load first and show only a page that loaded: presenting first leaves a blank sheet with no way out
+        // when the App Store can't be reached (hYYa Subscription Tracker's finding, 2026-11-23). Otherwise the
+        // App Store app opens the page.
         let store = SKStoreProductViewController()
         store.delegate = Closer.shared
-        store.loadProduct(withParameters: [SKStoreProductParameterITunesItemIdentifier: id])
-        top.present(store, animated: true)
+        store.loadProduct(withParameters: [SKStoreProductParameterITunesItemIdentifier: id]) { loaded, _ in
+            Task { @MainActor in
+                if loaded, presenter.presentedViewController == nil {
+                    presenter.present(store, animated: true)
+                } else if !loaded, let url = URL(string: "https://apps.apple.com/app/id\(id)") {
+                    UIApplication.shared.open(url)
+                }
+            }
+        }
         #else
         if let url = URL(string: "macappstore://apps.apple.com/app/id\(id)") { NSWorkspace.shared.open(url) }
         #endif

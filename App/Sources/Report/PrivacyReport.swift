@@ -398,7 +398,7 @@ enum AppNames {
         "com.example.photoeditor": "Photo Editor", "com.example.weatherplus": "Weather Plus", "com.example.chat": "Chat",
         // hYYa's apps.
         "com.hyya.footprintinspector": "hYYa Digital Footprint Check", "com.hyya.prayerpal": "hYYa PrayerPal", "com.hyya.encryptednotes": "hYYa Encrypted Notes",
-        "com.hyya.encryptedfolder": "hYYa Encrypted Folder", "com.hyya.subscriptionstracker": "hYYa Subscriptions Tracker",
+        "com.hyya.encryptedfolder": "hYYa Encrypted Folder", "com.hyya.subscriptionstracker": "hYYa Subscription Tracker",
         "com.hyya.hyya-ai": "hYYa ai", "com.hyya.ink": "hYYa ink", "com.hyya.anarchybrowser": "hYYa Anarchy Browser",
         // Common apps whose IDs don't say their name.
         "com.yourcompany.PPClient": "PayPal", "com.appspot.scruffapp": "Scruff", "com.investing.app": "Investing.com",

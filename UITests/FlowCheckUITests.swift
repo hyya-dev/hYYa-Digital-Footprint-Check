@@ -74,7 +74,7 @@ final class FlowCheckUITests: XCTestCase {
         func onScreen() -> Bool {
             guard el.exists else { return false }
             let w = app.windows.firstMatch.frame, f = el.frame
-            return f.minY >= w.minY && f.maxY <= w.maxY - 20
+            return f.minY >= w.minY + 44 && f.maxY <= w.maxY - 20 // clear of the status bar, where a tap scrolls to the top
         }
         while !onScreen() && i < max {
             let w = app.windows.firstMatch

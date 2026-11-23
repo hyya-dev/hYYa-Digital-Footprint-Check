@@ -14,7 +14,7 @@ display (1398 x 2034), book = the inner display sideways (2853 x 2007), open = t
 Layout: the mascot and full name, the headline and its highlights on the left; the Duo on the right, turned
 slightly in 3D (the book's two pages angled at the hinge). Copy comes from store/slides.json, by screen.
 """
-import importlib.util, json, sys
+import importlib.util, json, re, sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 
@@ -108,25 +108,55 @@ def book(canvas, shot, page_w, cx, cy):
     ImageDraw.Draw(canvas).line((cx, cy - h / 2 + drop + 6, cx, cy + h / 2 - drop - 6), fill=(8, 8, 9, 255), width=8)   # the hinge
 
 
+def centred_line(d, parts, y, max_w, size, weight):
+    """One line of (text, colour) parts, centred; shrinks the type until it fits (never wraps)."""
+    while True:
+        f = slides.font(size, weight)
+        w = sum(d.textlength(t, font=f) for t, _ in parts)
+        if w <= max_w or size <= 30:
+            break
+        size -= 2
+    x = (W - w) / 2
+    for t, colour in parts:
+        d.text((x, y), t, font=f, fill=colour)
+        x += d.textlength(t, font=f)
+    return size
+
+
 def make(pose, screen, spec, dirs, mascot):
+    """Owner, 2026-11-23 (hYYa Encrypted Notes' Duo slides as the model): the name, one big centred headline and
+    one line under it; the Duo large and centred below; the mascot standing beside the closed Duo."""
     c = slides.glow_background(W, H).convert("RGBA")
     d = ImageDraw.Draw(c)
-    left = 150
-    m = mascot.resize((140, int(140 * mascot.height / mascot.width)), Image.LANCZOS)
-    c.alpha_composite(m, (left, 120))
-    f = slides.font(58, "Semibold")
-    nx, ny = left + m.width + 28, 120 + m.height // 2 - 38
-    d.text((nx, ny), "hYYa", font=f, fill=slides.SAND)
-    d.text((nx + d.textlength("hYYa ", font=f), ny), "Digital Footprint Check", font=f, fill=slides.INK)
-    d.rounded_rectangle((nx, ny + 82, nx + 68, ny + 88), 3, fill=slides.SAND)
-    col = 1080
-    y = slides.draw_headline(d, spec["headline"], left, 120 + m.height + 120, col, 118)
-    slides.chips(d, spec["highlights"], left, y + 70, col, 46)
+    # The mascot and the full name, centred at the top.
+    m = mascot.resize((120, int(120 * mascot.height / mascot.width)), Image.LANCZOS)
+    f = slides.font(54, "Semibold")
+    name_w = d.textlength("hYYa Digital Footprint Check", font=f)
+    x0 = (W - (m.width + 24 + name_w)) / 2
+    c.alpha_composite(m, (int(x0), 70))
+    ny = 70 + m.height // 2 - 34
+    d.text((x0 + m.width + 24, ny), "hYYa", font=f, fill=slides.SAND)
+    d.text((x0 + m.width + 24 + d.textlength("hYYa ", font=f), ny), "Digital Footprint Check", font=f, fill=slides.INK)
+    # Headline: *starred* words in gold, one line.
+    parts = []
+    for piece in re.split(r"(\*[^*]+\*)", spec["headline"]):
+        if piece:
+            parts.append((piece.strip("*"), slides.SAND if piece.startswith("*") else slides.INK))
+    centred_line(d, parts, 260, W - 300, 150, "Bold")
+    # One line under it: the approved highlights, gold dots between.
+    sub = []
+    for i, h in enumerate(spec["highlights"]):
+        if i:
+            sub.append(("  \u00b7  ", slides.SAND))
+        sub.append((h, slides.MUTED))
+    centred_line(d, sub, 460, W - 400, 64, "Regular")
     shot = Image.open(dirs[pose] / f"{screen}.png")
     if pose == "book":
-        book(c, shot, 760, 1300 + (W - 1300) // 2, H // 2 + 60)
+        book(c, shot, 960, W // 2, 1265)
     else:
-        upright(c, shot, 1700, 1300 + (W - 1300) // 2, H // 2 + 40, crease=pose == "open")
+        upright(c, shot, 1380, W // 2, 1275, crease=pose == "open")
+        big = mascot.resize((560, int(560 * mascot.height / mascot.width)), Image.LANCZOS)
+        c.alpha_composite(big, (W // 2 - 560 - 520, H - big.height - 60))
     return c.convert("RGB")
 
 
