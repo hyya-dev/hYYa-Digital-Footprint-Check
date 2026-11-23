@@ -12,7 +12,7 @@ hYYa Digital Footprint Check
 See what apps know, check permissions and fix it step by step, privately.
 
 ## Full description (4000)
-100% free: no ads, no in-app purchases.
+100% free: no in-app purchases.
 
 Your apps can learn more about you than you think. hYYa Digital Footprint Check shows you what they can see, what has special access, and how to fix it, in plain words.
 
@@ -40,7 +40,7 @@ Android gives each company's apps a code that stays the same when you delete and
 
 PRIVATE BY DESIGN
 • No internet permission: the app can't connect anywhere, so nothing leaves your device.
-• No account, no ads, no tracking.
+• No account, no tracking.
 • Free. No purchases, no subscription.
 • Open source, so anyone can check how it works.
 
