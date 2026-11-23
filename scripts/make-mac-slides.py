@@ -28,29 +28,27 @@ def rounded(im, r):
 
 
 def make(spec_slide, raw, mascot):
+    """Owner, 2026-11-23 (hYYa Encrypted Notes' slides as the model; same layout as the Duo set): the name centred at
+    the top, one big centred headline, the highlights as one line under it, the real window large and centred
+    running off the bottom, the mascot standing beside it."""
     c = slides.glow_background(W, H).convert("RGBA")
     d = ImageDraw.Draw(c)
-    left = 150
-    m = mascot.resize((150, int(150 * mascot.height / mascot.width)), Image.LANCZOS)
-    c.alpha_composite(m, (left, 150))
-    f = slides.font(58, "Semibold")
-    nx, ny = left + m.width + 28, 150 + m.height // 2 - 38
-    d.text((nx, ny), "hYYa", font=f, fill=slides.SAND)
-    d.text((nx + d.textlength("hYYa ", font=f), ny), "Digital Footprint Check", font=f, fill=slides.INK)
-    d.rounded_rectangle((nx, ny + 84, nx + 70, ny + 90), 3, fill=slides.SAND)
-    y = slides.draw_headline(d, spec_slide["headline"], left, 150 + m.height + 120, 900, 112)
-    slides.chips(d, spec_slide["highlights"], left, y + 60, 900, 46)
-
+    y = slides.name_lockup(c, d, mascot, W / 2, 70, 54)
+    y = slides.centred_lines(d, slides.headline_parts(spec_slide["headline"]), y + 60, W - 300, 140, "Bold", W, 1.1)
+    y = slides.centred_lines(d, slides.highlight_parts(spec_slide["highlights"]), y + 20, W - 400, 60, "Regular", W, 1.3,
+                             break_at={slides.DOT})
     win = Image.open(raw / f"{spec_slide['screen']}.png").convert("RGB")
-    ww = 1720
+    ww = 1900
     win = win.resize((ww, int(win.height * ww / win.width)), Image.LANCZOS)
     win = rounded(win, 26)
-    x, wy = 1150, (H - win.height) // 2
+    x, wy = (W - ww) // 2, y + 70
     shadow = Image.new("RGBA", c.size, (0, 0, 0, 0))
     ImageDraw.Draw(shadow).rounded_rectangle((x + 20, wy + 40, x + win.width + 20, wy + win.height + 40), 30, fill=(0, 0, 0, 220))
     c.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(45)))
     ImageDraw.Draw(c).rounded_rectangle((x - 2, wy - 2, x + win.width + 1, wy + win.height + 1), 28, outline=slides.SAND_DEEP + (255,), width=2)
     c.alpha_composite(win, (x, wy))
+    big = mascot.resize((400, int(400 * mascot.height / mascot.width)), Image.LANCZOS)
+    c.alpha_composite(big, (50, H - big.height - 50))
     return c.convert("RGB")
 
 

@@ -105,6 +105,76 @@ def draw_headline(d, text, x, y, max_w, size):
     return y + len(lines) * line_h
 
 
+def centred_lines(d, parts, y, max_w, size, weight, canvas_w, gap=1.15, break_at=None):
+    """Centred text of (text, colour) parts, wrapped by word (or only at the parts named in break_at, such as
+    the dots between highlights). Returns the y below the last line."""
+    f = font(size, weight)
+    tokens = []
+    for text, colour in parts:
+        if break_at is not None:
+            tokens.append((text, colour, text in break_at))
+        else:
+            tokens += [(word, colour, True) for word in text.split(" ") if word]
+    lines, cur, cur_w = [], [], 0
+    if break_at is None:
+        space = d.textlength(" ", font=f)
+        for word, colour, _ in tokens:
+            wl = d.textlength(word, font=f)
+            if cur and cur_w + space + wl > max_w:
+                lines.append(cur); cur, cur_w = [], 0
+            cur.append((word + " ", colour)); cur_w += (space if cur_w else 0) + wl
+    else:
+        for text, colour, is_break in tokens:
+            wl = d.textlength(text, font=f)
+            if is_break and cur and cur_w + wl > max_w:   # never start a line with the dot
+                lines.append(cur); cur, cur_w = [], 0
+                continue
+            if cur_w + wl > max_w and cur and not is_break:
+                lines.append(cur); cur, cur_w = [], 0
+            cur.append((text, colour)); cur_w += wl
+    if cur:
+        lines.append(cur)
+    line_h = int(size * gap)
+    for i, line in enumerate(lines):
+        line = [(t.rstrip() if j == len(line) - 1 else t, c) for j, (t, c) in enumerate(line)]
+        w = sum(d.textlength(t, font=f) for t, _ in line)
+        x = (canvas_w - w) / 2
+        for t, colour in line:
+            d.text((x, y + i * line_h), t, font=f, fill=colour)
+            x += d.textlength(t, font=f)
+    return y + len(lines) * line_h
+
+
+def headline_parts(text):
+    """*starred* words are gold."""
+    return [(p.strip("*"), SAND if p.startswith("*") else INK) for p in re.split(r"(\*[^*]+\*)", text) if p]
+
+
+DOT = "  \u00b7  "
+
+
+def highlight_parts(items):
+    out = []
+    for i, h in enumerate(items):
+        if i:
+            out.append((DOT, SAND))
+        out.append((h, MUTED))
+    return out
+
+
+def name_lockup(canvas, d, mascot, cx, top, size):
+    """The small mascot and the full name, centred on cx."""
+    m = mascot.resize((int(size * 2.2), int(size * 2.2 * mascot.height / mascot.width)), Image.LANCZOS)
+    f = font(size, "Semibold")
+    name_w = d.textlength("hYYa Digital Footprint Check", font=f)
+    x0 = cx - (m.width + size * 0.45 + name_w) / 2
+    canvas.alpha_composite(m, (int(x0), int(top)))
+    nx, ny = x0 + m.width + size * 0.45, top + m.height / 2 - size * 0.62
+    d.text((nx, ny), "hYYa", font=f, fill=SAND)
+    d.text((nx + d.textlength("hYYa ", font=f), ny), "Digital Footprint Check", font=f, fill=INK)
+    return top + m.height
+
+
 def chips(d, items, x, y, max_w, size):
     f = font(size, "Semibold")
     pad_x, pad_y, gap = int(size * 0.75), int(size * 0.42), int(size * 0.45)
@@ -122,7 +192,36 @@ def chips(d, items, x, y, max_w, size):
     return cy + h
 
 
+def make_centred_slide(spec, raw_dir, w, h, mascot):
+    """App Store iPhone and iPad (owner, 2026-11-23, hYYa Encrypted Notes' slides as the model): the name centred
+    at the top, one big centred headline, the highlights as one line under it, the device large and centred running
+    off the bottom, the mascot standing at its lower left."""
+    canvas = glow_background(w, h).convert("RGBA")
+    d = ImageDraw.Draw(canvas)
+    unit = w / 1320
+    tablet = w / h > 0.6
+    y = name_lockup(canvas, d, mascot, w / 2, int(90 * unit), int((40 if tablet else 50) * unit))
+    y = centred_lines(d, headline_parts(spec["headline"]), y + int(50 * unit), w * 0.88, int((84 if tablet else 112) * unit), "Bold", w, 1.1)
+    y = centred_lines(d, highlight_parts(spec["highlights"]), y + int(22 * unit), w * 0.9, int((40 if tablet else 46) * unit), "Regular", w, 1.35,
+                      break_at={DOT})
+    dev_w = int(w * (0.74 if tablet else 0.68))
+    frame = device(Image.open(raw_dir / f"{spec['screen']}.png"), dev_w)
+    dev_y = max(y + int(60 * unit), int(h * (0.315 if tablet else 0.27)))   # the same height on every slide of a set
+    dev_x = (w - frame.width) // 2
+    shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).rounded_rectangle((dev_x + 20, dev_y + 40, dev_x + frame.width + 20, dev_y + frame.height + 40), 80, fill=(0, 0, 0, 200))
+    canvas.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(40)))
+    canvas.alpha_composite(frame, (dev_x, dev_y))
+    # Beside the device, touching only its frame: never over words on the screen.
+    big_w = int(w * (0.16 if tablet else 0.22))
+    big = mascot.resize((big_w, int(big_w * mascot.height / mascot.width)), Image.LANCZOS)
+    canvas.alpha_composite(big, (dev_x - int(big_w * 0.82), h - big.height - int(20 * unit)))
+    return canvas.convert("RGB")
+
+
 def make_slide(spec, raw_dir, w, h, mascot):
+    if not OPEN_FONT:
+        return make_centred_slide(spec, raw_dir, w, h, mascot)
     canvas = glow_background(w, h).convert("RGBA")
     d = ImageDraw.Draw(canvas)
     margin = int(w * 0.075)
