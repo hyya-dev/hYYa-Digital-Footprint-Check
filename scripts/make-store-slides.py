@@ -204,9 +204,12 @@ def make_centred_slide(spec, raw_dir, w, h, mascot):
     y = centred_lines(d, headline_parts(spec["headline"]), y + int(50 * unit), w * 0.88, int((84 if tablet else 112) * unit), "Bold", w, 1.1)
     y = centred_lines(d, highlight_parts(spec["highlights"]), y + int(22 * unit), w * 0.9, int((40 if tablet else 46) * unit), "Regular", w, 1.35,
                       break_at={DOT})
-    dev_w = int(w * (0.74 if tablet else 0.68))
-    frame = device(Image.open(raw_dir / f"{spec['screen']}.png"), dev_w)
-    dev_y = max(y + int(60 * unit), int(h * (0.315 if tablet else 0.27)))   # the same height on every slide of a set
+    # The same top on every slide of a set; shorter frames (Play phones, 9:16) need more room for the words.
+    dev_y = max(y + int(60 * unit), int(h * (0.315 if tablet else (0.32 if w / h > 0.5 else 0.27))))
+    shot = Image.open(raw_dir / f"{spec['screen']}.png")
+    fit_w = int((h - dev_y - 24 * unit) * shot.width / shot.height)   # the whole device stays in frame
+    dev_w = int(w * 0.74) if tablet else min(int(w * 0.68), fit_w)   # tablets run off the bottom (approved)
+    frame = device(shot, dev_w)
     dev_x = (w - frame.width) // 2
     shadow = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
     ImageDraw.Draw(shadow).rounded_rectangle((dev_x + 20, dev_y + 40, dev_x + frame.width + 20, dev_y + frame.height + 40), 80, fill=(0, 0, 0, 200))
@@ -220,8 +223,8 @@ def make_centred_slide(spec, raw_dir, w, h, mascot):
 
 
 def make_slide(spec, raw_dir, w, h, mascot):
-    if not OPEN_FONT:
-        return make_centred_slide(spec, raw_dir, w, h, mascot)
+    # Every set, App Store and Google Play (owner, 2026-11-23: "and Mac and later to Android"). Play keeps its open font.
+    return make_centred_slide(spec, raw_dir, w, h, mascot)
     canvas = glow_background(w, h).convert("RGBA")
     d = ImageDraw.Draw(canvas)
     margin = int(w * 0.075)
