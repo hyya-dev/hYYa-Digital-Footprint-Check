@@ -513,6 +513,7 @@ struct MacAccountSource: SignalSource {
         if case .verified(let transaction)? = try? await AppTransaction.shared {
             out.append(.init(id: "first-download", value: Format.dateTime(transaction.originalPurchaseDate)))
         }
+        out.append(ContentSafety.read())
         return out
     }
 }

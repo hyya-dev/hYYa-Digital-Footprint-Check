@@ -16,6 +16,9 @@ struct ScoreHomeView: View {
     @CheckStored(\.checkUpDone) private var checkUpStored
     @CheckStored(\.trackerChecked) private var trackerStored
     @State private var showingFormula = false
+    /// The sale notice: shown once per sale, then remembered by the sale's id only.
+    @AppStorage(SaleNotice.seenKey) private var saleSeen = ""
+    @State private var saleShowing = false
     #if os(iOS)
     @Environment(\.verticalSizeClass) private var verticalSizeClass
     private var short: Bool { verticalSizeClass == .compact }
@@ -30,6 +33,7 @@ struct ScoreHomeView: View {
             Page {
                 if let value = overall.value {
                     scoreHeader(overall, value: value)
+                    if saleShowing { SaleNoticeCard { withAnimation { saleShowing = false } } }
                 } else {
                     welcome
                 }
@@ -46,6 +50,13 @@ struct ScoreHomeView: View {
             }
             .hiddenNavigationBar()
             .sheet(isPresented: $showingFormula) { FormulaSheet() }
+            .onAppear {
+                // Only once a check is done; a new install meets it in Settings instead.
+                guard overall.value != nil, SaleNotice.isDue(seen: saleSeen) else { return }
+                saleShowing = true
+                // Seen once shown: it never comes back for this sale.
+                if !SaleNotice.preview { saleSeen = SaleNotice.current.id }
+            }
         }
     }
 

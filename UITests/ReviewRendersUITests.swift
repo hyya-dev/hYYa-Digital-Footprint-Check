@@ -53,6 +53,96 @@ final class ReviewRendersUITests: XCTestCase {
             shot("s04-checkup-more")
         }
     }
+    /// 1.1.3 (owner's yes needed before release): the child-or-teen finding and the five Check-up additions.
+    /// Owner's round 2 (2026-11-23): the sale notice in Settings for a new install, and the adult's own card.
+    func test113Round2() {
+        for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
+            tag = t
+            launch(["-firstRun", "-previewSale", "-startTab", "settings"], o)
+            shot("c01-settings-sale")
+            launch(["-firstRun", "-previewSale"], o)
+            shot("c02-welcome-no-toast")
+            launch(["-autoScan", "-previewContentSafety", "adult", "-openFinding", "content-warning"], o)
+            sleep(16)
+            shot("c03-adult-card")
+            app.swipeUp(velocity: .slow)
+            shot("c04-adult-card-fix")
+            let more = app.buttons["More about this"].firstMatch
+            scrollTo(more, max: 6)
+            if more.exists { more.tap(); sleep(1) }
+            app.swipeUp(velocity: .slow)
+            shot("c05-adult-card-more")
+        }
+    }
+
+    func test113NotSetUp() {
+        for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
+            tag = t
+            launch(["-autoScan", "-openFinding", "content-safety"], o)
+            sleep(16)
+            shot("n02c-finding-not-set-up")
+            launch(["-autoScan", "-previewContentSafety", "child", "-openFinding", "content-safety"], o)
+            sleep(16)
+            shot("n01-finding")
+            app.swipeUp(velocity: .slow)
+            shot("n01b-finding-fix")
+        }
+    }
+
+    func test113() {
+        for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
+            tag = t
+            // The sale notice: the card on the Score page, then the toast a new install sees.
+            launch(["-autoScan", "-startTab", "home", "-previewSale"], o)
+            sleep(16)
+            tab("Score")
+            shot("b01-score-sale")
+            app.swipeUp(velocity: .slow)
+            shot("b02-score-sale-2")
+            launch(["-firstRun", "-previewSale"], o)
+            shot("b03-welcome-toast")
+
+            launch(["-autoScan", "-previewContentSafety", "child", "-openFinding", "content-safety"], o)
+            sleep(16)
+            shot("n01-finding")
+            app.swipeUp(velocity: .slow)
+            shot("n01b-finding-fix")
+            let more = app.buttons["More about this"].firstMatch
+            scrollTo(more, max: 6)
+            if more.exists { more.tap(); sleep(1) }
+            shot("n02-finding-more")
+            app.swipeUp(velocity: .slow)
+            shot("n02b-finding-more")
+
+            // The usual state on most devices: neither setting on.
+            launch(["-autoScan", "-openFinding", "content-safety"], o)
+            sleep(16)
+            shot("n02c-finding-not-set-up")
+
+            launch(["-startTab", "checkup"], o)
+            let areas = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'More areas'")).firstMatch
+            scrollTo(areas, max: 6)
+            for _ in 0..<3 where !app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Hide the other areas'")).firstMatch.exists {
+                if areas.exists { areas.tap(); sleep(1) }
+            }
+            for (i, title) in ["Texts to people without iMessage", "Journaling Suggestions", "Safari's strongest protection", "What Apple itself collects", "Protect your Apple Account"].enumerated() {
+                let row = app.buttons.containing(NSPredicate(format: "label BEGINSWITH %@", title)).firstMatch
+                if !row.exists || !app.frame.contains(row.frame) {
+                    app.swipeDown(velocity: .fast); app.swipeDown(velocity: .fast); app.swipeDown(velocity: .fast)
+                }
+                scrollTo(row, max: 14)
+                if i < 4 { shot("s\(i)a-list") }
+                if row.exists { row.tap(); sleep(1) }
+                shot("s\(i)b-step")
+                app.swipeUp(velocity: .slow)
+                shot("s\(i)c-step-todo")
+                app.swipeUp(velocity: .slow)
+                shot("s\(i)d-step-todo")
+                app.navigationBars.buttons.firstMatch.tap(); sleep(1)
+            }
+        }
+    }
+
     /// Book pose (owner, 2026-11-16): two pages side by side on a wide, tall screen. Run on an iPad sideways
     /// (or the open Duo in Device Hub). Score | next check, Score | each check, then check | detail.
     func testBook() {

@@ -9,9 +9,11 @@ appear naturally a few times.
 hYYa Digital Footprint Check
 
 ## Short description (80)
-See what apps know, check permissions and fix it step by step. Free and private.
+See what apps know, check permissions and fix it step by step, privately.
 
 ## Full description (4000)
+100% free: no ads, no in-app purchases.
+
 Your apps can learn more about you than you think. hYYa Digital Footprint Check shows you what they can see, what has special access, and how to fix it, in plain words.
 
 FOUR SIMPLE STEPS

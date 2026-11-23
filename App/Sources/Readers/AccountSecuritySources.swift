@@ -129,6 +129,7 @@ struct SecuritySource: SignalSource {
             // iOS can't tell an app about every profile, so "not detected" must never read as "no".
             .init(id: "managed", value: managed ? "Yes" : "Not detected by this check", severityOverride: managed ? nil : .low),
             .init(id: "location-services", value: Format.onOff(locationOn)),
+            ContentSafety.read(),
         ]
     }
 }

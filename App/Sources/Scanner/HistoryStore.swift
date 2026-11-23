@@ -75,7 +75,8 @@ final class HistoryStore {
         let salt = self.salt()
         var hashes: [String: String] = [:]
         // Not permission findings: a value such as a rough location is few enough to guess from its marker.
-        for finding in findings where finding.definition.section.group != .permission {
+        // Nor the child-or-teen setting: three possible states, so a marker would give it away, and it's never stored.
+        for finding in findings where finding.definition.section.group != .permission && finding.id != ContentSafety.id && finding.id != ContentSafety.adultID {
             let material = salt + finding.id + "\u{1F}" + finding.reading.value + finding.reading.items.joined(separator: "\u{1F}")
             hashes[finding.id] = SHA256.hash(data: Data(material.utf8)).prefix(8).map { String(format: "%02x", $0) }.joined()
         }

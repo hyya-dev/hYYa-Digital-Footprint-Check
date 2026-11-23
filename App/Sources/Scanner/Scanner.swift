@@ -136,6 +136,9 @@ final class Scanner {
             progress = Double(i + 1) / Double(passiveSources.count)
         }
         readings.merge(fresh) { $1 }
+        // The child-or-teen card and the adult's Sensitive Content Warning card are never shown together.
+        if fresh[ContentSafety.id] != nil { readings[ContentSafety.adultID] = nil }
+        if fresh[ContentSafety.adultID] != nil { readings[ContentSafety.id] = nil }
         refreshPermissionStates()
         for kind in PermissionKind.onThisPlatform where isReadable(permissionStates[kind]) {
             await readPermission(kind, run: run)

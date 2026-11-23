@@ -42,6 +42,17 @@ enum SignalImpact {
         }
     }
 
+    /// Findings the general lines above would describe wrongly: a protective setting isn't a tracking
+    /// code, and "change it" must never point anyone at turning a child's protection off.
+    static let reachFor: [String: String] = [
+        "content-safety": "It tells an app that a young person probably uses this device, without asking.",
+        "content-warning": "Only that you chose to turn it on. It says very little about you.",
+    ]
+    static let lastingFor: [String: String] = [
+        "content-safety": "It stays as long as the protection is on, and the protection is worth keeping.",
+        "content-warning": "It stays until you change the setting.",
+    ]
+
     /// A concrete line for the clues worth a look.
     static let inPractice: [String: String] = [
         "idfv": "Every app from one company can match up what you do in each of them, and keep doing so until all its apps are gone.",

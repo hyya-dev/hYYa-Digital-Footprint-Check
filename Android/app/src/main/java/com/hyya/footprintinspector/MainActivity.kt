@@ -90,7 +90,13 @@ class MainActivity : ComponentActivity() {
                 when {
                     block != null -> com.hyya.footprintinspector.ui.IntegrityBlock(block)
                     warning != null && !rootWarningSeen -> com.hyya.footprintinspector.ui.RootWarning(warning, ::dismissRootWarning)
-                    else -> App(startTab, autoScan, openFinding, openFix)
+                    else -> {
+                        // Never over the integrity screens, and never in screenshot runs with made-up data.
+                        androidx.compose.runtime.LaunchedEffect(Unit) {
+                            if (!Sample.on) com.hyya.footprintinspector.agesignal.AgeSignal.runIfDue(this@MainActivity)
+                        }
+                        App(startTab, autoScan, openFinding, openFix)
+                    }
                 }
             }
         }

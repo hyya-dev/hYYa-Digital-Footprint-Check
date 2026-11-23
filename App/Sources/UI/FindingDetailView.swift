@@ -172,8 +172,8 @@ struct FindingDetailView: View {
             }
             impactRow("eye", "Who can read it",
                       def.section.group == .permission ? "Only apps you've given this permission." : "Any app on this device, without asking you.")
-            impactRow("clock", "How long it lasts", SignalImpact.lasting(def.persistence))
-            impactRow("link", "What it lets them do", SignalImpact.reach(finding.severity))
+            impactRow("clock", "How long it lasts", SignalImpact.lastingFor[def.id] ?? SignalImpact.lasting(def.persistence))
+            impactRow("link", "What it lets them do", SignalImpact.reachFor[def.id] ?? SignalImpact.reach(finding.severity))
         }
     }
 

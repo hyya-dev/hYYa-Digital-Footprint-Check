@@ -332,6 +332,8 @@ extension SignalCatalogue {
               reveals: "Whether Location Services is on at all.",
               why: "So apps know whether to ask.",
               persistence: .untilYouChangeIt, severity: .low, fix: .leaveIt("Nothing to change here. Per-app choices matter more; see the check-up.")),
+        ContentSafety.definition,
+        ContentSafety.adultDefinition,
     ]
 }
 

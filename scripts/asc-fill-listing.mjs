@@ -108,6 +108,16 @@ await infoStep(`age rating answers (all none → 4+)`, () => api(`/v1/ageRatingD
   horrorOrFearThemes: none, matureOrSuggestiveThemes: none, unrestrictedWebAccess: false, userGeneratedContent: false,
   violenceCartoonOrFantasy: none, violenceRealisticProlongedGraphicOrSadistic: none, violenceRealistic: none } } }));
 
+// Apple's two newer questions (2026): the app shares no location and has no dating or relationship features
+// (naming dating apps in "Sensitive apps" is not one). Their type isn't documented the same way everywhere, so
+// try the boolean form first and fall back to the "NONE" level.
+for (const attr of ["sharedLocation", "datingAndRelationships"]) {
+  await infoStep(`age rating: ${attr} No`, async () => {
+    const patch = (v) => api(`/v1/ageRatingDeclarations/${info.id}`, "PATCH", { data: { type: "ageRatingDeclarations", id: info.id, attributes: { [attr]: v } } });
+    try { await patch(false); } catch (e) { if (locked(e) || !/409|ENTITY_ERROR/.test(String(e))) throw e; await patch(none); }
+  });
+}
+
 // Review details: contact copied from a sibling app, notes from store/review-notes.txt
 const sibVersions = await api(`/v1/apps/${REVIEW_CONTACT_APP_ID}/appStoreVersions?limit=1`);
 const sibDetail = await api(`/v1/appStoreVersions/${sibVersions.data[0].id}/appStoreReviewDetail`);

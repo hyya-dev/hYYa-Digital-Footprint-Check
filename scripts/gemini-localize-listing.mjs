@@ -16,6 +16,8 @@
 //     whatsNewMac, from the English whatsNewMac; everything else stays as it is)
 //   node scripts/gemini-localize-listing.mjs --search-only   (redo subtitle and keywords only, the
 //     fields App Store search reads; descriptions and promotional text stay as they are)
+//   node scripts/gemini-localize-listing.mjs --keywords-only   (redo keywords only, written to fit each
+//     language's own approved subtitle, which stays as it is)
 //
 // The key comes from GEMINI_API_KEY in the environment or in the gitignored .env file.
 
@@ -32,8 +34,10 @@ const WHATS_NEW_ONLY = argv.includes("--whats-new");
 if (WHATS_NEW_ONLY) argv.splice(argv.indexOf("--whats-new"), 1);
 const WHATS_NEW_MAC = argv.includes("--whats-new-mac");
 if (WHATS_NEW_MAC) argv.splice(argv.indexOf("--whats-new-mac"), 1);
-const SEARCH_ONLY = argv.includes("--search-only");
+let SEARCH_ONLY = argv.includes("--search-only");
 if (SEARCH_ONLY) argv.splice(argv.indexOf("--search-only"), 1);
+const KEYWORDS_ONLY = argv.includes("--keywords-only");
+if (KEYWORDS_ONLY) { argv.splice(argv.indexOf("--keywords-only"), 1); SEARCH_ONLY = true; }
 const envFile = new URL("../.env", import.meta.url);
 const KEY = process.env.GEMINI_API_KEY || (existsSync(envFile) ? (readFileSync(envFile, "utf8").split("\n")
   .find((l) => l.startsWith("GEMINI_API_KEY=")) ?? "").slice(15).trim() : "");
@@ -93,19 +97,20 @@ function check(l) {
   return issues;
 }
 
-function prompt(language, feedback) {
+function prompt(language, feedback, subtitle) {
   return `You localise App Store listings. Localise this approved English listing for a free, open-source privacy app into ${language}, for people searching the App Store in that language.
 
 Rules:
 - Natural, native wording; calm and plain, never alarmist or hyped. Not a word-for-word translation.
 - subtitle: at most 30 characters. Translate the English subtitle's meaning, "a privacy score and an app tracker", into the local everyday words people search for. Never use the phrase "App Privacy Report" or its local name (it is the system's own feature name). No price, no "free", no superlatives.
-- keywords: comma-separated search terms people in this language really type, no spaces after commas, at most 100 UTF-8 bytes in total, every term longer than two characters where the script allows. Do not repeat any word from the name "${BRAND}" or from your subtitle. Cover ideas like: app permissions, tracking, privacy scanner, safety check, lockdown mode, location, camera, microphone, photos, contacts, data leak. Never "fingerprint" (people searching it want screen locks). English terms are fine only where locals commonly search in English.
+- keywords: comma-separated search terms people in this language really type, no spaces after commas, at most 100 UTF-8 bytes in total, every term longer than two characters where the script allows. Do not repeat any word from the name "${BRAND}" or from your subtitle. Cover the ideas of the English keywords: app permissions, tracking, digital fingerprinting (only in the sense of tracking a device; never a word people use for fingerprint screen locks or biometrics, so leave it out if the local word means that), privacy check-up, lockdown mode, location, camera, microphone, photos, contacts. No widget, safety or settings terms. English terms are fine only where locals commonly search in English.
+- promotionalText and description: both must open with a faithful translation of the first sentence, "100% free: no ads, no in-app purchases." Payment words appear nowhere else in the subtitle or keywords.
 - promotionalText: at most 170 characters. Keep it device-neutral like the English (phone, tablet or computer): never name iPhone, iPad, Mac or Android.
 - description: at most 4000 characters, plain text. Keep the structure: paragraphs, the UPPERCASE section headings (translated, still uppercase where the script has case) and the • bullets. Keep "${BRAND}", "hYYa" and "Mozilla Public License 2.0" unchanged; "Settings" is the system's own localised name for the Settings app. Stay device-neutral like the English ("your device", "the system"): never name iPhone, iPad, iOS, Mac or Android.
 - Never mention other apps or companies, viruses, malware or spyware, and make no ranking claims.
 - The app itself is in English, so when the release note names one of its pages ("Check-up"), keep that name in English exactly as written; local quotation marks around it are fine.
 - whatsNew: the release note. Keep every line in order: each • feature line${en.whatsNew?.includes("iPhone Duo") ? ' (keep "iPhone Duo" exactly as written, it\'s the device\'s name)' : ""} and, on the last line, a faithful translation of the fixed sentence "This release contains general bug fixes and stability improvements."
-${feedback ? `\nYour previous attempt had these problems; fix all of them:\n- ${feedback.join("\n- ")}\n` : ""}
+${KEYWORDS_ONLY && subtitle ? `\nThis language's subtitle is fixed: "${subtitle}". Write only keywords that fit it (no word repeated from it), and return that subtitle unchanged.\n` : ""}${feedback ? `\nYour previous attempt had these problems; fix all of them:\n- ${feedback.join("\n- ")}\n` : ""}
 English listing (JSON):
 ${JSON.stringify(WHATS_NEW ? { whatsNew: en.whatsNew } : SEARCH_ONLY ? { subtitle: en.subtitle, keywords: en.keywords } : TEXT_ONLY ? { promotionalText: en.promotionalText, description: en.description, whatsNew: en.whatsNew }
   : { subtitle: en.subtitle, keywords: en.keywords, promotionalText: en.promotionalText, description: en.description, whatsNew: en.whatsNew }, null, 1)}`;
@@ -147,9 +152,9 @@ async function localise(locale) {
     issues = check(result);
   } else {
     for (let attempt = 1; attempt <= 4; attempt++) {
-      result = await gemini(prompt(LOCALES[locale], issues));
+      result = await gemini(prompt(LOCALES[locale], issues, kept?.subtitle));
       if (kept) result = WHATS_NEW ? { ...kept, whatsNew: result.whatsNew }
-        : SEARCH_ONLY ? { ...kept, subtitle: result.subtitle, keywords: result.keywords }
+        : SEARCH_ONLY ? { ...kept, subtitle: KEYWORDS_ONLY ? kept.subtitle : result.subtitle, keywords: result.keywords }
         : { subtitle: kept.subtitle, keywords: kept.keywords, ...result };
       delete result.locale; delete result.name;
       result.keywords = result.keywords.split(/\s*[,،、，]\s*/).filter(Boolean).join(",");

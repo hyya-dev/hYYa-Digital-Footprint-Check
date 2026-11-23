@@ -7,5 +7,15 @@
 	<array>
 		<string>$(AppIdentifierPrefix)com.hyya.footprintinspector</string>
 	</array>
+	<!-- Declared Age Range: asks Apple's age-range sheet only where a law requires it. The answer
+	     is never stored or sent. -->
+	<key>com.apple.developer.declared-age-range</key>
+	<true/>
+	<!-- Lets the app read Apple's nudity-blurring setting, to show the user what any app with this
+	     capability learns. It analyses no content. -->
+	<key>com.apple.developer.sensitivecontentanalysis.client</key>
+	<array>
+		<string>analysis</string>
+	</array>
 </dict>
 </plist>

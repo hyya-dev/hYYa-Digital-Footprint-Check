@@ -34,6 +34,9 @@ struct SettingsView: View {
     @AppStorage(ScanReminder.storageKey) private var reminder = ScanReminder.off.rawValue
     @State private var notificationsOff = false
     @AppStorage(HyyaSuggestions.settingKey) private var showSuggestions = true
+    /// The sale notice for people who haven't seen it on the Score page (a new install sees it here).
+    @AppStorage(SaleNotice.seenKey) private var saleSeen = ""
+    @State private var saleShowing = false
 
     static let shareMessage = "hYYa Digital Footprint Check shows what any app can learn about your device, and how to fix it. Free, open source, nothing leaves your device."
 
@@ -42,6 +45,7 @@ struct SettingsView: View {
             Page {
                 HeroCard(eyebrow: "Settings", title: "hYYa Digital Footprint Check",
                          subtitle: "Everything here stays on this device.", mood: .idle, mascotSize: 96)
+                if saleShowing { SaleNoticeCard { withAnimation { saleShowing = false } } }
 
                 SectionTitle(title: "Your scans")
                 Panel {
@@ -131,6 +135,11 @@ struct SettingsView: View {
                         .buttonStyle(PressableCardStyle())
                 }
                 #endif
+            }
+            .onAppear {
+                guard SaleNotice.isDue(seen: saleSeen) else { return }
+                saleShowing = true
+                if !SaleNotice.preview { saleSeen = SaleNotice.current.id }
             }
             .hiddenNavigationBar()
             .alert("Notifications are off", isPresented: $notificationsOff) {

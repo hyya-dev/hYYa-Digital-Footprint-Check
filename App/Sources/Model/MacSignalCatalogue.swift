@@ -259,7 +259,7 @@ enum MacSignalCatalogue {
     static let reused: [SignalDefinition] = {
         let byID = Dictionary(uniqueKeysWithValues: (SignalCatalogue.passive + SignalCatalogue.advanced).map { ($0.id, $0) })
         var out: [SignalDefinition] = []
-        for id in ["storefront", "install-date", "first-download"] { if let d = byID[id] { out.append(d) } }
+        for id in ["storefront", "install-date", "first-download", "content-safety", "content-warning"] { if let d = byID[id] { out.append(d) } }
         if let reinstall = byID["reinstall-memory"] {
             out.append(reinstall.with(fix: .onlyApple("Deleting the app doesn't clear it, and nor does a reinstall. Apple could limit this.")))
         }

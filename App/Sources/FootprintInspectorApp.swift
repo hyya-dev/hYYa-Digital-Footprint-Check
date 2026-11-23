@@ -63,6 +63,7 @@ struct FootprintInspectorApp: App {
                 .environment(scanner)
                 .environment(history)
                 .environment(check)
+                .modifier(AgeSignalOnLaunch())
             }
             .tint(Brand.accent)
             .preferredColorScheme(.dark)

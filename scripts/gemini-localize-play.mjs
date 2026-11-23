@@ -73,6 +73,7 @@ function check(l) {
   const issues = [];
   const len = (s) => [...(s ?? "")].length;
   if (!l.shortDescription || len(l.shortDescription) > 80) issues.push(`shortDescription is ${len(l.shortDescription)} characters (max 80)`);
+  if (/\bfree\b|gratuit|gratis|kostenlos|無料|免费|免費|무료|бесплат|مجان|ücretsiz|grátis|darmow|zdarma|ingyenes|miễn phí|gratuita|ฟรี/i.test(l.shortDescription ?? "")) issues.push("shortDescription must not mention free or price");
   if (!l.fullDescription || len(l.fullDescription) > 4000) issues.push(`fullDescription is ${len(l.fullDescription)} characters (max 4000)`);
   for (const f of ["shortDescription", "fullDescription"]) {
     // Letter-aware edges: in many scripts \b treats accented letters as breaks ("…ios" in Lithuanian).
@@ -100,7 +101,8 @@ function prompt(language, feedback) {
 Rules:
 - Natural, native wording; calm and plain, never alarmist or hyped. Not a word-for-word translation.
 - Google Play search reads the full description, so use the local everyday terms people really search for: privacy check, app permissions, device fingerprint, digital footprint, trackers. Let them appear naturally a few times; no keyword stuffing.
-- shortDescription: at most 80 characters. Same message as the English: see what apps know about your device, then fix it; free, open source, private.
+- shortDescription: at most 80 characters. Same message as the English: see what apps know about your device, then fix it, privately. No price or payment words such as "free" (Google's metadata rules).
+- fullDescription must open with a faithful translation of its first line, "100% free: no ads, no in-app purchases."
 - fullDescription: at most 4000 characters, plain text. Keep the structure: paragraphs, the UPPERCASE section headings (translated, still uppercase where the script has case) and the • bullets. Keep "${BRAND}" and "hYYa" unchanged. "Settings" is the system's own localised name for the Settings app. Keep "Android" and "Google" where the English has them, but never name iPhone, iPad, iOS or Mac.
 - Stay device-neutral: the listing is for phones and tablets alike, so say "device" (the local neutral word) wherever the English says "device". Never write "phone", "mobile", "smartphone", "cell" or "tablet".
 - The app itself is in English, so when the release note names one of its pages (${PAGES.map((p) => `"${p}"`).join(", ")}), keep that name in English exactly as written; local quotation marks around it are fine.

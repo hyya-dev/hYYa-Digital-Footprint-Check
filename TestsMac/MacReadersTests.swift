@@ -40,7 +40,9 @@ final class MacReadersTests: XCTestCase {
             }
         }
         let passive = SignalCatalogue.list.filter { $0.section.group != .permission }.map(\.id)
-        let unread = passive.filter { !ids.contains($0) && !["mac-battery", "first-download", "storefront"].contains($0) }
+        // The child-or-teen card and the adult's Sensitive Content Warning card are one reading in two states: one is read.
+        XCTAssertTrue(ids.contains(ContentSafety.id) != ids.contains(ContentSafety.adultID), "Exactly one content-safety card")
+        let unread = passive.filter { !ids.contains($0) && !["mac-battery", "first-download", "storefront", ContentSafety.id, ContentSafety.adultID].contains($0) }
         XCTAssertTrue(unread.isEmpty, "Defined but never read: \(unread)")
     }
 

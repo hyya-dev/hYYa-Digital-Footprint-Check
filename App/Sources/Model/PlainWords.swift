@@ -82,6 +82,8 @@ enum PlainWords {
         "tracking": ("Apps can see if they may ask to track you", "Turning tracking requests off tells every app no."),
         "managed": ("Apps may see if an organisation manages this device", "Normal on a work device. This check can't see every profile, so look in Settings for any you don't recognise."),
         "location-services": ("Apps can see if Location Services is on", "Only the switch, not where you are."),
+        "content-safety": ("Apps can tell if a child or teen uses this device", "Apple's Communication Safety setting shows whether the device is set up for a young person. Where it's on, keep it on: it protects them. Only Apple could stop apps reading it."),
+        "content-warning": ("Apps can see you've turned on nudity blurring", "Sensitive Content Warning blurs photos and videos that may contain nudity. Apps can tell it's on, and that's all: it tells them very little."),
 
         // Clever tricks
         "web-fingerprint": ("Web pages inside apps can fingerprint you", "They read your screen, languages and graphics to tell devices apart. Your browser protects you better."),

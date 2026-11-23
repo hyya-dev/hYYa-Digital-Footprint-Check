@@ -38,8 +38,8 @@ android {
         targetSdk = 36
         // versionName is the marketing version (1.0.0 on every store); versionCode is the
         // build number and may be bumped freely, but Play refuses a code it already holds.
-        versionCode = 31
-        versionName = "1.1.2"
+        versionCode = 32
+        versionName = "1.1.3"
     }
 
     signingConfigs {
@@ -95,6 +95,8 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     // Google's In-App Review (the standard rating prompt). Play edition only: F-Droid takes no Google libraries.
     if (!fdroid) implementation(libs.play.review)
+    // Play Age Signals: asked only where Play says a law requires it. Play edition only.
+    if (!fdroid) implementation(libs.play.age.signals)
     // The review library pulls in fragment 1.1.0, which Play reports as outdated: use a current one.
     if (!fdroid) implementation(libs.androidx.fragment)
     testImplementation(libs.junit)
