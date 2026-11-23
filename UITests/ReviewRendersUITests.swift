@@ -75,6 +75,23 @@ final class ReviewRendersUITests: XCTestCase {
         }
     }
 
+    /// The reworded hide step (2026-11-25): last but one, no promise that other apps can't spot the app.
+    func test113HideStep() {
+        for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
+            tag = t
+            launch(["-startTab", "sensitive", "-sensitiveCategories", "politics"], o)
+            let check = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Check '")).firstMatch
+            scrollTo(check); check.tap(); sleep(2)
+            let show = app.buttons["Show the apps"]
+            if show.waitForExistence(timeout: 5) { show.tap(); sleep(1) }
+            let what = app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'WHAT TO DO' OR label CONTAINS 'What to do'")).firstMatch
+            scrollTo(what)
+            shot("h01-steps")
+            scrollTo(app.staticTexts.containing(NSPredicate(format: "label CONTAINS 'Prefer the app? Hide it'")).firstMatch)
+            shot("h02-hide-step")
+        }
+    }
+
     func test113NotSetUp() {
         for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
             tag = t

@@ -204,7 +204,7 @@ private struct FoundAppCard: View {
                 .foregroundStyle(Tone.fix.tint)
                 .padding(.top, 4)
             #if os(iOS)
-            StepList(steps: [SensitiveCatalogue.hideStep] + category.steps + [SensitiveCatalogue.deleteStep], tint: Tone.fix.tint)
+            StepList(steps: category.steps + [SensitiveCatalogue.hideStep, SensitiveCatalogue.deleteStep], tint: Tone.fix.tint)
             #else
             StepList(steps: category.steps + [SensitiveCatalogue.deleteStep], tint: Tone.fix.tint)
             #endif

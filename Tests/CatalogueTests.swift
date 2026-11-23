@@ -32,6 +32,16 @@ struct CatalogueTests {
         #expect(SensitiveCatalogue.allSchemes.count == Set(SensitiveCatalogue.allSchemes).count)
     }
 
+    /// The hide step is for people who keep the app, and says only what was tested on a real device.
+    @Test func hideStepWording() {
+        #if os(iOS)
+        let step = SensitiveCatalogue.hideStep
+        #expect(step.hasPrefix("Prefer the app? Hide it"))
+        #expect(step.contains("Check again here to see it gone."))
+        #expect(!step.contains("Best:"))
+        #endif
+    }
+
     /// The "who else can check" card names no organisation and makes no detection claim, and the
     /// Check-up covers device management (docs/WATCHERS-RESEARCH.md).
     @Test func othersCanCheckCopyAndDeviceManagementStep() {

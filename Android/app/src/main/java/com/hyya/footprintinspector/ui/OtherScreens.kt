@@ -177,7 +177,7 @@ private fun FoundAppCard(c: SensitiveCategory, app: SensitiveApp) {
         Pill("Worth a look", Brand.concern, Brand.concernSoft)
         Text(listOfNotNull(c.tells, c.risk).joinToString(" "), color = Brand.textMuted, fontSize = 14.sp, lineHeight = 19.sp)
         Eyebrow("What to do")
-        StepList(listOf(Sensitive.HIDE_STEP) + c.steps + Sensitive.DELETE_STEP)
+        StepList(c.steps + Sensitive.HIDE_STEP + Sensitive.DELETE_STEP)
     }
 }
 

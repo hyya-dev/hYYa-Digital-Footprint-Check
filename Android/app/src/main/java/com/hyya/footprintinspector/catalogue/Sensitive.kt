@@ -27,10 +27,12 @@ object Sensitive {
     const val OTHERS_LINE = "Any app on this device can run this same check, including banking, government, employer and ID apps."
     const val WEBSITE_LINE = "If you'd rather an organisation couldn't, use its website in your browser instead of its app. A website can't see which apps you have."
     /**
-     * The best first step: apps in Private space (or Samsung's Secure Folder) live in a separate,
-     * locked profile, so apps outside it can't spot them, and their owner still opens them.
+     * For people who keep the app. Tested 2026-11-25 (Android 16 emulator): an app installed only in a
+     * Private space profile was not found by this check from the main profile, even with the space
+     * unlocked; the same app in the main profile was. The space gets a new copy, so the original must be
+     * uninstalled. Google says some apps can still tell that Private space is used, so say so.
      */
-    const val HIDE_STEP = "Best: move it into Private space (Android 15 and later; on Samsung, Secure Folder). Apps outside it can no longer spot it, and you still open it behind your lock. Check again here to see it gone."
+    const val HIDE_STEP = "Prefer the app? Move it into Private space (Android 15 and later; on Samsung, Secure Folder), then uninstall the original. Apps outside it can no longer spot it, though some may still notice you use Private space. Check again here to see it gone."
     const val DELETE_STEP = "To delete an app: touch and hold its icon, then tap Uninstall."
 
     val categories = listOf(

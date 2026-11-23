@@ -54,4 +54,13 @@ class CatalogueTest {
         val offenders = texts.filter { bad.containsMatchIn(it) && "\"Sam's Pixel\"" !in it }
         assertTrue("Device brand in copy: $offenders", offenders.isEmpty())
     }
+
+    /** For people who keep the app: Private space, the original uninstalled, and Google's caveat kept. */
+    @Test fun hideStepWording() {
+        val step = Sensitive.HIDE_STEP
+        assertTrue(step.startsWith("Prefer the app? Move it into Private space"))
+        assertTrue(step.contains("uninstall the original"))
+        assertTrue(step.contains("some may still notice you use Private space"))
+        assertTrue(!step.contains("Best:"))
+    }
 }
