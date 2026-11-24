@@ -1,0 +1,392 @@
+{
+  "updated": "2026-11-24",
+  "slides": [
+    {
+      "store": "App Store",
+      "device": "iPhone 6.9",
+      "slide": 1,
+      "file": "store/slides/iphone-6.9/01-results.png",
+      "screen": "store-02-results",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "b677e03807493d62253cd6dab78ebf13a2553aaa9356c6df3dfa3bf328bcf6eb"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone 6.9",
+      "slide": 2,
+      "file": "store/slides/iphone-6.9/02-tracker.png",
+      "screen": "store-08-tracker",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "dac8d2ef79011987f4752ce2f46c67f70d6089225414448674ab93d36778eb83"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone 6.9",
+      "slide": 3,
+      "file": "store/slides/iphone-6.9/03-fix.png",
+      "screen": "store-09-fix",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "af96b94ea71dab5b7b41cd8db02d3eb6f65ba5c64442c07269b8143afe7685d8"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone 6.9",
+      "slide": 4,
+      "file": "store/slides/iphone-6.9/04-finding.png",
+      "screen": "store-04-finding",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "74ce1db7b58b79ed64108692c840076750fa9449897773c05311d75c58342455"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone 6.9",
+      "slide": 5,
+      "file": "store/slides/iphone-6.9/05-sensitive.png",
+      "screen": "store-05-sensitive",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "828a4ba42e50bdc381d9fe5d0cf341cc961e935fc0d6af4d75adf9dfed558183"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone 6.9",
+      "slide": 6,
+      "file": "store/slides/iphone-6.9/06-checkup.png",
+      "screen": "store-06-checkup",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "d8097c8fe34b0afca5af024344df716cd49cb0e2cf88c4da7c42cde1191cc146"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone 6.9",
+      "slide": 7,
+      "file": "store/slides/iphone-6.9/07-home.png",
+      "screen": "store-01-home",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "a10b6749522472b9fe389f43e401563fdc317f7b59b2564882ad6baa6285e6ef"
+    },
+    {
+      "store": "App Store",
+      "device": "iPad 13",
+      "slide": 1,
+      "file": "store/slides/ipad-13/01-results.png",
+      "screen": "store-02-results",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "97e0cbbe70634f0a277f54419d19a417758de0e2ae230d14a4feff619d8f12f3"
+    },
+    {
+      "store": "App Store",
+      "device": "iPad 13",
+      "slide": 2,
+      "file": "store/slides/ipad-13/02-tracker.png",
+      "screen": "store-08-tracker",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "ab7b8d6a42b8732655f1e360a57f408c52281de9720c8e2711b7be16a2c8dd76"
+    },
+    {
+      "store": "App Store",
+      "device": "iPad 13",
+      "slide": 3,
+      "file": "store/slides/ipad-13/03-fix.png",
+      "screen": "store-09-fix",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "ac38823167e9e7f6e0c19356a449a90bdbe686008d71bc29af0a1f2fd4885511"
+    },
+    {
+      "store": "App Store",
+      "device": "iPad 13",
+      "slide": 4,
+      "file": "store/slides/ipad-13/04-finding.png",
+      "screen": "store-04-finding",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "3009036f769f912b9569f0d777d0e61d3e266f62013921adf0a1f21c09c331c3"
+    },
+    {
+      "store": "App Store",
+      "device": "iPad 13",
+      "slide": 5,
+      "file": "store/slides/ipad-13/05-sensitive.png",
+      "screen": "store-05-sensitive",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "a475b0f8fd71a0c26d7c0035dbaa72e4634b54ac6d608f4721714b0cb0db95f1"
+    },
+    {
+      "store": "App Store",
+      "device": "iPad 13",
+      "slide": 6,
+      "file": "store/slides/ipad-13/06-checkup.png",
+      "screen": "store-06-checkup",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "b1a1b59a08863c2cbe76858061cd95ed9814e68e4163ab7f8a8e62057680a1a8"
+    },
+    {
+      "store": "App Store",
+      "device": "iPad 13",
+      "slide": 7,
+      "file": "store/slides/ipad-13/07-home.png",
+      "screen": "store-01-home",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "451b4d3a645bce8f07d1fbfcd538198c2df105e221348b680790dac07cb015e5"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone Duo",
+      "slide": 1,
+      "file": "store/slides/duo/01-closed-results.png",
+      "screen": "closed-results",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "7e0b41586d9bba12e6d9cec0d11eeb6b7441ef5b4f46c890e76f62412a966cee"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone Duo",
+      "slide": 2,
+      "file": "store/slides/duo/02-book-finding.png",
+      "screen": "book-finding",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "d664c23181ea8a12e356bcee96669f2a36367f03ce8c259422c18c355e30952d"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone Duo",
+      "slide": 3,
+      "file": "store/slides/duo/03-book-fix.png",
+      "screen": "book-fix",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "c16753906871a6e1a54b4b809a1b96e3b086442b4f1491b568474194f1d9bc50"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone Duo",
+      "slide": 4,
+      "file": "store/slides/duo/04-closed-tracker.png",
+      "screen": "closed-tracker",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "4ac0a34b321d56727f4628162c38cb619fb4a21dd09d6e27299c488c7dfc136e"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone Duo",
+      "slide": 5,
+      "file": "store/slides/duo/05-book-sensitive.png",
+      "screen": "book-sensitive",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "f213f91c1dd71997f28e7717a3770892c49a099572f83036f909f9e130f5a862"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone Duo",
+      "slide": 6,
+      "file": "store/slides/duo/06-book-checkup.png",
+      "screen": "book-checkup",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "688e2a7af9245dd45da878c8276b51c6032ca16b6ef22a2559ec05b85618a63d"
+    },
+    {
+      "store": "App Store",
+      "device": "iPhone Duo",
+      "slide": 7,
+      "file": "store/slides/duo/07-closed-home.png",
+      "screen": "closed-home",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "d7c93ca718700be4fb2f1550fe5414c34498b209be7de1a3d8f6592f0233897d"
+    },
+    {
+      "store": "App Store",
+      "device": "Mac",
+      "slide": 1,
+      "file": "store/slides/mac/01-results.png",
+      "screen": "mac-01-results",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "ad80c5dac4c2badf3f0cd86ce2b9003d9c88e43477b1179fd560738b4da36115"
+    },
+    {
+      "store": "App Store",
+      "device": "Mac",
+      "slide": 2,
+      "file": "store/slides/mac/02-fix.png",
+      "screen": "mac-07-fix",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "bcd52ce19bae65d74114950ec4adfc822ff1d86944e1c1eea19a588bd8cccae2"
+    },
+    {
+      "store": "App Store",
+      "device": "Mac",
+      "slide": 3,
+      "file": "store/slides/mac/03-finding.png",
+      "screen": "mac-02-finding",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "40624d5d8328b448bb099cd52953c952e817b791d9783a0da8f873116d671cf2"
+    },
+    {
+      "store": "App Store",
+      "device": "Mac",
+      "slide": 4,
+      "file": "store/slides/mac/04-sensitive.png",
+      "screen": "mac-04-sensitive",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "5b8660fa24cb25f5f5ea140610dcbcb6b265ae47af5d75a374e2ca2927aa69cc"
+    },
+    {
+      "store": "App Store",
+      "device": "Mac",
+      "slide": 5,
+      "file": "store/slides/mac/05-checkup.png",
+      "screen": "mac-05-checkup",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "4fc527a47a0b5e9b1ad658915aa0117e3c4c9b8e61d400608150663e9355186e"
+    },
+    {
+      "store": "App Store",
+      "device": "Mac",
+      "slide": 6,
+      "file": "store/slides/mac/06-home.png",
+      "screen": "mac-06-home",
+      "languages": "en-US (shown in every App Store language)",
+      "sha256": "ce0d196229b4e7e17a3c7bae28381dba354a2b093125087a3a0ff3a519ce8e81"
+    },
+    {
+      "store": "Google Play",
+      "device": "Phone",
+      "slide": 1,
+      "file": "store/slides/android-phone/01-results.png",
+      "screen": "store-02-results",
+      "languages": "every Play language (same image)",
+      "sha256": "a5a4df7c855fc365647c73dfdae85db6807e9f4a7c910d6689c838757341f6af"
+    },
+    {
+      "store": "Google Play",
+      "device": "Phone",
+      "slide": 2,
+      "file": "store/slides/android-phone/02-watch.png",
+      "screen": "store-03-watch",
+      "languages": "every Play language (same image)",
+      "sha256": "d7c1af098b3b5c80500e5e82e78ba63734148812ba0023245ed619d5d588ed38"
+    },
+    {
+      "store": "Google Play",
+      "device": "Phone",
+      "slide": 3,
+      "file": "store/slides/android-phone/03-fix.png",
+      "screen": "store-07-fix",
+      "languages": "every Play language (same image)",
+      "sha256": "826182c25358e23a95d49e4cf09c4a8d25cd92a68392e236f8f73d0e15c65431"
+    },
+    {
+      "store": "Google Play",
+      "device": "Phone",
+      "slide": 4,
+      "file": "store/slides/android-phone/04-finding.png",
+      "screen": "store-04-finding",
+      "languages": "every Play language (same image)",
+      "sha256": "125449d20f1fb2bb3219cda15bc27dfad15a84eb97addf5a14b438144cbc3612"
+    },
+    {
+      "store": "Google Play",
+      "device": "Phone",
+      "slide": 5,
+      "file": "store/slides/android-phone/05-sensitive.png",
+      "screen": "store-05-sensitive",
+      "languages": "every Play language (same image)",
+      "sha256": "6bec9714c52ad9417b38273ca89e9cae513a5857aec7bf61136b0158470ba57f"
+    },
+    {
+      "store": "Google Play",
+      "device": "Phone",
+      "slide": 6,
+      "file": "store/slides/android-phone/06-checkup.png",
+      "screen": "store-06-checkup",
+      "languages": "every Play language (same image)",
+      "sha256": "50c6db202fdedf8554b5a65f114d46ca7a6ebf68ceee444b87434a5d6835fd63"
+    },
+    {
+      "store": "Google Play",
+      "device": "Phone",
+      "slide": 7,
+      "file": "store/slides/android-phone/07-home.png",
+      "screen": "store-01-home",
+      "languages": "every Play language (same image)",
+      "sha256": "b1423f4cc59d533f2979e2e7719de98639135c6528f98cfb9847be3f2e92f572"
+    },
+    {
+      "store": "Google Play",
+      "device": "Tablet (7 and 10 inch)",
+      "slide": 1,
+      "file": "store/slides/android-tablet/01-results.png",
+      "screen": "store-02-results",
+      "languages": "every Play language (same image)",
+      "sha256": "aa64b16e1f62f7d980e313b4560381b2fd7f2d37f614a679cc5bc36b8d686e77"
+    },
+    {
+      "store": "Google Play",
+      "device": "Tablet (7 and 10 inch)",
+      "slide": 2,
+      "file": "store/slides/android-tablet/02-watch.png",
+      "screen": "store-03-watch",
+      "languages": "every Play language (same image)",
+      "sha256": "12f966bb7e4b2dff030d10e55668ed649c7c554456dd6b04966a7fb72de4ee0f"
+    },
+    {
+      "store": "Google Play",
+      "device": "Tablet (7 and 10 inch)",
+      "slide": 3,
+      "file": "store/slides/android-tablet/03-fix.png",
+      "screen": "store-07-fix",
+      "languages": "every Play language (same image)",
+      "sha256": "97cb1fa69df70674a85ef38efa0c0bd9043f9b1889f33a88ca9362ee5e6f7478"
+    },
+    {
+      "store": "Google Play",
+      "device": "Tablet (7 and 10 inch)",
+      "slide": 4,
+      "file": "store/slides/android-tablet/04-finding.png",
+      "screen": "store-04-finding",
+      "languages": "every Play language (same image)",
+      "sha256": "7122c82b8cb114cf468ce2fc3c1faede53e431b39c9cb3b6b1ce8e1343d3c7a9"
+    },
+    {
+      "store": "Google Play",
+      "device": "Tablet (7 and 10 inch)",
+      "slide": 5,
+      "file": "store/slides/android-tablet/05-sensitive.png",
+      "screen": "store-05-sensitive",
+      "languages": "every Play language (same image)",
+      "sha256": "97a86ceffc7ce51d9bc446a33a2dd975e6679cdc4094fb8425a6264e8bd91596"
+    },
+    {
+      "store": "Google Play",
+      "device": "Tablet (7 and 10 inch)",
+      "slide": 6,
+      "file": "store/slides/android-tablet/06-checkup.png",
+      "screen": "store-06-checkup",
+      "languages": "every Play language (same image)",
+      "sha256": "b72aa7a8f9bcb4c4d2e62dba69eeff6b0310c2f35fa2242d0f9ce7794ee1fd26"
+    },
+    {
+      "store": "Google Play",
+      "device": "Tablet (7 and 10 inch)",
+      "slide": 7,
+      "file": "store/slides/android-tablet/07-home.png",
+      "screen": "store-01-home",
+      "languages": "every Play language (same image)",
+      "sha256": "4f3a366ea51663453c438c298324e223c6352d55b0225c6f34f9607a88c8a558"
+    },
+    {
+      "store": "Google Play",
+      "device": "Icon",
+      "slide": 1,
+      "file": "store/slides/play-icon-512.png",
+      "screen": "-",
+      "languages": "every Play language (same image)",
+      "sha256": "1db0a8fbf014bc4937a1a2e57f187d9fb380f7ec03dc9745b538ff5996f40de9"
+    },
+    {
+      "store": "Google Play",
+      "device": "Feature graphic",
+      "slide": 1,
+      "file": "store/slides/play-feature-1024x500.png",
+      "screen": "-",
+      "languages": "every Play language (same image)",
+      "sha256": "13169c892e6c5d178580f56b0303d1219ffc88c0850c8b96c4d91400ebf2ef5e"
+    }
+  ]
+}

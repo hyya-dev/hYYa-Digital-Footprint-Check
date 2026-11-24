@@ -11,7 +11,7 @@
 //   PLAY_SERVICE_ACCOUNT_JSON=… node scripts/play-push-tablet-slides.mjs [--apply]
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { accessToken, api, pushGraphics } from "./play-api.mjs";
+import { accessToken, api, pushGraphics, planGraphics, guardUploads } from "./play-api.mjs";
 
 const APPLY = process.argv.includes("--apply");
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -23,8 +23,11 @@ const edit = await api(token, "/edits", { method: "POST", body: {} });
 const E = `/edits/${edit.id}`;
 const langs = ((await api(token, `${E}/listings`)).listings ?? []).map((l) => l.language);
 const started = Date.now();
-await pushGraphics(token, E, langs, { sevenInchScreenshots: tablets, tenInchScreenshots: tablets }, { log: () => {} });
-console.log(`• tablet slides (${tablets.length}) for 7- and 10-inch in ${langs.length} languages, read back in order (${Math.round((Date.now() - started) / 1000)} s)`);
+const files = { sevenInchScreenshots: tablets, tenInchScreenshots: tablets };
+const g = await planGraphics(token, E, langs, files);
+try { guardUploads(g.uploads, process.argv.slice(2)); } catch (e) { await api(token, E, { method: "DELETE" }); console.error(e.message); process.exit(1); }
+await pushGraphics(token, E, langs, files, { log: () => {}, plan: g.plan });
+console.log(`• tablet slides: ${g.uploads} uploaded, ${g.unchangedSets} of ${g.sets} sets kept; read back in order (${Math.round((Date.now() - started) / 1000)} s)`);
 await api(token, `${E}:validate`, { method: "POST" });
 
 if (!APPLY) {

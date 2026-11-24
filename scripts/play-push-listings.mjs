@@ -16,7 +16,7 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { accessToken, api, pushGraphics } from "./play-api.mjs";
+import { accessToken, api, pushGraphics, planGraphics, guardUploads } from "./play-api.mjs";
 
 const APPLY = process.argv.includes("--apply");
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -52,15 +52,23 @@ const edit = await api(token, "/edits", { method: "POST", body: {} });
 const E = `/edits/${edit.id}`;
 const live = new Set(((await api(token, `${E}/listings`)).listings ?? []).map((l) => l.language));
 
-for (const [lang, l] of Object.entries(local))
+// Only text that differs from what Play holds is written (Marketing standing rule, 2026-11-25).
+let written = 0;
+for (const [lang, l] of Object.entries(local)) {
+  const held = await api(token, `${E}/listings/${lang}`).catch(() => null);
+  if (held && held.title === l.title && held.shortDescription === l.shortDescription && held.fullDescription === l.fullDescription) continue;
   await api(token, `${E}/listings/${lang}`, { method: "PUT", body: {
     language: lang, title: l.title, shortDescription: l.shortDescription, fullDescription: l.fullDescription } });
-console.log(`• listing text: ${Object.keys(local).length} languages`);
+  written++;
+}
+console.log(`• listing text: ${written} of ${Object.keys(local).length} languages changed`);
 
 const fresh = Object.keys(local).filter((l) => !live.has(l));
 if (fresh.length) {
   const started = Date.now();
-  await pushGraphics(token, E, fresh, gallery);
+  const g = await planGraphics(token, E, fresh, gallery);
+  try { guardUploads(g.uploads, process.argv.slice(2)); } catch (e) { await api(token, E, { method: "DELETE" }); console.error(e.message); process.exit(1); }
+  await pushGraphics(token, E, fresh, gallery, { plan: g.plan });
   console.log(`• gallery for ${fresh.length} new languages, read back in order (${Math.round((Date.now() - started) / 1000)} s)`);
 }
 

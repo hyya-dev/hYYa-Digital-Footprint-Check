@@ -3,7 +3,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 //
-// Replaces the en-US screenshots of the editable iOS version with the slides in store/slides/.
+// Brings the en-US screenshots of the editable version in line with store/slides/, uploading only
+// the slides that changed (checksum and order). --dry-run plans only; over 20 uploads needs
+// --approved-uploads N (the owner's yes first).
 // 🚨 Uploading screenshots is not a review submission, and this script never submits.
 //
 //   ASC_ISSUER_ID=… ASC_KEY_ID=… ASC_PRIVATE_KEY_PATH=… node scripts/asc-upload-screenshots.mjs [iphone|ipad]
@@ -24,7 +26,8 @@ const SETS = (process.env.PLATFORM ?? "IOS") === "MAC_OS" ? {
   // Apple's published API reference yet; uploads to it were confirmed working by other tools.
   duo: { dir: "store/slides/duo", type: "APP_IPHONE_DUO" },
 };
-const only = process.argv[2];
+const only = process.argv.slice(2).find((a, i, all) => !a.startsWith("--") && all[i - 1] !== "--approved-uploads");
+const DRY = process.argv.includes("--dry-run");
 const { ASC_ISSUER_ID, ASC_KEY_ID, ASC_PRIVATE_KEY_PATH } = process.env;
 const key = readFileSync(ASC_PRIVATE_KEY_PATH, "utf8");
 
@@ -45,30 +48,49 @@ async function api(path, method = "GET", body) {
   return t ? JSON.parse(t) : null;
 }
 
-const versions = await api(`/v1/apps/${APP_ID}/appStoreVersions?filter[platform]=${PLATFORM}&filter[appStoreState]=PREPARE_FOR_SUBMISSION,DEVELOPER_REJECTED,REJECTED,METADATA_REJECTED`);
+// A dry run may also read a version in review (read only), to show what an upload would change.
+const states = "PREPARE_FOR_SUBMISSION,DEVELOPER_REJECTED,REJECTED,METADATA_REJECTED" + (DRY ? ",WAITING_FOR_REVIEW,IN_REVIEW" : "");
+const versions = await api(`/v1/apps/${APP_ID}/appStoreVersions?filter[platform]=${PLATFORM}&filter[appStoreState]=${states}`);
 const version = versions.data[0];
+if (!version) { console.log(`No editable ${PLATFORM} version. Nothing was changed.`); process.exit(0); }
 const locs = await api(`/v1/appStoreVersions/${version.id}/appStoreVersionLocalizations`);
 const loc = locs.data.find((l) => l.attributes.locale === "en-US");
 
+// Plan first (Marketing standing rule, 2026-11-25): compare each set with what App Store Connect holds,
+// by MD5 checksum and order, keep the matching prefix, and replace only from the first difference.
+const plans = [];
 for (const [name, set] of Object.entries(SETS)) {
   if (only && only !== name) continue;
   let files;
   try { files = readdirSync(set.dir).filter((f) => f.endsWith(".png")).sort(); } catch { console.log(`skip ${name}: no ${set.dir}`); continue; }
   if (!files.length) { console.log(`skip ${name}: empty`); continue; }
-
+  const local = files.map((f) => ({ f, path: join(set.dir, f), md5: createHash("md5").update(readFileSync(join(set.dir, f))).digest("hex") }));
   const sets = await api(`/v1/appStoreVersionLocalizations/${loc.id}/appScreenshotSets?limit=50`);
-  let target = sets.data.find((s) => s.attributes.screenshotDisplayType === set.type);
-  if (target) {
-    const existing = await api(`/v1/appScreenshotSets/${target.id}/appScreenshots?limit=50`);
-    for (const s of existing.data) await api(`/v1/appScreenshots/${s.id}`, "DELETE");
-  } else {
-    target = (await api("/v1/appScreenshotSets", "POST", { data: { type: "appScreenshotSets",
-      attributes: { screenshotDisplayType: set.type },
-      relationships: { appStoreVersionLocalization: { data: { type: "appStoreVersionLocalizations", id: loc.id } } } } })).data;
+  const target = sets.data.find((s) => s.attributes.screenshotDisplayType === set.type);
+  const held = target ? (await api(`/v1/appScreenshotSets/${target.id}/appScreenshots?limit=50`)).data : [];
+  let keep = 0;
+  while (keep < held.length && keep < local.length && held[keep].attributes.sourceFileChecksum === local[keep].md5) keep++;
+  plans.push({ name, set, target, keep, del: held.slice(keep), up: local.slice(keep), total: local.length });
+  console.log(`  ${name}: ${keep} kept, ${local.length - keep} to upload${held.length - keep ? `, ${held.length - keep} to replace` : ""}`);
+}
+const planned = plans.reduce((n, p) => n + p.up.length, 0);
+if (planned > 20) {
+  const i = process.argv.indexOf("--approved-uploads");
+  if (i < 0 || Number(process.argv[i + 1]) !== planned) {
+    console.error(`${planned} screenshot uploads planned (over 20). Ask the owner first, then re-run with --approved-uploads ${planned}. Nothing was changed.`);
+    process.exit(1);
   }
+}
+if (DRY) { console.log(`Dry run: ${planned} upload(s) planned. Nothing was changed.`); process.exit(0); }
 
-  for (const f of files) {
-    const path = join(set.dir, f);
+for (const p of plans) {
+  if (!p.up.length && !p.del.length) { console.log(`= ${p.name}: unchanged (${p.total} slides)`); continue; }
+  let target = p.target;
+  if (!target) target = (await api("/v1/appScreenshotSets", "POST", { data: { type: "appScreenshotSets",
+      attributes: { screenshotDisplayType: p.set.type },
+      relationships: { appStoreVersionLocalization: { data: { type: "appStoreVersionLocalizations", id: loc.id } } } } })).data;
+  for (const s of p.del) await api(`/v1/appScreenshots/${s.id}`, "DELETE");
+  for (const { f, path, md5 } of p.up) {
     const bytes = readFileSync(path);
     const reserved = (await api("/v1/appScreenshots", "POST", { data: { type: "appScreenshots",
       attributes: { fileName: f, fileSize: statSync(path).size },
@@ -79,11 +101,10 @@ for (const [name, set] of Object.entries(SETS)) {
       const r = await fetch(op.url, { method: op.method, headers, body: chunk });
       if (!r.ok) throw new Error(`upload ${f} → ${r.status}`);
     }
-    const md5 = createHash("md5").update(bytes).digest("hex");
     await api(`/v1/appScreenshots/${reserved.id}`, "PATCH", { data: { type: "appScreenshots", id: reserved.id,
       attributes: { uploaded: true, sourceFileChecksum: md5 } } });
-    console.log(`  ${name}: ${f}`);
+    console.log(`  ${p.name}: ${f}`);
   }
-  console.log(`✓ ${name}: ${files.length} slides → ${set.type}`);
+  console.log(`✓ ${p.name}: ${p.up.length} uploaded, ${p.keep} kept → ${p.set.type}`);
 }
 console.log("Nothing was submitted.");

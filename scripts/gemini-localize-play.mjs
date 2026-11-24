@@ -22,6 +22,10 @@ const opt = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 ? 
 const MODEL = opt("--model", "gemini-3.7-flash");
 const FORCE = argv.includes("--force");
 if (FORCE) argv.splice(argv.indexOf("--force"), 1);
+// Marketing standing rule (2026-11-25): never re-translate a whole set without the owner's yes.
+const APPROVED_FULL = argv.includes("--approved-full");
+if (APPROVED_FULL) argv.splice(argv.indexOf("--approved-full"), 1);
+if (FORCE && !APPROVED_FULL) { console.error("--force re-translates every language. Ask the owner first, then add --approved-full. Default (no flag): only changed lines are translated."); process.exit(1); }
 const NOTES_ONLY = argv.includes("--notes-only");
 if (NOTES_ONLY) argv.splice(argv.indexOf("--notes-only"), 1);
 const envFile = new URL("../.env", import.meta.url);
@@ -151,6 +155,79 @@ async function localise(code) {
   return `${code}: ✓ ${NOTES_ONLY ? result.releaseNotes.split("\n")[0] : result.shortDescription}`;
 }
 
+// The English the current translations were made from. Changed-only mode diffs against it.
+const SOURCE = new URL(".source-en-US.json", OUT);
+const saveSource = () => writeFileSync(SOURCE, JSON.stringify(en, null, 2) + "\n");
+
+async function geminiLines(language, lines, context) {
+  const body = { contents: [{ role: "user", parts: [{ text: `You localise a Google Play listing into ${language}. Translate ONLY the numbered English lines below, each into one line, keeping "${BRAND}" and "hYYa" unchanged, the same tone (calm, plain), and any leading "•" bullet. Follow the same rules as the existing translation; never name iPhone, iPad, iOS or Mac; say "device", never "phone" or "tablet".
+Full English listing, for context only:
+${context}
+
+Lines to translate (JSON array, same order):
+${JSON.stringify(lines)}` }] }],
+    generationConfig: { temperature: 0.2, responseMimeType: "application/json",
+      responseSchema: { type: "OBJECT", required: ["lines"], properties: { lines: { type: "ARRAY", items: { type: "STRING" } } } } } };
+  for (let a = 1; a <= 5; a++) {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY }, body: JSON.stringify(body) });
+    const t = await res.text();
+    if (res.ok) return JSON.parse(JSON.parse(t).candidates[0].content.parts.map((p) => p.text).join("")).lines;
+    if (a === 5 || ![429, 500, 503].includes(res.status)) throw new Error(`Gemini ${res.status}: ${t.slice(0, 300)}`);
+    await new Promise((r) => setTimeout(r, 5000 * a));
+  }
+}
+
+// Default (no --force, no --notes-only, no language list): translate only what changed in English since
+// the last run, line by line, and splice it into each language's existing text.
+if (!FORCE && !NOTES_ONLY && !argv.length && existsSync(SOURCE)) {
+  const old = JSON.parse(readFileSync(SOURCE, "utf8"));
+  const fields = ["shortDescription", "fullDescription", "releaseNotes"];
+  const plan = {};
+  for (const f of fields) {
+    const a = old[f].split("\n"), b = en[f].split("\n");
+    if (a.join("\n") === b.join("\n")) continue;
+    plan[f] = a.length === b.length ? b.map((l, i) => (l !== a[i] ? i : -1)).filter((i) => i >= 0) : null; // null: structure changed
+  }
+  if (!Object.keys(plan).length) { console.log("English unchanged since the last translation: nothing to translate."); process.exit(0); }
+  // TEST_LANGS=de-DE,ja-JP limits a trial run to a few languages; it then saves nothing but those files.
+  const codes = process.env.TEST_LANGS ? process.env.TEST_LANGS.split(",") : Object.keys(LANGUAGES);
+  const lineCount = Object.values(plan).reduce((n, v) => n + (v ? v.length : 999), 0);
+  console.log(`Changed: ${Object.entries(plan).map(([f, v]) => `${f} (${v ? v.length + " line(s)" : "structure changed"})`).join(", ")}; ${codes.length} languages.`);
+  if (Object.values(plan).some((v) => v === null) && !APPROVED_FULL) {
+    console.error("A field changed its line structure, so it needs a full re-translation of that field in every language. Ask the owner first, then re-run with --approved-full."); process.exit(1);
+  }
+  const queue2 = [...codes]; let done = 0, fails = [];
+  await Promise.all(Array.from({ length: 6 }, async () => {
+    while (queue2.length) {
+      const code = queue2.shift();
+      const file = new URL(`${code}.json`, OUT);
+      if (!existsSync(file)) { fails.push(`${code}: no existing translation`); continue; }
+      const cur = JSON.parse(readFileSync(file, "utf8"));
+      try {
+        for (const [f, idx] of Object.entries(plan)) {
+          const mine = cur[f].split("\n");
+          if (!idx || mine.length !== en[f].split("\n").length) { fails.push(`${code} ${f}: line structure differs, needs a full field translation`); continue; }
+          const tr = await geminiLines(LANGUAGES[code], idx.map((i) => en[f].split("\n")[i]), en[f]);
+          if (tr.length !== idx.length) throw new Error(`${f}: got ${tr.length} lines for ${idx.length}`);
+          idx.forEach((i, k) => { mine[i] = tr[k]; });
+          cur[f] = mine.join("\n");
+        }
+        const issues = check(cur);
+        if (issues.length) { fails.push(`${code}: ${issues.join("; ")}`); continue; }
+        write(code, cur); done++;
+      } catch (e) { fails.push(`${code}: ${e.message}`); }
+    }
+  }));
+  for (const [code, from] of Object.entries(process.env.TEST_LANGS ? {} : COPIES)) {
+    if (from === "en-US") { write(code, en); continue; }
+    const src = new URL(`${from}.json`, OUT); if (existsSync(src)) write(code, JSON.parse(readFileSync(src, "utf8")));
+  }
+  console.log(`Changed lines translated in ${done} languages; ${fails.length} need attention${fails.length ? ":\n  " + fails.join("\n  ") : "."}`);
+  if (!fails.length && !process.env.TEST_LANGS) saveSource();
+  process.exit(fails.length ? 1 : 0);
+}
+
 const wanted = argv.length ? argv.filter((c) => LANGUAGES[c]) : Object.keys(LANGUAGES);
 const queue = [...wanted];
 await Promise.all(Array.from({ length: 6 }, async () => {
@@ -169,3 +246,6 @@ for (const [code, from] of Object.entries(COPIES)) {
   write(code, JSON.parse(readFileSync(src, "utf8")));
   console.log(`${code}: = ${from}`);
 }
+
+// Remember the English these translations were made from, for the next changed-only run.
+if (FORCE || !existsSync(SOURCE)) saveSource();

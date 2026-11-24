@@ -80,7 +80,7 @@ const UPLOAD_BASE = `https://androidpublisher.googleapis.com/upload/androidpubli
  * time). ⛔ But the images WITHIN a set go one after another: Play orders a gallery by upload order,
  * and parallel uploads inside a set would shuffle the slides. Every set is then read back and its
  * order checked against [files] by sha256 (`verifyGraphics`) — fail closed, before any commit.
- * Each set is DELETED first, so a re-run replaces it instead of appending a second copy.
+ * (2026-11-25) Only changed sets are touched now: see planGraphics.
  * A 429 or 5xx is retried with backoff (1, 2, 4, 8 s); anything else stops the run.
  */
 /** Retries a call that failed with 429 or a 5xx (Play is sometimes briefly unavailable), waiting 1, 2, 4, 8 s. */
@@ -93,21 +93,63 @@ const retrying = async (fn) => {
   }
 };
 
-export async function pushGraphics(token, E, langs, files, { concurrency = 6, log = console.log } = {}) {
-  const jobs = langs.flatMap((lang) => Object.entries(files).map(([type, paths]) => ({ lang, type, paths })));
-  const left = Object.fromEntries(langs.map((l) => [l, Object.keys(files).length]));
+/**
+ * Plans what each image set needs (Marketing standing rule, 2026-11-25: upload only what changed).
+ * For every language and image type it reads what the edit already holds (a new edit starts from the
+ * live listing), compares sha256s in order, and keeps the longest matching prefix. Only the images after
+ * the first difference are deleted and uploaded again (Play orders a gallery by upload order, so that
+ * is the smallest change that keeps the order). Sets that already match are left alone.
+ */
+export async function planGraphics(token, E, langs, files, { concurrency = 8 } = {}) {
+  const sha = (p) => crypto.createHash("sha256").update(readFileSync(p)).digest("hex");
+  const want = Object.fromEntries(Object.entries(files).map(([t, ps]) => [t, ps.map((p) => ({ path: p, sha: sha(p) }))]));
+  const jobs = langs.flatMap((lang) => Object.keys(files).map((type) => ({ lang, type })));
+  const plan = [];
   let next = 0;
   const worker = async () => {
     while (next < jobs.length) {
-      const { lang, type, paths } = jobs[next++];
-      await retrying(() => api(token, `${E}/listings/${lang}/${type}`, { method: "DELETE" })).catch(() => {});
-      for (const p of paths)
-        await retrying(() => api(token, `${UPLOAD_BASE}${E}/listings/${lang}/${type}?uploadType=media`,
-                                 { method: "POST", raw: readFileSync(p), contentType: "image/png" }));
-      if (--left[lang] === 0) log(`  graphics: ${lang} done`);
+      const { lang, type } = jobs[next++];
+      const held = ((await retrying(() => api(token, `${E}/listings/${lang}/${type}`))).images ?? []);
+      const local = want[type];
+      let keep = 0;
+      while (keep < held.length && keep < local.length && held[keep].sha256 === local[keep].sha) keep++;
+      const del = held.slice(keep).map((i) => i.id);
+      const up = local.slice(keep).map((x) => x.path);
+      if (del.length || up.length) plan.push({ lang, type, keep, del, up });
     }
   };
   await Promise.all(Array.from({ length: Math.min(concurrency, jobs.length) }, worker));
+  const uploads = plan.reduce((n, x) => n + x.up.length, 0);
+  return { plan, uploads, sets: jobs.length, unchangedSets: jobs.length - plan.length };
+}
+
+/**
+ * Rule 5: more than 20 image uploads needs the owner's yes first. Pass the approved number with
+ * `--approved-uploads N` (it must equal the planned count, so a bigger surprise still stops).
+ */
+export function guardUploads(planned, args, what = "image uploads") {
+  if (planned <= 20) return;
+  const i = args.indexOf("--approved-uploads");
+  const approved = i >= 0 ? Number(args[i + 1]) : NaN;
+  if (approved === planned) return;
+  throw new Error(`${planned} ${what} planned (over 20). Ask the owner first, then re-run with --approved-uploads ${planned}. Nothing was changed.`);
+}
+
+/** Applies a plan from planGraphics: deletes the stale tail of each changed set, uploads the rest in order, then verifies every set. */
+export async function pushGraphics(token, E, langs, files, { concurrency = 6, log = console.log, plan } = {}) {
+  plan ??= (await planGraphics(token, E, langs, files)).plan;
+  let next = 0;
+  const worker = async () => {
+    while (next < plan.length) {
+      const { lang, type, del, up } = plan[next++];
+      for (const id of del) await retrying(() => api(token, `${E}/listings/${lang}/${type}/${id}`, { method: "DELETE" }));
+      for (const p of up)
+        await retrying(() => api(token, `${UPLOAD_BASE}${E}/listings/${lang}/${type}?uploadType=media`,
+                                 { method: "POST", raw: readFileSync(p), contentType: "image/png" }));
+      log(`  graphics: ${lang} ${type}: replaced ${up.length}`);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, plan.length || 1) }, worker));
   await verifyGraphics(token, E, langs, files);
 }
 

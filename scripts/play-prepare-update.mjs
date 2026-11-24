@@ -18,7 +18,7 @@
 import crypto from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { accessToken, api, pushGraphics, PACKAGE } from "./play-api.mjs";
+import { accessToken, api, pushGraphics, planGraphics, guardUploads, PACKAGE } from "./play-api.mjs";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const args = process.argv.slice(2);
@@ -72,6 +72,21 @@ const gallery = {
 const edit = await api(token, "/edits", { method: "POST", body: {} });
 const E = `/edits/${edit.id}`;
 
+// Plan before changing anything (Marketing standing rule, 2026-11-25): only listing text that differs
+// from what Play holds is written, and only slides whose files changed are uploaded.
+const same = (a, b) => a && b && a.title === b.title && a.shortDescription === b.shortDescription && a.fullDescription === b.fullDescription;
+const changedListings = [];
+for (const l of listings) {
+  const held = await api(token, `${E}/listings/${l.language}`).catch(() => null);
+  if (!same(held, l)) changedListings.push(l);
+}
+const graphics = await planGraphics(token, E, listings.map((l) => l.language), gallery);
+console.log(`• plan: listing text ${changedListings.length} of ${listings.length} languages changed; graphics ${graphics.uploads} upload(s) in ${graphics.plan.length} set(s), ${graphics.unchangedSets} of ${graphics.sets} sets unchanged`);
+try { guardUploads(graphics.uploads, args); } catch (e) {
+  await api(token, E, { method: "DELETE" }).catch(() => {});
+  console.error(e.message); process.exit(1);
+}
+
 // The release name testers see in Play Console, from the build itself: "1.0.5 (18)".
 const versionName = readFileSync(`${ROOT}Android/app/build.gradle.kts`, "utf8").match(/versionName = "([^"]+)"/)[1];
 const aab = readFileSync(`${ROOT}Android/app/build/outputs/bundle/release/app-release.aab`);
@@ -92,15 +107,15 @@ await call(token, `${E}/tracks/${TRACK}`, { method: "PUT", body: { track: TRACK,
 }] } });
 console.log(`• ${TRACK}: versionCode ${b.versionCode}`);
 
-for (const l of listings)
+for (const l of changedListings)
   await call(token, `${E}/listings/${l.language}`, { method: "PUT", body: {
     language: l.language, title: l.title, shortDescription: l.shortDescription, fullDescription: l.fullDescription } });
 for (const lang of englishFor) await api(token, `${E}/listings/${lang}`, { method: "DELETE" }).catch(() => {});
-console.log(`• listing text: ${listings.length} languages${englishFor.length ? `; ${englishFor.join(", ")} now show English` : ""}`);
+console.log(`• listing text: ${changedListings.length} of ${listings.length} languages written${englishFor.length ? `; ${englishFor.join(", ")} now show English` : ""}`);
 
 const started = Date.now();
-await pushGraphics(token, E, listings.map((l) => l.language), gallery, { log: () => {} });
-console.log(`• slides (${slides.length}) in every language, read back in order (${Math.round((Date.now() - started) / 1000)} s)`);
+await pushGraphics(token, E, listings.map((l) => l.language), gallery, { log: () => {}, plan: graphics.plan });
+console.log(`• graphics: ${graphics.uploads} uploaded, ${graphics.unchangedSets} sets kept; every set read back in order (${Math.round((Date.now() - started) / 1000)} s)`);
 
 await api(token, `${E}:validate`, { method: "POST" });
 console.log(`\nPrepared and validated, NOT sent. Edit id: ${edit.id}`);
