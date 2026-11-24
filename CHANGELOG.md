@@ -4,6 +4,32 @@ Each store release, with the store's What's New and the date it went live on eac
 Every release has a matching tag and a [GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases).
 Website: [hyya.com/hyya-digital-footprint-check.html](https://hyya.com/hyya-digital-footprint-check.html)
 
+## 1.1.3
+
+What's New (App Store and Mac App Store):
+> • New in Check-up: Safari's strongest protection, Advanced Data Protection and more.
+>
+> This release contains general bug fixes and stability improvements.
+
+What's in it (App Store and Mac App Store):
+- Age range: only where Apple says an age-assurance law applies, the app shows Apple's own age-range sheet after you
+  install or update it, and otherwise at most once a year. Nothing depends on the answer, and it is never stored or sent;
+  the app keeps only the date it asked.
+- New finding: whether apps can tell, without asking, that this device is set up for a young person with Apple's
+  Communication Safety. It is shown for your information and never counts against your score.
+- New finding (shown on its own): whether apps can tell that you turned on Sensitive Content Warning.
+- Check-up: new steps for Safari's strongest protection, Advanced Data Protection, texts to people without iMessage,
+  Journaling Suggestions and what Apple itself collects.
+- Sensitive apps: for people who keep an app, a new step to hide it (iPhone and iPad: Hide and Require Face ID or
+  Touch ID), so other apps no longer find it. Tested on a real iPhone.
+- A short notice, once per sale, when other hYYa apps are on sale. It is built into the app, so nothing is downloaded
+  to show it and nothing about you is sent.
+
+| Store | Version | Live | Source |
+|---|---|---|---|
+| App Store (iPhone and iPad) | 1.1.3 (build 49) | 2026-11-24 | tag `v1.1.3-build49` |
+| Mac App Store | 1.1.3 (build 49) | 2026-11-24 | tag `v1.1.3-build49` |
+
 ## 1.1.2
 
 What's New (every store):
