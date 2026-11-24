@@ -26,6 +26,11 @@ const SETS = (process.env.PLATFORM ?? "IOS") === "MAC_OS" ? {
   // Apple's published API reference yet; uploads to it were confirmed working by other tools.
   duo: { dir: "store/slides/duo", type: "APP_IPHONE_DUO" },
 };
+// ONE size per device class (Marketing standing rule, 2026-11-25): iPhone 6.9", iPad 13", iPhone Duo, Mac.
+// Apple scales these for smaller screens, and every image submitted stays in Apple's library forever, so never
+// add 6.5"/6.3"/6.1"/5.5" or smaller iPad sets, and use the same sizes for custom product pages.
+const ALLOWED = new Set(["APP_IPHONE_67", "APP_IPAD_PRO_3GEN_129", "APP_IPHONE_DUO", "APP_DESKTOP"]);
+for (const s of Object.values(SETS)) if (!ALLOWED.has(s.type)) throw new Error(`${s.type}: one size per device class only (standing rule)`);
 const only = process.argv.slice(2).find((a, i, all) => !a.startsWith("--") && all[i - 1] !== "--approved-uploads");
 const DRY = process.argv.includes("--dry-run");
 const { ASC_ISSUER_ID, ASC_KEY_ID, ASC_PRIVATE_KEY_PATH } = process.env;
