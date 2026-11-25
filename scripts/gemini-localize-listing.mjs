@@ -21,6 +21,7 @@
 //
 // The key comes from GEMINI_API_KEY in the environment or in the gitignored .env file.
 
+import { generate, batch, report } from "./gemini-client.mjs";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 
 const argv = process.argv.slice(2);
@@ -28,6 +29,9 @@ const opt = (name, fallback) => { const i = argv.indexOf(name); return i >= 0 ? 
 const MODEL = opt("--model", "gemini-3.7-flash");
 const FORCE = argv.includes("--force");
 if (FORCE) argv.splice(argv.indexOf("--force"), 1);
+// Marketing standing rule (2026-11-25): never re-translate a whole set without the owner's yes.
+const APPROVED_FULL = argv.includes("--approved-full");
+if (APPROVED_FULL) argv.splice(argv.indexOf("--approved-full"), 1);
 const TEXT_ONLY = argv.includes("--text-only");
 if (TEXT_ONLY) argv.splice(argv.indexOf("--text-only"), 1);
 const WHATS_NEW_ONLY = argv.includes("--whats-new");
@@ -127,17 +131,16 @@ const schema = WHATS_NEW
       subtitle: { type: "STRING" }, keywords: { type: "STRING" }, promotionalText: { type: "STRING" }, description: { type: "STRING" }, whatsNew: { type: "STRING" } } };
 
 async function gemini(text) {
-  for (let a = 1; a <= 5; a++) {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
-      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": KEY },
-      body: JSON.stringify({ contents: [{ role: "user", parts: [{ text }] }],
-        generationConfig: { temperature: 0.3, responseMimeType: "application/json", responseSchema: schema } }),
-    });
-    const t = await res.text();
-    if (res.ok) return JSON.parse(JSON.parse(t).candidates[0].content.parts.map((p) => p.text).join(""));
-    if (a === 5 || ![429, 500, 503].includes(res.status)) throw new Error(`Gemini ${res.status}: ${t.slice(0, 300)}`);
-    await new Promise((r) => setTimeout(r, 5000 * a));
-  }
+  return generate(MODEL, text, schema, 0.3);
+}
+
+function merge(result, kept) {
+  if (kept) result = WHATS_NEW ? { ...kept, whatsNew: result.whatsNew }
+    : SEARCH_ONLY ? { ...kept, subtitle: KEYWORDS_ONLY ? kept.subtitle : result.subtitle, keywords: result.keywords }
+    : { subtitle: kept.subtitle, keywords: kept.keywords, ...result };
+  delete result.locale; delete result.name;
+  result.keywords = result.keywords.split(/\s*[,،、，]\s*/).filter(Boolean).join(",");
+  return result;
 }
 
 async function localise(locale) {
@@ -152,12 +155,9 @@ async function localise(locale) {
     issues = check(result);
   } else {
     for (let attempt = 1; attempt <= 4; attempt++) {
-      result = await gemini(prompt(LOCALES[locale], issues, kept?.subtitle));
-      if (kept) result = WHATS_NEW ? { ...kept, whatsNew: result.whatsNew }
-        : SEARCH_ONLY ? { ...kept, subtitle: KEYWORDS_ONLY ? kept.subtitle : result.subtitle, keywords: result.keywords }
-        : { subtitle: kept.subtitle, keywords: kept.keywords, ...result };
-      delete result.locale; delete result.name;
-      result.keywords = result.keywords.split(/\s*[,،、，]\s*/).filter(Boolean).join(",");
+      result = attempt === 1 && firstPass[locale] && !(firstPass[locale] instanceof Error) ? firstPass[locale]
+        : await gemini(prompt(LOCALES[locale], issues, kept?.subtitle));
+      result = merge(result, kept);
       issues = check(result);
       if (!issues.length) break;
     }
@@ -168,7 +168,74 @@ async function localise(locale) {
   return `${locale}: ✓ ${result.subtitle}`;
 }
 
+// The English the current translations were made from; the default run diffs against it.
+const SOURCE = new URL(".source-en-US.json", OUT);
+const TEXT_FIELDS = ["promotionalText", "description", "whatsNew", "whatsNewMac"];
+const saveSource = () => writeFileSync(SOURCE, JSON.stringify(Object.fromEntries([...TEXT_FIELDS, "subtitle", "keywords"].map((f) => [f, en[f]])), null, 2) + "\n");
+const LINES_SCHEMA = { type: "OBJECT", required: ["lines"], properties: { lines: { type: "ARRAY", items: { type: "STRING" } } } };
+const linesPrompt = (language, lines, context) => `You localise an App Store listing into ${language}. Translate ONLY the English lines below, each into one line, keeping "${BRAND}" and "hYYa" unchanged, the same calm, plain tone, and any leading "•" bullet. Never mention Android. Say "device", never "iPhone", "iPad", "phone" or "tablet".
+Full English listing, for context only:
+${en.description}
+
+Lines to translate (JSON array, same order):
+${JSON.stringify(lines)}`;
+
+const modeFlags = FORCE || TEXT_ONLY || WHATS_NEW || SEARCH_ONLY;
+if (FORCE && !APPROVED_FULL) { console.error("--force re-translates every locale. Ask the owner first, then add --approved-full. Default (no flag): only changed lines are translated."); process.exit(1); }
+
+if (!modeFlags && !argv.length && existsSync(SOURCE)) {
+  const old = JSON.parse(readFileSync(SOURCE, "utf8"));
+  if (old.subtitle !== en.subtitle || old.keywords !== en.keywords) {
+    console.error("Subtitle or keywords changed: those are per-language search wording, not line translations. With the owner's yes, run --search-only or --keywords-only."); process.exit(1);
+  }
+  const plan = {};
+  for (const f of TEXT_FIELDS) {
+    const a = (old[f] ?? "").split("\n"), b = (en[f] ?? "").split("\n");
+    if (a.join("\n") === b.join("\n")) continue;
+    plan[f] = a.length === b.length ? b.map((l, i) => (l !== a[i] ? i : -1)).filter((i) => i >= 0) : null;
+  }
+  if (!Object.keys(plan).length) { console.log("English unchanged since the last translation: nothing to translate."); process.exit(0); }
+  if (Object.values(plan).some((v) => v === null) && !APPROVED_FULL) { console.error("A field changed its line structure: it needs a full re-translation of that field in every locale. Ask the owner first, then re-run with --approved-full."); process.exit(1); }
+  const codes = process.env.TEST_LANGS ? process.env.TEST_LANGS.split(",") : Object.keys(LOCALES).filter((l) => !ENGLISH.has(l));
+  const cur = {}, items = [], fails = [];
+  for (const l of codes) {
+    const file = new URL(`${l}.json`, OUT); if (!existsSync(file)) { fails.push(`${l}: no existing translation`); continue; }
+    cur[l] = JSON.parse(readFileSync(file, "utf8"));
+    for (const [f, idx] of Object.entries(plan)) {
+      if ((cur[l][f] ?? "").split("\n").length !== en[f].split("\n").length) { fails.push(`${l} ${f}: line structure differs`); continue; }
+      items.push({ key: `${l}|${f}`, text: linesPrompt(LOCALES[l], idx.map((i) => en[f].split("\n")[i])), schema: LINES_SCHEMA, temperature: 0.2 });
+    }
+  }
+  const answers = items.length > 5 ? await batch(MODEL, items, { name: "appstore-changed-lines" })
+    : Object.fromEntries(await Promise.all(items.map(async (it) => [it.key, await generate(MODEL, it.text, it.schema, it.temperature).catch((e) => e)])));
+  for (const it of items) {
+    const [l, f] = it.key.split("|"); const idx = plan[f]; const tr = answers[it.key];
+    if (tr instanceof Error || !tr?.lines || tr.lines.length !== idx.length) { fails.push(`${l} ${f}: translation failed`); delete cur[l]; continue; }
+    const mine = cur[l][f].split("\n"); idx.forEach((i, k) => { mine[i] = tr.lines[k]; }); cur[l][f] = mine.join("\n");
+  }
+  let done = 0;
+  for (const [l, r] of Object.entries(cur)) {
+    if (fails.some((x) => x.startsWith(l + " ") || x.startsWith(l + ":"))) continue;
+    const issues = check(r); if (issues.length) { fails.push(`${l}: ${issues.join("; ")}`); continue; }
+    writeFileSync(new URL(`${l}.json`, OUT), JSON.stringify(r, null, 2) + "\n"); done++;
+  }
+  if (!process.env.TEST_LANGS) for (const l of ENGLISH) { const file = new URL(`${l}.json`, OUT); if (existsSync(file)) { const r = JSON.parse(readFileSync(file, "utf8")); for (const f of Object.keys(plan)) r[f] = en[f]; writeFileSync(file, JSON.stringify(r, null, 2) + "\n"); } }
+  console.log(`Changed lines translated in ${done} locales; ${fails.length} need attention${fails.length ? ":\n  " + fails.join("\n  ") : "."}`);
+  if (!fails.length && !process.env.TEST_LANGS) saveSource();
+  report("gemini-localize-listing", "changed-lines");
+  process.exit(fails.length ? 1 : 0);
+}
+
 const wanted = argv.length ? argv : Object.keys(LOCALES);
+// Mode and full runs over many locales: first pass through the Batch API at half price; anything failing the
+// checks is then retried directly with the reasons as feedback.
+const firstPass = {};
+const toBatch = wanted.filter((l) => !ENGLISH.has(l) && (modeFlags || !existsSync(new URL(`${l}.json`, OUT))));
+if (toBatch.length > 5) Object.assign(firstPass, await batch(MODEL, toBatch.map((l) => {
+  const file = new URL(`${l}.json`, OUT);
+  const kept = (TEXT_ONLY || WHATS_NEW || SEARCH_ONLY) && existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : null;
+  return { key: l, text: prompt(LOCALES[l], undefined, kept?.subtitle), schema, temperature: 0.3 };
+}), { name: "appstore-full" }));
 const queue = [...wanted];
 await Promise.all(Array.from({ length: 6 }, async () => {
   while (queue.length) {
@@ -176,3 +243,5 @@ await Promise.all(Array.from({ length: 6 }, async () => {
     try { console.log(await localise(loc)); } catch (e) { console.log(`${loc}: ✗ ${e.message}`); }
   }
 }));
+if (FORCE || TEXT_ONLY || !existsSync(SOURCE)) saveSource();
+report("gemini-localize-listing", FORCE ? "full" : WHATS_NEW ? "whats-new" : SEARCH_ONLY ? "search" : TEXT_ONLY ? "text" : "new-locales");
