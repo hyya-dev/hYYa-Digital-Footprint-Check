@@ -8,10 +8,11 @@ tests cover iOS and iPadOS only, so no Mac).
 
     python3 scripts/make-ppo-slides.py <raw-iphone> <raw-ipad> <raw-duo> <out-dir>
 
-Each raw dir holds ppo-b-rise.png from StoreScreenshotsUITests.testCapturePPORise (sample data; the Duo's is the
-folded outer display). The ideas are Marketing's 2026-11 plan, unchanged; only the look is new:
+Each raw dir holds ppo-b-rise.png (StoreScreenshotsUITests.testCapturePPORise) and ppo-a-sensitive.png
+(testCapturePPOSensitive), sample data only; the Duo's are the folded outer display. The ideas are Marketing's 2026-11 plan, unchanged; only the look is new:
   A  "What do your apps know about you?": six things an app can learn, as flat slate cards with a coral edge, the
-     mascot under a gold spotlight, "Find out in one tap. Then fix it." No app screen.
+     line "Find out in one tap. Then fix it.", then a small device with the Sensitive apps result, names hidden
+     (Marketing, 2026-11-27: only claims hyya.com states; show the app so review has no reason to object).
   B  "Fix it. Watch your score go up.": 45 -> 57 in big type over the real Footprint page after a fix
      (the made-up earlier scan of -previewRise).
 Slides 2-7 of each test version are the default page's own, so only slide 1 differs.
@@ -30,9 +31,11 @@ CORAL = (229, 115, 115)       # "worth a look"
 SAGE = (129, 199, 132)        # fixed / better
 EDGE = (255, 255, 255, 13)    # the cards' 1pt white 5% edge
 A_HEAD = "What do your apps *know\u00a0about\u00a0you?*"   # no-break spaces: the gold phrase stays on one line
+# Only what hyya.com and the app state (Marketing, 2026-11-27): Sensitive apps categories in hyya.com's own words,
+# the headphones' name and the device fingerprint.
 A_CARDS = [("Your dating life", "from your dating apps"), ("A unique fingerprint", "links you across apps"),
-           ("Your first name", "from your headphones' name"), ("Your money", "crypto and betting apps"),
-           ("Your health", "period, fertility, therapy apps"), ("Where you've been", "with Photos access")]
+           ("Your first name", "from your headphones' name"), ("Your money", "crypto and gambling apps"),
+           ("Your health", "health and fertility apps"), ("Your faith", "religion and faith apps")]
 A_FOOT = "Find out in one tap. Then fix it."
 A_SUB = ["Open source", "Nothing leaves your device"]   # no price words on screenshots
 B_HEAD = "Fix it. Watch your score *go\u00a0up.*"
@@ -92,36 +95,42 @@ def numbers(d, cx, y, size, max_w=None):
 
 # ---- portrait: iPhone 6.9" and iPad 13" -------------------------------------------------------------------------
 
-def portrait_a(w, h, mascot):
+def portrait_a(w, h, mascot, shot):
+    """Marketing, 2026-11-27: the cards, the line, then a small device with the Sensitive apps result (names hidden),
+    so the first slide shows the app; the mascot stands beside the device as on the default page."""
     c = S.glow_background(w, h).convert("RGBA")
     d = ImageDraw.Draw(c)
     unit = w / 1320
     tablet = w / h > 0.6
     y = S.name_lockup(c, d, mascot, w / 2, int(90 * unit), int((40 if tablet else 50) * unit))
     y = S.centred_lines(d, S.headline_parts(A_HEAD), y + int(50 * unit), w * 0.88, int((96 if tablet else 112) * unit), "Bold", w, 1.1)
-    # Six cards in two columns.
-    cols, gap = 2, int((34 if tablet else 30) * unit)
+    cols, gap = 2, int((26 if tablet else 24) * unit)
     grid_w = w * (0.80 if tablet else 0.90)
     cw = (grid_w - gap) / cols
-    ch = int((150 if tablet else 190) * unit)
+    ch = int((118 if tablet else 160) * unit)
     x0 = (w - grid_w) / 2
-    top = y + int(60 * unit)
-    tsize, ssize = int((44 if tablet else 50) * unit), int((32 if tablet else 36) * unit)
-    for i, (t, s) in enumerate(A_CARDS):
+    top = y + int(44 * unit)
+    tsize, ssize = int((40 if tablet else 46) * unit), int((29 if tablet else 33) * unit)
+    for i, (t, s_) in enumerate(A_CARDS):
         r, k = divmod(i, cols)
-        bx = x0 + k * (cw + gap)
-        by = top + r * (ch + gap)
-        card(c, (int(bx), int(by), int(bx + cw), int(by + ch)), t, s, unit, tsize, ssize)
-    cards_end = top + 3 * ch + 2 * gap
-    # Footer, then the mascot fills the room between.
-    fsize, ssz = int((64 if tablet else 66) * unit), int((40 if tablet else 42) * unit)
-    foot_y = h - int(90 * unit) - ssz - int(26 * unit) - fsize
-    room = foot_y - int(50 * unit) - (cards_end + int(50 * unit))
-    mw = min(int(w * (0.42 if tablet else 0.62)), int(room * mascot.width / mascot.height))
-    mh = int(mw * mascot.height / mascot.width)
-    spotlight_mascot(c, mascot, mw, w / 2, cards_end + int(50 * unit) + (room - mh) / 2)
-    y = S.centred_lines(d, [(A_FOOT, S.INK)], foot_y, w * 0.9, fsize, "Bold", w, 1.1)
-    S.centred_lines(d, S.highlight_parts(A_SUB), y + int(26 * unit), w * 0.9, ssz, "Regular", w, 1.3, break_at={S.DOT})
+        bx, by = x0 + k * (cw + gap), top + r * (ch + gap)
+        card(c, (int(bx), int(by), int(bx + cw), int(by + ch)), t, s_, unit, tsize, ssize)
+    y = top + 3 * ch + 2 * gap
+    y = S.centred_lines(d, [(A_FOOT, S.INK)], y + int(46 * unit), w * 0.9, int((54 if tablet else 60) * unit), "Bold", w, 1.1)
+    y = S.centred_lines(d, S.highlight_parts(A_SUB), y + int(14 * unit), w * 0.9, int((36 if tablet else 40) * unit), "Regular", w, 1.3, break_at={S.DOT})
+    dev_y = y + int(50 * unit)
+    fit_w = int((h - dev_y - 70 * unit) * shot.width / shot.height)
+    dev_w = int(w * 0.62) if tablet else min(int(w * 0.62), fit_w)   # tablets run off the bottom, as on the default page
+    frame = S.device(shot, dev_w)
+    dev_x = (w - frame.width) // 2
+    sh = Image.new("RGBA", c.size, (0, 0, 0, 0))
+    ImageDraw.Draw(sh).rounded_rectangle((dev_x + 20, dev_y + 40, dev_x + frame.width + 20, dev_y + frame.height + 40), 80, fill=(0, 0, 0, 200))
+    c.alpha_composite(sh.filter(ImageFilter.GaussianBlur(40)))
+    c.alpha_composite(frame, (dev_x, dev_y))
+    edge = int(16 * unit)
+    big_w = min(int(w * (0.18 if tablet else 0.26)), int((dev_x - edge) / 0.82))
+    big = mascot.resize((big_w, int(big_w * mascot.height / mascot.width)), Image.LANCZOS)
+    c.alpha_composite(big, (max(edge, dev_x - int(big_w * 0.82)), h - big.height - int(30 * unit)))
     return c.convert("RGB")
 
 
@@ -164,24 +173,25 @@ def duo_header(c, d, mascot, head, sub_parts=None):
     D.centred_line(d, S.headline_parts(head), 260, W - 300, 150, "Bold")
 
 
-def duo_a(mascot):
+def duo_a(mascot, shot):
+    """Three cards each side of the folded Duo showing the Sensitive apps result; the line under them."""
     W, H = D.W, D.H
     c = S.glow_background(W, H).convert("RGBA")
     d = ImageDraw.Draw(c)
     duo_header(c, d, mascot, A_HEAD)
-    # Three cards each side of the mascot.
-    cw, ch, gap = 820, 220, 44
-    top = 560
-    for i, (t, s) in enumerate(A_CARDS):
+    cw, ch, gap = 820, 210, 40
+    top = 520
+    for i, (t, s_) in enumerate(A_CARDS):
         side, r = i % 2, i // 2
-        bx = 150 if side == 0 else W - 150 - cw
+        bx = 120 if side == 0 else W - 120 - cw
         by = top + r * (ch + gap)
-        card(c, (bx, by, bx + cw, by + ch), t, s, 2.0, 66, 46)
-    cards_end = top + 3 * ch + 2 * gap
-    mw = 760
-    spotlight_mascot(c, mascot, mw, W / 2, 540)
-    D.centred_line(d, [(A_FOOT, S.INK)], 1520, W - 400, 100, "Bold")
-    D.centred_line(d, S.highlight_parts(A_SUB), 1680, W - 400, 64, "Regular")
+        card(c, (bx, by, bx + cw, by + ch), t, s_, 2.0, 64, 44)
+    D.upright(c, shot, 1150, W // 2, 1080)
+    # The standing mascot under the left cards, beside the device, never over it.
+    big = mascot.resize((430, int(430 * mascot.height / mascot.width)), Image.LANCZOS)
+    c.alpha_composite(big, (W // 2 - 430 - 470, top + 3 * ch + 2 * gap + 40))
+    D.centred_line(d, [(A_FOOT, S.INK)], 1715, W - 400, 88, "Bold")
+    D.centred_line(d, S.highlight_parts(A_SUB), 1840, W - 400, 58, "Regular")
     return c.convert("RGB")
 
 
@@ -209,11 +219,11 @@ if __name__ == "__main__":
     jobs = [("iphone-6.9", 1320, 2868, raw_iphone), ("ipad-13", 2064, 2752, raw_ipad)]
     for name, w, h, raw in jobs:
         (out / "A" / name).mkdir(parents=True, exist_ok=True); (out / "B" / name).mkdir(parents=True, exist_ok=True)
-        portrait_a(w, h, mascot).save(out / "A" / name / "01-ppo-a.png", optimize=True)
+        portrait_a(w, h, mascot, Image.open(raw / "ppo-a-sensitive.png")).save(out / "A" / name / "01-ppo-a.png", optimize=True)
         portrait_b(w, h, mascot, Image.open(raw / "ppo-b-rise.png")).save(out / "B" / name / "01-ppo-b.png", optimize=True)
     for v in "AB":
         (out / v / "duo").mkdir(parents=True, exist_ok=True)
-    duo_a(mascot).save(out / "A" / "duo" / "01-ppo-a.png", optimize=True)
+    duo_a(mascot, Image.open(raw_duo / "ppo-a-sensitive.png")).save(out / "A" / "duo" / "01-ppo-a.png", optimize=True)
     duo_b(mascot, Image.open(raw_duo / "ppo-b-rise.png")).save(out / "B" / "duo" / "01-ppo-b.png", optimize=True)
     for p in sorted(out.rglob("01-ppo-*.png")):
         print(p, Image.open(p).size)

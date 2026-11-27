@@ -135,6 +135,17 @@ enum SensitiveCatalogue {
     @MainActor
     static func scan(_ categoryIDs: Set<String>) -> [String: [SensitiveApp]] {
         var found: [String: [SensitiveApp]] = [:]
+        #if DEBUG
+        // Renders only (debug builds, `-previewSensitive`): as if one listed app answered in each of dating, health and
+        // money, so a store shot can show a result on a Simulator, where none is installed. The names stay hidden.
+        if LaunchOptions.has("-previewSensitive") {
+            let pick = ["dating": "tinder", "health": "flo", "money": "coinbase"]
+            for category in categories where categoryIDs.contains(category.id) {
+                found[category.id] = category.checkedApps.filter { $0.scheme == pick[category.id] }
+            }
+            return found
+        }
+        #endif
         #if os(macOS)
         let installed = Set(MacAppsSource.installedAppNames().map { $0.lowercased() })
         #endif

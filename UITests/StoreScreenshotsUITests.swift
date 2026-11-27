@@ -152,6 +152,31 @@ final class StoreScreenshotsUITests: XCTestCase {
         shot("ppo-b-rise", showing: app.buttons["Share your progress"])
     }
 
+    /// Product page test version A's small device: the Sensitive apps result with three made-up finds
+    /// (`-previewSensitive`), names still hidden as in the app. Attached as `ppo-a-sensitive`.
+    func testCapturePPOSensitive() {
+        app.launchArguments += ["-previewSensitive", "-startTab", "sensitive", "-sensitiveCategories", "dating,faith,health,money"]
+        app.launch()
+        sleep(2)
+        let check = app.buttons.containing(NSPredicate(format: "label BEGINSWITH 'Check '")).firstMatch
+        scrollTo(check, max: 6)
+        XCTAssertTrue(check.exists, "The Check button isn't on the page")
+        check.tap()
+        sleep(2)
+        // The result card: the ring, "3 apps could reveal you" and the hidden names, under the status bar.
+        let heading = app.staticTexts["3 apps could reveal you"].firstMatch
+        XCTAssertTrue(heading.waitForExistence(timeout: 10), "The result never showed")
+        let win = app.windows.firstMatch.frame
+        let show = app.buttons["Show the apps"].firstMatch
+        if show.exists && show.frame.maxY > win.maxY - 110 {
+            let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.8))
+            from.press(forDuration: 0.1, thenDragTo: from.withOffset(CGVector(dx: 0, dy: -(show.frame.maxY - win.maxY + 140))),
+                       withVelocity: 300, thenHoldForDuration: 0.5)
+            sleep(1)
+        }
+        shot("ppo-a-sensitive", showing: show)
+    }
+
     func testCaptureSettings() {
         app.launch()
         sleep(2)
