@@ -121,6 +121,37 @@ final class StoreScreenshotsUITests: XCTestCase {
         shot("review-sensitive-result")
     }
 
+    /// Product page test version B (score rise): the Footprint page after a made-up earlier scan 12
+    /// points lower (`-previewRise`), with "Since your last scan" in view. Attached as `ppo-b-rise`.
+    func testCapturePPORise() {
+        app.launchArguments += ["-previewRise"]
+        app.launch()
+        sleep(2)
+        tab("Footprint"); tap("Start with check 1")
+        XCTAssertTrue(app.buttons["Scan again"].waitForExistence(timeout: 20))
+        sleep(2)
+        // Exactly as far as the page's own header ("Check 1 · Footprint", "N things you can fix"), which then
+        // sits just under the status bar with the fixes and "Since your last scan" below it.
+        let header = app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'things you can fix' OR label CONTAINS[c] 'thing you can fix'")).firstMatch
+        XCTAssertTrue(header.waitForExistence(timeout: 10), "The fixes header isn't on the page")
+        let win = app.windows.firstMatch.frame
+        let lift = header.frame.minY - win.minY - 120
+        if lift > 10 {
+            let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.8))
+            from.press(forDuration: 0.1, thenDragTo: from.withOffset(CGVector(dx: 0, dy: -lift)), withVelocity: 300, thenHoldForDuration: 0.5)
+            sleep(1)
+        }
+        // Narrow screens (the folded Duo): the whole rise card matters more than the header.
+        let share = app.buttons["Share your progress"]
+        if share.exists && share.frame.maxY > win.maxY - 70 {
+            let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.8))
+            from.press(forDuration: 0.1, thenDragTo: from.withOffset(CGVector(dx: 0, dy: -(share.frame.maxY - win.maxY + 90))),
+                       withVelocity: 300, thenHoldForDuration: 0.5)
+            sleep(1)
+        }
+        shot("ppo-b-rise", showing: app.buttons["Share your progress"])
+    }
+
     func testCaptureSettings() {
         app.launch()
         sleep(2)
