@@ -25,10 +25,21 @@ What's in it (App Store and Mac App Store):
 - A short notice, once per sale, when other hYYa apps are on sale. It is built into the app, so nothing is downloaded
   to show it and nothing about you is sent.
 
+What's New (Google Play):
+> This release contains general bug fixes and stability improvements.
+
+What's in it (Google Play):
+- Age signal: only where Google Play says an age-assurance law applies, the app asks Google Play for the age signal it
+  holds, as those laws require. Nothing depends on it, and it is never stored or sent; the app keeps only the date it asked.
+  The F-Droid edition doesn't include it.
+- Sensitive apps: for people who keep an app, a new step to move it into Private space (on Samsung, Secure Folder) and
+  uninstall the original, so apps outside it no longer find it. Tested on Android 16.
+
 | Store | Version | Live | Source |
 |---|---|---|---|
 | App Store (iPhone and iPad) | 1.1.3 (build 49) | 2026-11-24 | tag `v1.1.3-build49` |
 | Mac App Store | 1.1.3 (build 49) | 2026-11-24 | tag `v1.1.3-build49` |
+| Google Play | 1.1.3 (versionCode 33) | 2026-11-27 | tag `v1.1.3-android33` |
 
 ## 1.1.2
 
