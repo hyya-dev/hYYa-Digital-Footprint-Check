@@ -275,6 +275,8 @@ final class FlowCheckUITests: XCTestCase {
     }
 
     func testSettingsFlow() {
+        // Start as someone who hasn't rated yet: once tapped, the card is gone for good (1.1.4).
+        app.launchArguments += ["-reviewCardTapped", "NO"]
         app.launch()
         tab("Settings")
         // Each card is one button (1.0.5), so its label holds the pill's words.

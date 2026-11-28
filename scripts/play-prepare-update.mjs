@@ -46,7 +46,7 @@ const dir = `${ROOT}GooglePlayConsole/localized/`;
 // Languages whose translation didn't pass the checks: their old listing is removed, so Play shows
 // the current English instead of outdated text. --english-for fa,hi-IN,…
 const englishFor = (args[args.indexOf("--english-for") + 1] ?? "").split(",").filter((x) => args.includes("--english-for") && x);
-const listings = readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(dir + f, "utf8")))
+const listings = readdirSync(dir).filter((f) => f.endsWith(".json") && !f.startsWith(".")).map((f) => JSON.parse(readFileSync(dir + f, "utf8")))
   .filter((l) => !englishFor.includes(l.language));
 // English (United States) comes from the approved source file.
 const md = readFileSync(`${ROOT}GooglePlayConsole/listing-en-US.md`, "utf8");

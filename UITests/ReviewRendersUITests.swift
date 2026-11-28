@@ -53,6 +53,60 @@ final class ReviewRendersUITests: XCTestCase {
             shot("s04-checkup-more")
         }
     }
+    /// 1.1.4 (owner's yes needed before the build): the sale card with three apps (ink removed), in Settings for a new
+    /// install and on Score; Settings before and after the rating card was tapped (then gone for good).
+    func test114() {
+        for (o, t) in [(UIDeviceOrientation.portrait, "up"), (.landscapeLeft, "side")] {
+            tag = t
+            launch(["-firstRun", "-previewSale", "-startTab", "settings"], o)
+            shot("d01-settings-sale")
+            app.swipeUp(velocity: .slow)
+            shot("d02-settings-sale-2")
+            launch(["-firstRun", "-previewSale", "-startTab", "settings", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityL"], o)
+            app.swipeUp(velocity: .slow)
+            shot("d07-settings-sale-large-text")
+            launch(["-autoScan", "-startTab", "home", "-previewSale"], o)
+            sleep(16)
+            tab("Score")
+            shot("d03-score-sale")
+            app.swipeUp(velocity: .slow)
+            shot("d04-score-sale-2")
+            for (args, name) in [([String](), "d05-settings-rate-card"), (["-reviewCardTapped", "YES"], "d06-settings-after-rating")] {
+                launch(["-startTab", "settings"] + args, o)
+                // The line just above the card: the card (or Support hYYa, once it's gone) shows under it.
+                let above = app.staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'Only scores and counts'")).firstMatch
+                scrollTo(above, max: 8)
+                for _ in 0..<6 where above.exists && above.frame.minY > 140 {
+                    let mid = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.6))
+                    mid.press(forDuration: 0.05, thenDragTo: mid.withOffset(CGVector(dx: 0, dy: -120)))
+                }
+                shot(name)
+            }
+        }
+    }
+
+    /// The real tap: Rate the App opens the store, and the card never comes back, not even after a relaunch.
+    func test114RateTapHides() {
+        tag = "up"
+        launch(["-startTab", "settings"], .portrait)
+        let card = app.buttons.containing(NSPredicate(format: "label CONTAINS 'Enjoying hYYa Digital Footprint Check'")).firstMatch
+        scrollTo(card, max: 8)
+        XCTAssertTrue(card.exists, "the rating card shows before it is tapped")
+        card.tap()
+        sleep(3)
+        app.activate()
+        sleep(2)
+        XCTAssertFalse(card.exists, "gone once tapped")
+        shot("d08-after-tap")
+        app.terminate()
+        app.launchArguments = ["-sampleData", "-startTab", "settings"]
+        app.launch()
+        sleep(2)
+        scrollTo(app.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Report a Security Issue'")).firstMatch, max: 8)
+        XCTAssertFalse(card.exists, "still gone after a relaunch")
+        shot("d09-after-relaunch")
+    }
+
     /// 1.1.3 (owner's yes needed before release): the child-or-teen finding and the five Check-up additions.
     /// Owner's round 2 (2026-11-23): the sale notice in Settings for a new install, and the adult's own card.
     func test113Round2() {

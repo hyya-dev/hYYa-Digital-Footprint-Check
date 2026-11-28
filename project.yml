@@ -18,8 +18,8 @@ settings:
     SWIFT_VERSION: "5.0"
     # Apple silicon only: same convention as the sibling hYYa apps.
     ARCHS: arm64
-    MARKETING_VERSION: "1.1.3"
-    CURRENT_PROJECT_VERSION: "49"
+    MARKETING_VERSION: "1.1.4"
+    CURRENT_PROJECT_VERSION: "50"
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: "8PYFWUL3ND"
     SWIFT_STRICT_CONCURRENCY: complete

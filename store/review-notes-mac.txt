@@ -18,14 +18,16 @@ The app has no CallKit and no pricing references in its screenshots.
 
 Also in the app:
 - Tracker: lists the System Settings panes that show which apps can record the screen, use accessibility, monitor input or read all files, each opened with an x-apple.systempreferences link. The app reads none of these itself.
-- Re-scan reminder: optional local notification (weekly or monthly), asked for only when chosen. No server, no push.
+- Re-scan reminder: optional local notification, asked for only when chosen. No server, no push.
 - "Fix them with me": steps through fixable findings and opens System Settings; the app never changes a setting itself.
 
-Widget: only the score and last-check time, from a device-only keychain item; no network, no finding or app name.
+Widget: only the score and last-check time (device-only keychain); no finding or app name.
 Check-up steps are instructions only: the app reads none of those settings, detects no malware and reads no passwords.
 
-New in 1.1.3:
-- Declared Age Range: only where Apple reports that an age-assurance law applies, the app shows Apple's age-range sheet after install or update, then at most yearly. Nothing is gated on it; it is never stored, logged or sent.
-- Sensitive Content Analysis entitlement: only to read SCSensitivityAnalyzer.analysisPolicy and show the user that apps can tell whether Communication Safety or Sensitive Content Warning is on. No content is analysed; never scored.
+New in 1.1.4 (fixes only): the Settings rating card opens the App Store review page, then never shows again; the sale notice lists three apps.
+
+Since 1.1.3:
+- Declared Age Range: only where Apple reports an age-assurance law applies, Apple's age-range sheet shows after install or update, then at most yearly. Nothing is gated on it; never stored, logged or sent.
+- Sensitive Content Analysis entitlement: only reads SCSensitivityAnalyzer.analysisPolicy to show whether Communication Safety or Sensitive Content Warning is on. No content is analysed; never scored.
 - New Check-up steps (Safari protection, Analytics and Apple Advertising, Advanced Data Protection): instructions only.
-- A one-time in-app notice that the developer's other apps are on sale until 31 December. It is built into the app (nothing is fetched), opens their App Store pages, and is never a notification.
+- A one-time notice that three of the developer's other apps are on sale until 31 December: built in (nothing fetched), opens their App Store pages, never a notification.

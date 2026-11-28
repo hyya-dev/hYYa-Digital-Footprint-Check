@@ -21,8 +21,12 @@ Keychain: only the app's own install dates (a reinstall demonstration) and the w
 
 Check-up steps are instructions only: the app reads none of those settings, detects no malware and reads no passwords. Optional local re-scan reminder: no server, no push. The widget shows only the score and last-check time.
 
-New in 1.1.3:
+New in 1.1.4 (fixes only):
+- The "Enjoying…? Rate the App" card in Settings opens the App Store write-review page and is then never shown again.
+- The built-in sale notice now lists three of the developer's apps (Encrypted Folder, Encrypted Notes, Subscription Tracker), all on sale until 31 December.
+
+Since 1.1.3:
 - Declared Age Range: only where Apple reports that an age-assurance law applies, the app shows Apple's age-range sheet after install or update, then at most yearly. Nothing is gated on the answer; it is never stored, logged or sent. Only the request date is kept.
 - Sensitive Content Analysis entitlement: used only to read SCSensitivityAnalyzer.analysisPolicy, to show the user that any app can tell whether Communication Safety or Sensitive Content Warning is on. No images or videos are analysed; the reading is shown on screen only and never scored.
 - New Check-up steps (Safari protection, Journaling Suggestions, Analytics and Apple Advertising, Advanced Data Protection, RCS Messaging): instructions only.
-- A one-time in-app notice that the developer's other apps are on sale until 31 December. It is built into the app (nothing is fetched), opens their App Store pages, and is never a notification.
+- A one-time in-app notice that three of the developer's other apps are on sale until 31 December. It is built into the app (nothing is fetched), opens their App Store pages, and is never a notification.

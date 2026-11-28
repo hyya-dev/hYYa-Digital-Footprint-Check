@@ -45,7 +45,7 @@ ok(build?.attributes.usesNonExemptEncryption === false, `export compliance answe
 // Every language against the repo.
 const locs = (await api(`/v1/appStoreVersions/${version.id}/appStoreVersionLocalizations?limit=200`)).data;
 const repo = { "en-US": en };
-for (const f of readdirSync(new URL("../store/localized/", import.meta.url))) if (f.endsWith(".json"))
+for (const f of readdirSync(new URL("../store/localized/", import.meta.url))) if (f.endsWith(".json") && !f.startsWith("."))
   repo[f.slice(0, -5)] = JSON.parse(readFileSync(new URL(`../store/localized/${f}`, import.meta.url), "utf8"));
 let same = 0;
 for (const l of locs) {

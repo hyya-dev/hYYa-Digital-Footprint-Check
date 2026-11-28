@@ -29,10 +29,12 @@ struct SaleNoticeTests {
     @Test func neverNamesThisAppOrAPrice() {
         #expect(!sale.apps.contains { $0.name.localizedCaseInsensitiveContains("Footprint") })
         #expect(!(sale.title + sale.body).contains("$"))
-        #expect(sale.apps.count == 4)
+        // hYYa ink is out (owner, 2026-11-28): its sale doesn't end on 31 December.
+        #expect(sale.apps.count == 3)
+        #expect(!sale.apps.contains { $0.id == "ink" || $0.name.localizedCaseInsensitiveContains("ink") })
         // Full App Store names, and ids that never change.
         #expect(sale.apps.allSatisfy { $0.name.hasPrefix("hYYa ") })
-        #expect(sale.apps.map(\.appStoreID) == ["6786209046", "6786135330", "6792328099", "6760548018"])
+        #expect(sale.apps.map(\.appStoreID) == ["6786135330", "6792328099", "6760548018"])
         #expect(!(sale.title + sale.body).contains("http") && !(sale.title + sale.body).contains("@") && !(sale.title + sale.body).contains("<"))
     }
 }

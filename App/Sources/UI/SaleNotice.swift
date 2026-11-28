@@ -41,7 +41,7 @@ enum SaleNotice {
         body: "Other hYYa apps are up to 50% off until 31 December.",
         apps: [
             // Full names, as on the App Store (read 2026-11-23); ids pinned here, never taken from anywhere else.
-            App(id: "ink", name: "hYYa ink", appStoreID: "6786209046", icon: "SaleInk"),
+            // hYYa ink left out (owner, 2026-11-28): its sale runs on different dates from "until 31 December".
             App(id: "folder", name: "hYYa Encrypted Folder", appStoreID: "6786135330", icon: "SaleFolder"),
             App(id: "notes", name: "hYYa Encrypted Notes", appStoreID: "6792328099", icon: "SaleNotes"),
             App(id: "tracker", name: "hYYa Subscription Tracker", appStoreID: "6760548018", icon: "SaleTracker"),
@@ -66,6 +66,7 @@ enum SaleNotice {
 struct SaleNoticeCard: View {
     var sale: SaleNotice.Sale = SaleNotice.current
     let close: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
         ToneCard(tone: .context, title: sale.title, symbol: "sparkles") {
@@ -82,13 +83,12 @@ struct SaleNoticeCard: View {
             Text(sale.body)
                 .font(.brand(.subheadline)).foregroundStyle(Brand.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
-            // Exactly four in a row where each tile has room, otherwise two by two: never a lone tile or a half-empty row.
-            ViewThatFits(in: .horizontal) {
-                row(sale.apps, minWidth: 140)
-                VStack(spacing: 8) {
-                    row(Array(sale.apps.prefix(2)), minWidth: 0)
-                    row(Array(sale.apps.dropFirst(2)), minWidth: 0)
-                }
+            // Three in a row, names wrapping onto two lines; one under another only at the largest text sizes.
+            // Never a lone tile under a full row.
+            if typeSize.isAccessibilitySize {
+                VStack(spacing: 8) { ForEach(sale.apps) { app in tile(app) } }
+            } else {
+                row(sale.apps, minWidth: 0)
             }
         }
     }
@@ -112,7 +112,9 @@ struct SaleNoticeCard: View {
                 Text(app.name)
                     .font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink)
                     .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                    // Three to a row: "hYYa / Encrypted / Folder" may need three lines; never cut a name short.
+                    .lineLimit(3)
+                    .minimumScaleFactor(0.8)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }

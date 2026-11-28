@@ -85,6 +85,15 @@ fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
 
 private fun prefs(c: Context) = c.getSharedPreferences("app", Context.MODE_PRIVATE)
 
+private tailrec fun Context.findActivity(): android.app.Activity? = when (this) {
+    is android.app.Activity -> this
+    is android.content.ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
+/** Set once the person taps through to rate on Google Play; the rating card then never shows again. */
+private const val RATED_KEY = "reviewCardTapped"
+
 // MARK: Sensitive apps
 
 @Composable
@@ -93,15 +102,22 @@ fun SensitiveScreen(scanner: com.hyya.footprintinspector.scan.Scanner) {
     // Every kind is on until the person turns some off (owner, 2026-11-16). No saved choice means all.
     val allIds = Sensitive.categories.map { it.id }.toSet()
     var chosen by remember { mutableStateOf(if (prefs(context).contains("sensitiveCategories")) prefs(context).getStringSet("sensitiveCategories", emptySet())!!.toSet() else allIds) }
-    var results by remember { mutableStateOf<Map<String, List<SensitiveApp>>?>(null) }
-    var revealed by remember { mutableStateOf(false) }
+    // Held by the Scanner (memory only), so turning the device keeps the result on screen.
+    var results by scanner::sensitiveResults
+    var revealed by scanner::sensitiveRevealed
 
-    // Results never outlive the screen: cleared as soon as the app goes to the background.
+    // Results never outlive the screen: cleared as soon as the app goes to the background (not when it only turns).
     val owner = LocalLifecycleOwner.current
     DisposableEffect(owner) {
-        val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_STOP) { results = null; revealed = false } }
+        val obs = LifecycleEventObserver { _, e ->
+            if (e == Lifecycle.Event.ON_STOP && context.findActivity()?.isChangingConfigurations != true) { results = null; revealed = false }
+        }
         owner.lifecycle.addObserver(obs)
-        onDispose { owner.lifecycle.removeObserver(obs) }
+        onDispose {
+            owner.lifecycle.removeObserver(obs)
+            // Leaving the page clears it too, as before; turning the device doesn't.
+            if (context.findActivity()?.isChangingConfigurations != true) { results = null; revealed = false }
+        }
     }
 
     Page(resetOn = "${results != null}-$revealed") {
@@ -416,9 +432,15 @@ fun SettingsScreen(scanner: Scanner, nav: Nav) {
                 onClick = if (nothingSaved) null else ({ confirmingClear = true }))
         }
         Text("Only scores and counts are kept, never which apps you have. Clear history removes them too.", color = Brand.textSubtle, fontSize = 12.sp)
-        // Rating card, as on iOS.
+        // Rating card, as on iOS: gone for good once the person has tapped through to rate (owner, 2026-11-28).
+        // The F-Droid edition's card asks for GitHub feedback instead and stays (owner, 2026-11-28).
         // The whole card opens the link; the pill is its label, centred across the card.
-        ToneCard(Tone.CONTEXT, "Enjoying hYYa Digital Footprint Check?", onClick = { openUrl(context, Links.RATE) }, paper = Paper.PURPLE) {
+        val fdroid = com.hyya.footprintinspector.BuildConfig.FDROID
+        var rated by remember { mutableStateOf(!fdroid && prefs(context).getBoolean(RATED_KEY, false)) }
+        if (!rated) ToneCard(Tone.CONTEXT, "Enjoying hYYa Digital Footprint Check?", onClick = {
+            openUrl(context, Links.RATE)
+            if (!fdroid) { prefs(context).edit().putBoolean(RATED_KEY, true).apply(); rated = true }
+        }, paper = Paper.PURPLE) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Mascot(72)
                 Spacer(Modifier.width(12.dp))

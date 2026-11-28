@@ -37,6 +37,7 @@ struct SettingsView: View {
     /// The sale notice for people who haven't seen it on the Score page (a new install sees it here).
     @AppStorage(SaleNotice.seenKey) private var saleSeen = ""
     @State private var saleShowing = false
+    @AppStorage(ReviewCard.tappedKey) private var reviewCardTapped = false
 
     static let shareMessage = "hYYa Digital Footprint Check shows what any app can learn about your device, and how to fix it. Free, open source, nothing leaves your device."
 
@@ -91,7 +92,8 @@ struct SettingsView: View {
                 Text("Only scores and counts are kept, never which apps you have. Clear history removes them too.")
                     .font(.brand(.footnote)).foregroundStyle(Brand.textSubtle).padding(.horizontal, 4).padding(.top, -14)
 
-                ReviewCard()
+                // Gone for good once the person has tapped through to rate (owner, 2026-11-28).
+                if !reviewCardTapped { ReviewCard() }
 
                 // Same order as Encrypted Notes. Share and Rate carry subtitles because they're asks;
                 // the other three are errands the user already knows the reason for.

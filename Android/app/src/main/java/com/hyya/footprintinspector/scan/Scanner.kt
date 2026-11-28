@@ -44,6 +44,11 @@ class Scanner(app: Application) : AndroidViewModel(app) {
         @Volatile var previewRise = false
     }
 
+    /** The Sensitive apps result on screen, in memory only (never written anywhere). Kept here so turning the
+     *  device doesn't drop it; the screen clears it whenever the app really goes to the background. */
+    var sensitiveResults by mutableStateOf<Map<String, List<com.hyya.footprintinspector.catalogue.SensitiveApp>>?>(null)
+    var sensitiveRevealed by mutableStateOf(false)
+
     var phase by mutableStateOf(Phase.IDLE); private set
     var progress by mutableStateOf(0f); private set
     var readings by mutableStateOf<Map<String, Reading>>(emptyMap()); private set

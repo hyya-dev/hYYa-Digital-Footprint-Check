@@ -7,11 +7,12 @@ import SwiftUI
 
 /// "Rate hYYa Digital Footprint Check". Opens the App Store's write-review page once the app has an
 /// App Store id (a tap must always do something visible). Until then it falls back to Apple's
-/// in-app rating prompt.
+/// in-app rating prompt. Once tapped it is never shown again (Settings hides it; owner, 2026-11-28).
 struct ReviewCard: View {
+    static let tappedKey = "reviewCardTapped"
     @Environment(\.openURL) private var openURL
     @Environment(\.requestReview) private var requestReview
-    @AppStorage("reviewCardTapped") private var tapped = false
+    @AppStorage(ReviewCard.tappedKey) private var tapped = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
@@ -28,7 +29,7 @@ struct ReviewCard: View {
                                 Image(systemName: "star.fill").font(.brand(.caption)).foregroundStyle(Brand.sand)
                             }
                         }
-                        Text(tapped ? "Thank you for rating" : "Enjoying hYYa Digital Footprint Check?")
+                        Text("Enjoying hYYa Digital Footprint Check?")
                             .font(.brand(.headline))
                             .foregroundStyle(Brand.ink)
                         Text("Your reviews keep us smiling while coding, and help others find a privacy app they can trust.")
@@ -51,12 +52,12 @@ struct ReviewCard: View {
 
     private func rate() {
         Haptics.selection()
-        tapped = true
         if let url = hYYaLinks.appStoreReview {
             openURL(url)
         } else {
             requestReview()
         }
+        tapped = true
     }
 }
 

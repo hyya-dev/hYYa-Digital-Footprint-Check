@@ -50,7 +50,7 @@ const infoNow = Object.fromEntries(infoLocData.map((l) => [l.attributes.locale, 
 let verLocs = Object.fromEntries((await api(`/v1/appStoreVersions/${version.id}/appStoreVersionLocalizations?limit=200`)).data.map((l) => [l.attributes.locale, l.id]));
 
 const wanted = process.argv.slice(2);
-const files = readdirSync(DIR).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5))
+const files = readdirSync(DIR).filter((f) => f.endsWith(".json") && !f.startsWith(".")).map((f) => f.slice(0, -5))
   .filter((l) => !wanted.length || wanted.includes(l)).sort();
 
 let failed = 0;

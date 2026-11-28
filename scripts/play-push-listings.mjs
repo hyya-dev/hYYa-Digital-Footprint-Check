@@ -23,7 +23,7 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const DIR = `${ROOT}GooglePlayConsole/localized/`;
 const LIMITS = { title: 30, shortDescription: 80, fullDescription: 4000 };
 
-const local = Object.fromEntries(readdirSync(DIR).filter((f) => f.endsWith(".json"))
+const local = Object.fromEntries(readdirSync(DIR).filter((f) => f.endsWith(".json") && !f.startsWith("."))
   .map((f) => JSON.parse(readFileSync(DIR + f, "utf8"))).map((l) => [l.language, l]));
 // English (United States) comes from the approved source file, not the translations.
 const md = readFileSync(`${ROOT}GooglePlayConsole/listing-en-US.md`, "utf8");
