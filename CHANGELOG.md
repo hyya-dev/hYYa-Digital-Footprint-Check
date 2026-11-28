@@ -4,6 +4,25 @@ Each store release, with the store's What's New and the date it went live on eac
 Every release has a matching tag and a [GitHub Release](https://github.com/hyya-dev/hYYa-Digital-Footprint-Check/releases).
 Website: [hyya.com/hyya-digital-footprint-check.html](https://hyya.com/hyya-digital-footprint-check.html)
 
+## 1.1.4
+
+What's New (every store):
+> This release contains general bug fixes and stability improvements.
+
+What's in it:
+- The rating card in Settings goes for good once you tap through to rate (App Store, Mac App Store and the Google Play
+  edition). The F-Droid edition keeps its feedback card.
+- App Store and Mac App Store: the sale notice lists three hYYa apps (Encrypted Folder, Encrypted Notes and
+  Subscription Tracker), in one row with their full names.
+- Google Play: turning the device no longer clears the Sensitive apps result. It is still kept in memory only and
+  cleared when you leave that page or the app.
+
+| Store | Version | Live | Source |
+|---|---|---|---|
+| Google Play | 1.1.4 (versionCode 34) | 2026-11-28 | tag `v1.1.4-android34` |
+| App Store (iPhone and iPad) | 1.1.4 (build 50) | in review | tag `v1.1.4-build50` (on its live day) |
+| Mac App Store | 1.1.4 (build 50) | in review | tag `v1.1.4-build50` (on its live day) |
+
 ## 1.1.3
 
 What's New (App Store and Mac App Store):
